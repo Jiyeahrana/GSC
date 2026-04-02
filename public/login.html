@@ -20,20 +20,20 @@
               "on-tertiary-container": "#fb6b00",
               "on-error-container": "#ffdad6",
               "tertiary": "#ffb692",
-              "surface": "#0a151a",
+              "surface": "#001523",
               "tertiary-container": "#551f00",
               "surface-tint": "#bac8dc",
               "on-secondary-fixed-variant": "#334861",
               "outline-variant": "#454652",
               "primary": "#bac8dc",
               "on-background": "#d8e4ec",
-              "surface-container-high": "#202b32",
+              "surface-container-high": "#18435a",
               "on-error": "#690005",
               "tertiary-fixed": "#ffdbcb",
               "secondary-fixed-dim": "#b2c8e7",
               "primary-fixed-dim": "#bac8dc",
               "on-secondary-container": "#a4bad8",
-              "surface-container-highest": "#2b363d",
+              "surface-container-highest": "#011C30",
               "on-tertiary-fixed-variant": "#7a3000",
               "secondary": "#b2c8e7",
               "background": "#0a151a",
@@ -48,14 +48,14 @@
               "inverse-surface": "#d8e4ec",
               "on-surface": "#d8e4ec",
               "on-primary-fixed-variant": "#3a4859",
-              "surface-container-low": "#121d23",
+              "surface-container-low": "#00111c",
               "on-secondary-fixed": "#031d34",
               "on-tertiary": "#562000",
               "primary-container": "#233141",
               "error": "#ffb4ab",
               "tertiary-fixed-dim": "#ffb692",
               "on-secondary": "#1b324a",
-              "surface-container": "#162127",
+              "surface-container": "#001523",
               "inverse-on-surface": "#273238",
               "inverse-primary": "#525f71",
               "surface-dim": "#0a151a",
@@ -85,7 +85,7 @@
 </head>
 <body class="bg-surface text-on-surface font-body min-h-screen flex flex-col" x-data="{ tab: 'login' }">
 <!-- TopNavBar (Shared Component) -->
-<header class="bg-[#0a151a] flex justify-between items-center w-full px-6 py-4 fixed top-0 z-50">
+<header class="bg-[#001523] flex justify-between items-center w-full px-6 py-4 fixed top-0 z-50">
 <div class="flex items-center gap-4">
 <span class="text-xl font-black tracking-tighter text-[#bac8dc] uppercase font-['Manrope']">WEB NAME</span>
 </div>
@@ -193,25 +193,11 @@
 </div>
 </div>
 </div>
-<button class="w-full py-4 mt-4 border-2 border-primary text-primary font-headline font-extrabold uppercase tracking-widest rounded transition-all hover:bg-primary hover:text-on-primary text-xs" type="submit">
+<button class="w-full py-4 mt-4 border-2 border-primary text-primary font-headline font-extrabold uppercase tracking-widest rounded transition-all hover:bg-primary hover:text-on-primary text-s" type="submit">
                                 Register Port Facility
                             </button>
 </form>
 </section>
-</div>
-</div>
-<!-- Status Ticker (Industrial Aesthetic) -->
-<div class="bg-surface-container-lowest p-3 rounded flex items-center justify-between text-[10px] font-label font-bold tracking-[0.2em] text-on-surface-variant uppercase border-l-2 border-tertiary">
-<div class="flex items-center gap-4">
-<span class="flex items-center gap-2">
-<span class="w-1.5 h-1.5 bg-tertiary rounded-full animate-pulse shadow-[0_0_8px_rgba(255,182,146,0.8)]"></span>
-                        System Live
-                    </span>
-<span>Node: AMS-01</span>
-</div>
-<div class="text-outline">
-                    Encrypted: AES-256
-                </div>
 </div>
 </div>
 </main>
