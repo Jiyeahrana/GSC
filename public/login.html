@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Web Name | Access</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script defer="" src="https://unpkg.com/alpinejs"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-bright": "#303b41",
+              "outline": "#908f9d",
+              "primary-fixed": "#d6e4f9",
+              "on-tertiary-container": "#fb6b00",
+              "on-error-container": "#ffdad6",
+              "tertiary": "#ffb692",
+              "surface": "#0a151a",
+              "tertiary-container": "#551f00",
+              "surface-tint": "#bac8dc",
+              "on-secondary-fixed-variant": "#334861",
+              "outline-variant": "#454652",
+              "primary": "#bac8dc",
+              "on-background": "#d8e4ec",
+              "surface-container-high": "#202b32",
+              "on-error": "#690005",
+              "tertiary-fixed": "#ffdbcb",
+              "secondary-fixed-dim": "#b2c8e7",
+              "primary-fixed-dim": "#bac8dc",
+              "on-secondary-container": "#a4bad8",
+              "surface-container-highest": "#2b363d",
+              "on-tertiary-fixed-variant": "#7a3000",
+              "secondary": "#b2c8e7",
+              "background": "#0a151a",
+              "surface-variant": "#2b363d",
+              "surface-container-lowest": "#051015",
+              "on-surface-variant": "#c6c5d4",
+              "on-primary": "#243141",
+              "on-primary-container": "#8b99ac",
+              "on-primary-fixed": "#0f1c2c",
+              "secondary-fixed": "#d1e4ff",
+              "on-tertiary-fixed": "#341100",
+              "inverse-surface": "#d8e4ec",
+              "on-surface": "#d8e4ec",
+              "on-primary-fixed-variant": "#3a4859",
+              "surface-container-low": "#121d23",
+              "on-secondary-fixed": "#031d34",
+              "on-tertiary": "#562000",
+              "primary-container": "#233141",
+              "error": "#ffb4ab",
+              "tertiary-fixed-dim": "#ffb692",
+              "on-secondary": "#1b324a",
+              "surface-container": "#162127",
+              "inverse-on-surface": "#273238",
+              "inverse-primary": "#525f71",
+              "surface-dim": "#0a151a",
+              "error-container": "#93000a",
+              "secondary-container": "#354b64"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .industrial-glass {
+            background: rgba(48, 59, 65, 0.6);
+            backdrop-filter: blur(20px);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body min-h-screen flex flex-col" x-data="{ tab: 'login' }">
+<!-- TopNavBar (Shared Component) -->
+<header class="bg-[#0a151a] flex justify-between items-center w-full px-6 py-4 fixed top-0 z-50">
+<div class="flex items-center gap-4">
+<span class="text-xl font-black tracking-tighter text-[#bac8dc] uppercase font-['Manrope']">WEB NAME</span>
+</div>
+<div class="hidden md:flex items-center space-x-8">
+<nav class="flex space-x-6 font-['Manrope'] font-bold tracking-tight">
+<a class="text-[#bac8dc] hover:text-[#d8e4ec] transition-colors" href="#">a</a>
+<a class="text-[#c6c5d4] hover:text-[#d8e4ec] transition-colors" href="#">b</a>
+<a class="text-[#c6c5d4] border-b-2 border-[#bac8dc] pb-1 hover:text-[#d8e4ec] transition-colors" href="#">c</a>
+</nav>
+</div>
+<div class="flex items-center gap-4 text-[#bac8dc]">
+<button class="material-symbols-outlined hover:text-[#d8e4ec] transition-colors" data-icon="language">language</button>
+<button class="material-symbols-outlined hover:text-[#d8e4ec] transition-colors" data-icon="help_outline">help_outline</button>
+</div>
+</header>
+<main class="flex-grow flex items-center justify-center pt-20 pb-12 px-6 relative overflow-hidden">
+<!-- Background Decorative Element -->
+<div class="absolute inset-0 opacity-10 pointer-events-none">
+<div class="absolute top-0 right-0 w-[800px] h-[800px] bg-primary rounded-full blur-[120px] -translate-y-1/2 translate-x-1/3"></div>
+<div class="absolute bottom-0 left-0 w-[600px] h-[600px] bg-secondary rounded-full blur-[100px] translate-y-1/2 -translate-x-1/4"></div>
+</div>
+<div class="w-full max-w-lg relative z-10 space-y-6">
+<!-- Center Form Container -->
+<div class="bg-surface-container rounded-lg border-l-4 border-primary overflow-hidden shadow-2xl">
+<!-- Tabs Navigation -->
+<div class="bg-surface-container-low p-1 flex">
+<button :class="tab === 'login' ? 'bg-surface-container-high text-primary' : 'text-on-surface-variant hover:text-on-surface'" @click="tab = 'login'" class="flex-1 py-3 font-headline font-bold text-sm uppercase tracking-widest transition-all rounded">
+                        Login
+                    </button>
+<button :class="tab === 'register' ? 'bg-surface-container-high text-primary' : 'text-on-surface-variant hover:text-on-surface'" @click="tab = 'register'" class="flex-1 py-3 font-headline font-bold text-sm uppercase tracking-widest transition-all rounded">
+                        Register Port
+                    </button>
+</div>
+<!-- Content Area -->
+<div class="p-8">
+<!-- Login Section -->
+<section x-show="tab === 'login'" x-transition:enter="transition ease-out duration-300" x-transition:enter-end="opacity-100 translate-y-0" x-transition:enter-start="opacity-0 translate-y-2">
+<div class="mb-8 text-center md:text-left">
+<h2 class="font-headline text-2xl font-bold text-on-surface mb-2">Operator Login</h2>
+<p class="text-sm text-on-surface-variant">Access the command center.</p>
+</div>
+<form class="space-y-6">
+<div class="space-y-1.5">
+<label class="font-label text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Work Email</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline" data-icon="alternate_email">alternate_email</span>
+<input class="w-full bg-surface-container-lowest border-none focus:ring-1 focus:ring-primary pl-10 py-3 text-sm rounded" placeholder="name@portauthority.com" type="email"/>
+</div>
+</div>
+<div class="space-y-1.5">
+<div class="flex justify-between items-center">
+<label class="font-label text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Secure Password</label>
+<a class="text-[10px] uppercase font-bold text-primary hover:underline" href="#">Forgot Access?</a>
+</div>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline" data-icon="lock">lock</span>
+<input class="w-full bg-surface-container-lowest border-none focus:ring-1 focus:ring-primary pl-10 py-3 text-sm rounded" placeholder="••••••••••••" type="password"/>
+</div>
+</div>
+<div class="pt-4">
+<button class="w-full py-4 bg-primary text-on-primary font-headline font-extrabold uppercase tracking-widest rounded transition-all hover:opacity-90 flex items-center justify-center gap-2 shadow-lg shadow-primary/10" type="submit">
+                                    Authenticate Access
+                                    <span class="material-symbols-outlined text-sm" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+</form>
+</section>
+<!-- Registration Section -->
+<section x-cloak="" x-show="tab === 'register'" x-transition:enter="transition ease-out duration-300" x-transition:enter-end="opacity-100 translate-y-0" x-transition:enter-start="opacity-0 translate-y-2">
+<div class="mb-8 text-center md:text-left">
+<h2 class="font-headline text-2xl font-bold text-on-surface mb-2">Port Onboarding</h2>
+<p class="text-sm text-on-surface-variant">Register new Port facility</p>
+</div>
+<form class="space-y-4">
+<div class="grid grid-cols-1 gap-4">
+<div class="space-y-1.5">
+<label class="font-label text-[10px] font-bold text-outline uppercase tracking-widest">Port Name</label>
+<input class="w-full bg-surface-container-lowest border-none focus:ring-1 focus:ring-secondary py-3 px-3 text-sm rounded" placeholder="e.g. Port of Shanghai" type="text"/>
+</div>
+<div class="space-y-1.5">
+<label class="font-label text-[10px] font-bold text-outline uppercase tracking-widest">Authorized Port Representative
+</label>
+<input class="w-full bg-surface-container-lowest border-none focus:ring-1 focus:ring-secondary py-3 px-3 text-sm rounded" placeholder="e.g. John Smith" type="text"/>
+</div>
+<div class="space-y-1.5">
+<label class="font-label text-[10px] font-bold text-outline uppercase tracking-widest">Designation/Role
+</label>
+<input class="w-full bg-surface-container-lowest border-none focus:ring-1 focus:ring-secondary py-3 px-3 text-sm rounded" placeholder="e.g. Operations Director" type="text"/>
+</div>
+<div class="space-y-1.5">
+<label class="font-label text-[10px] font-bold text-outline uppercase tracking-widest">Geographic Location</label>
+<input class="w-full bg-surface-container-lowest border-none focus:ring-1 focus:ring-secondary py-3 px-3 text-sm rounded" placeholder="e.g. 51.9225° N, 4.4792° E" type="text"/>
+</div>
+</div>
+<div class="mt-4 p-4 bg-surface-container-highest rounded-lg border border-primary/10">
+<p class="font-headline text-[10px] font-bold text-primary uppercase tracking-widest mb-3">Storage Configuration</p>
+<div class="flex gap-4">
+<div class="flex-1 space-y-1">
+<label class="text-[9px] text-outline-variant uppercase">Zones</label>
+<input class="w-full bg-surface-container-lowest border-none text-sm py-2 px-2 rounded" type="number" value="4"/>
+</div>
+<div class="flex-[2] space-y-1">
+<label class="text-[9px] text-outline-variant uppercase">Capacity (Unit)</label>
+<input class="w-full bg-surface-container-lowest border-none text-sm py-2 px-2 rounded" placeholder="250,000" type="text"/>
+</div>
+</div>
+</div>
+<button class="w-full py-4 mt-4 border-2 border-primary text-primary font-headline font-extrabold uppercase tracking-widest rounded transition-all hover:bg-primary hover:text-on-primary text-xs" type="submit">
+                                Register Port Facility
+                            </button>
+</form>
+</section>
+</div>
+</div>
+<!-- Status Ticker (Industrial Aesthetic) -->
+<div class="bg-surface-container-lowest p-3 rounded flex items-center justify-between text-[10px] font-label font-bold tracking-[0.2em] text-on-surface-variant uppercase border-l-2 border-tertiary">
+<div class="flex items-center gap-4">
+<span class="flex items-center gap-2">
+<span class="w-1.5 h-1.5 bg-tertiary rounded-full animate-pulse shadow-[0_0_8px_rgba(255,182,146,0.8)]"></span>
+                        System Live
+                    </span>
+<span>Node: AMS-01</span>
+</div>
+<div class="text-outline">
+                    Encrypted: AES-256
+                </div>
+</div>
+</div>
+</main>
+<!-- Footer Space -->
+<footer class="p-6 text-center text-outline text-[10px] font-label tracking-widest uppercase">
+        © 2024 Nautical Forge Systems. All Rights Reserved. Controlled Access Environment.
+    </footer>
+<style>
+        [x-cloak] { display: none !important; }
+    </style>
+</body></html>
