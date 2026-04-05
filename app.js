@@ -18,6 +18,8 @@ app.use(cors({
 app.use(express.json({ limit : '50mb' })); //to parse body of incoming POST request with increased limit
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Requiring Routes
+const portRoute = require("./routes/port");
 
 
 const startServer = async()=>{
@@ -25,6 +27,10 @@ const startServer = async()=>{
             //connecting to database
             await connectDB(process.env.MONGO_URI);
             console.log("Database Connected Successfully!✅");
+
+            // Routes
+            app.use("/api/v1/port", portRoute);
+
             // Getting PORT
             const PORT = process.env.PORT || 3000;
             app.listen(PORT,()=>{
