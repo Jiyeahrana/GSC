@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Shipment Data Entry | Industrial Navigator</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-tertiary-fixed": "#341000",
+                    "surface-container-high": "#172c3b",
+                    "on-secondary-fixed-variant": "#214b62",
+                    "secondary-fixed": "#c6e7ff",
+                    "background": "#001523",
+                    "surface-dim": "#001523",
+                    "on-surface-variant": "#c4c6cc",
+                    "on-error": "#690005",
+                    "on-secondary-fixed": "#001e2d",
+                    "on-primary-fixed": "#0f1c2b",
+                    "on-background": "#d0e5f9",
+                    "on-tertiary": "#562000",
+                    "on-primary-container": "#465465",
+                    "primary-container": "#bac8dc",
+                    "secondary": "#a4cce8",
+                    "on-tertiary-fixed-variant": "#7a3000",
+                    "on-error-container": "#ffdad6",
+                    "surface-container-lowest": "#00101c",
+                    "error-container": "#93000a",
+                    "tertiary": "#ffdbcc",
+                    "error": "#ffb4ab",
+                    "secondary-fixed-dim": "#a4cce8",
+                    "primary-fixed-dim": "#bac8dc",
+                    "primary": "#d6e4f9",
+                    "inverse-on-surface": "#1e3342",
+                    "secondary-container": "#214b62",
+                    "outline": "#8e9196",
+                    "inverse-surface": "#d0e5f9",
+                    "surface-bright": "#273b4b",
+                    "tertiary-container": "#ffb693",
+                    "surface-container": "#0c2230",
+                    "tertiary-fixed": "#ffdbcb",
+                    "on-tertiary-container": "#8d3900",
+                    "on-primary-fixed-variant": "#3a4858",
+                    "inverse-primary": "#525f71",
+                    "surface": "#001523",
+                    "on-primary": "#243141",
+                    "tertiary-fixed-dim": "#ffb692",
+                    "surface-container-low": "#071d2c",
+                    "primary-fixed": "#d6e4f8",
+                    "on-secondary-container": "#93bad6",
+                    "on-secondary": "#02344b",
+                    "surface-tint": "#bac8dc",
+                    "outline-variant": "#44474c",
+                    "surface-container-highest": "#233746",
+                    "surface-variant": "#233746",
+                    "on-surface": "#d0e5f9"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "fontFamily": {
+                    "headline": ["Manrope"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { background-color: #001523; color: #d0e5f9; font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #001523; }
+        ::-webkit-scrollbar-thumb { background: #172c3b; border-radius: 10px; }
+    </style>
+</head>
+<body class="overflow-x-hidden">
+<!-- TopNavBar -->
+<header class="bg-[#001523] dark:bg-[#001523] docked full-width top-0 z-50 fixed w-full">
+<div class="flex justify-between items-center px-6 py-4 w-full">
+<div class="flex items-center space-x-8">
+<span class="text-xl font-black text-[#d0e5f9] uppercase tracking-widest font-manrope">Industrial Navigator</span>
+<nav class="hidden md:flex items-center space-x-6 text-sm font-manrope font-bold tracking-tight">
+<a class="text-[#44474c] hover:text-[#d0e5f9] transition-colors duration-300" href="#">Terminal A</a>
+<a class="text-[#44474c] hover:text-[#d0e5f9] transition-colors duration-300" href="#">Terminal B</a>
+</nav>
+</div>
+<div class="flex items-center space-x-5">
+<div class="hidden lg:flex items-center bg-surface-container px-3 py-1.5 rounded-lg border border-outline-variant/20">
+<span class="material-symbols-outlined text-sm text-[#bac8dc] mr-2">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-xs text-[#d0e5f9] w-48" placeholder="Search parameters..." type="text"/>
+</div>
+<div class="flex items-center space-x-4">
+<span class="material-symbols-outlined text-[#bac8dc] cursor-pointer hover:text-[#fb6b00]">notifications</span>
+<span class="material-symbols-outlined text-[#bac8dc] cursor-pointer hover:text-[#fb6b00]">anchor</span>
+<img alt="Chief Officer Profile" class="w-8 h-8 rounded-full border border-primary/30" data-alt="Close up portrait of a senior port officer in a professional navy uniform, sharp lighting, industrial office background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAgnFqoIcCOYMHClAvQmG0DIxd-OJOfnCwtQF4Radcv6N_fLf1sdhPvW3oUMqriBlabvs2o_lKGZX6_cSy0ufMNfcbvVqfPozGetteOvxClctP9hr5PRrUXbtViK5C0bVBRQaDQqvJKNr-kpOqNe_ew5fSUDEmwH5d9-fHMvNQC47PZ2DNEoltJyDx2b_JFTWiYfPqDKCeM69anS_7QQ7X3iF3ZJU0nK5yDvmbbceQK7BnW6V6QD7G7gnAb3lrtMpMwyZQvmYDQWnFM"/>
+</div>
+</div>
+</div>
+<div class="bg-gradient-to-b from-[#172c3b] to-transparent h-[2px] w-full"></div>
+</header>
+<!-- SideNavBar -->
+<aside class="bg-[#001523] dark:bg-[#001523] fixed left-0 top-0 h-full flex flex-col pt-20 border-r border-[#172c3b]/30 w-64 z-40 hidden md:flex">
+<div class="px-6 py-6 mb-4">
+<div class="flex items-center space-x-3 mb-2">
+<div class="w-10 h-10 bg-surface-container-high rounded flex items-center justify-center">
+<span class="material-symbols-outlined text-[#fb6b00]" style="font-variation-settings: 'FILL' 1;">filter</span>
+</div>
+<div>
+<p class="text-lg font-bold text-[#bac8dc] font-manrope leading-tight">Port Operations</p>
+<p class="text-[10px] text-[#44474c] uppercase tracking-widest font-medium">Sector 07-Alpha</p>
+</div>
+</div>
+</div>
+<nav class="flex-1 px-4 space-y-1">
+<a class="group flex items-center space-x-3 p-4 text-[#44474c] hover:bg-[#172c3b]/50 hover:text-[#bac8dc] transition-all duration-200 font-inter text-sm font-medium uppercase tracking-wider" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="group flex items-center space-x-3 p-4 bg-[#172c3b] text-[#d0e5f9] border-l-4 border-[#fb6b00] rounded-r-md font-inter text-sm font-medium uppercase tracking-wider" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">directions_boat</span>
+<span>Shipments</span>
+</a>
+<a class="group flex items-center space-x-3 p-4 text-[#44474c] hover:bg-[#172c3b]/50 hover:text-[#bac8dc] transition-all duration-200 font-inter text-sm font-medium uppercase tracking-wider" href="#">
+<span class="material-symbols-outlined">conveyor_belt</span>
+<span>Yard Management</span>
+</a>
+<a class="group flex items-center space-x-3 p-4 text-[#44474c] hover:bg-[#172c3b]/50 hover:text-[#bac8dc] transition-all duration-200 font-inter text-sm font-medium uppercase tracking-wider" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span>Analytics</span>
+</a>
+<a class="group flex items-center space-x-3 p-4 text-[#44474c] hover:bg-[#172c3b]/50 hover:text-[#bac8dc] transition-all duration-200 font-inter text-sm font-medium uppercase tracking-wider" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span>Settings</span>
+</a>
+</nav>
+<div class="px-4 py-6 border-t border-[#172c3b]/30">
+<button class="w-full bg-[#fb6b00] text-on-tertiary-fixed font-bold py-3 rounded-md flex items-center justify-center space-x-2 shadow-lg shadow-tertiary/10 hover:brightness-110 transition-all">
+<span class="material-symbols-outlined text-sm">add</span>
+<span class="text-sm font-manrope uppercase tracking-tight">New Entry</span>
+</button>
+<a class="flex items-center space-x-3 p-4 mt-4 text-[#44474c] hover:text-[#bac8dc] font-inter text-sm font-medium uppercase tracking-wider" href="#">
+<span class="material-symbols-outlined">help_center</span>
+<span>Support</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="md:ml-64 pt-24 min-h-screen">
+<div class="max-w-7xl mx-auto px-6 py-8">
+<!-- Header Section -->
+<div class="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div>
+<h1 class="text-4xl font-black font-headline tracking-tighter text-[#d0e5f9] mb-2 uppercase">Shipment Manifest Entry</h1>
+<p class="text-[#8e9196] font-body max-w-xl">Register new vessel arrivals and departures within Sector 07-Alpha. Ensure all telemetry and timing data is synchronized with the central port authority.</p>
+</div>
+<div class="bg-surface-container-high/40 backdrop-blur-md px-6 py-3 border-l-4 border-[#fb6b00] rounded-r-lg">
+<p class="text-[10px] uppercase tracking-widest text-[#44474c] font-bold">System Status</p>
+<p class="text-sm font-headline text-[#fb6b00] flex items-center">
+<span class="w-2 h-2 rounded-full bg-[#fb6b00] animate-pulse mr-2"></span>
+                        LIVE UPLINK: ACTIVE
+                    </p>
+</div>
+</div>
+<!-- Bento Layout Content -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+<!-- Main Form Section -->
+<section class="lg:col-span-8">
+<div class="bg-surface-container rounded-xl p-8 border border-outline-variant/10 shadow-2xl relative overflow-hidden">
+<!-- Decorative Industrial background element -->
+<div class="absolute top-0 right-0 w-32 h-32 opacity-5 pointer-events-none">
+<span class="material-symbols-outlined text-[8rem]">precision_manufacturing</span>
+</div>
+<form class="space-y-8">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+<!-- Shipment ID (Read Only / Auto) -->
+<div class="flex flex-col space-y-2">
+<label class="text-[10px] uppercase tracking-widest font-bold text-[#8e9196] font-label">Shipment ID</label>
+<div class="flex items-center bg-surface-dim/50 border-b-2 border-outline-variant/30 p-3">
+<span class="material-symbols-outlined text-sm text-[#44474c] mr-3">fingerprint</span>
+<input class="bg-transparent border-none focus:ring-0 text-[#fb6b00] font-mono text-sm w-full" readonly="" type="text" value="MANIFEST-8829-QX"/>
+</div>
+</div>
+<!-- Vessel Name -->
+<div class="flex flex-col space-y-2">
+<label class="text-[10px] uppercase tracking-widest font-bold text-[#8e9196] font-label">Vessel Name</label>
+<div class="flex items-center bg-surface-container-highest/30 border-b-2 border-primary/20 focus-within:border-[#fb6b00] transition-colors p-3">
+<span class="material-symbols-outlined text-sm text-[#bac8dc] mr-3">directions_boat</span>
+<input class="bg-transparent border-none focus:ring-0 text-[#d0e5f9] placeholder-[#44474c] text-sm w-full" placeholder="e.g. Iron Voyager" type="text"/>
+</div>
+</div>
+<!-- Departure -->
+<div class="flex flex-col space-y-2">
+<label class="text-[10px] uppercase tracking-widest font-bold text-[#8e9196] font-label">Departure Date/Time</label>
+<div class="flex items-center bg-surface-container-highest/30 border-b-2 border-primary/20 focus-within:border-[#fb6b00] transition-colors p-3">
+<span class="material-symbols-outlined text-sm text-[#bac8dc] mr-3">calendar_today</span>
+<input class="bg-transparent border-none focus:ring-0 text-[#d0e5f9] text-sm w-full [color-scheme:dark]" type="datetime-local"/>
+</div>
+</div>
+<!-- Arrival -->
+<div class="flex flex-col space-y-2">
+<label class="text-[10px] uppercase tracking-widest font-bold text-[#8e9196] font-label">Arrival Date/Time</label>
+<div class="flex items-center bg-surface-container-highest/30 border-b-2 border-primary/20 focus-within:border-[#fb6b00] transition-colors p-3">
+<span class="material-symbols-outlined text-sm text-[#bac8dc] mr-3">event_available</span>
+<input class="bg-transparent border-none focus:ring-0 text-[#d0e5f9] text-sm w-full [color-scheme:dark]" type="datetime-local"/>
+</div>
+</div>
+<!-- Zone Information -->
+<div class="flex flex-col space-y-2">
+<label class="text-[10px] uppercase tracking-widest font-bold text-[#8e9196] font-label">Zone Information</label>
+<div class="flex items-center bg-surface-container-highest/30 border-b-2 border-primary/20 focus-within:border-[#fb6b00] transition-colors p-3">
+<span class="material-symbols-outlined text-sm text-[#bac8dc] mr-3">location_on</span>
+<select class="bg-transparent border-none focus:ring-0 text-[#d0e5f9] text-sm w-full appearance-none">
+<option class="bg-surface-container">Zone A - Main Dock</option>
+<option class="bg-surface-container">Zone B - Heavy Freight</option>
+<option class="bg-surface-container">Zone C - Liquid Cargo</option>
+<option class="bg-surface-container">Zone D - Automated Hub</option>
+</select>
+</div>
+</div>
+<!-- Status -->
+<div class="flex flex-col space-y-2">
+<label class="text-[10px] uppercase tracking-widest font-bold text-[#8e9196] font-label">Logistics Status</label>
+<div class="flex items-center bg-surface-container-highest/30 border-b-2 border-primary/20 focus-within:border-[#fb6b00] transition-colors p-3">
+<span class="material-symbols-outlined text-sm text-[#bac8dc] mr-3">analytics</span>
+<select class="bg-transparent border-none focus:ring-0 text-[#d0e5f9] text-sm w-full appearance-none">
+<option class="bg-surface-container">Inbound</option>
+<option class="bg-surface-container">Outbound</option>
+<option class="bg-surface-container">Docked</option>
+<option class="bg-surface-container">Awaiting Clearance</option>
+</select>
+</div>
+</div>
+</div>
+<!-- Additional Notes -->
+<div class="flex flex-col space-y-2">
+<label class="text-[10px] uppercase tracking-widest font-bold text-[#8e9196] font-label">Additional Operational Notes</label>
+<div class="bg-surface-container-highest/30 border-b-2 border-primary/20 focus-within:border-[#fb6b00] transition-colors p-3">
+<textarea class="bg-transparent border-none focus:ring-0 text-[#d0e5f9] placeholder-[#44474c] text-sm w-full resize-none" placeholder="Enter cargo specifics, pilot instructions, or weather advisories..." rows="4"></textarea>
+</div>
+</div>
+<!-- Submit Button Section -->
+<div class="pt-4 flex items-center justify-between border-t border-outline-variant/10">
+<div class="flex items-center space-x-2 text-[10px] text-[#44474c] font-mono">
+<span class="material-symbols-outlined text-xs">shield</span>
+<span>ENCRYPTED SECURE ENTRY</span>
+</div>
+<button class="bg-gradient-to-br from-[#fb6b00] to-[#7a3000] text-on-tertiary-fixed px-10 py-4 rounded-md font-black font-manrope uppercase tracking-widest text-sm flex items-center group" type="submit">
+                                    Log Shipment
+                                    <span class="material-symbols-outlined ml-2 group-hover:translate-x-1 transition-transform">send</span>
+</button>
+</div>
+</form>
+</div>
+</section>
+<!-- Contextual Sidebar -->
+<aside class="lg:col-span-4 space-y-8">
+<!-- Statistics / HUD -->
+<div class="bg-surface-container-low rounded-xl p-6 border border-outline-variant/5">
+<h3 class="text-[10px] uppercase tracking-[0.2em] font-bold text-[#bac8dc] mb-4 flex items-center">
+<span class="w-1 h-4 bg-[#fb6b00] mr-2"></span>
+                            Sector Telemetry
+                        </h3>
+<div class="grid grid-cols-2 gap-4">
+<div class="bg-surface-dim p-4 rounded-lg border border-outline-variant/10">
+<p class="text-[10px] text-[#44474c] uppercase mb-1">Active Slots</p>
+<p class="text-2xl font-black font-headline text-[#d0e5f9]">14 / 20</p>
+</div>
+<div class="bg-surface-dim p-4 rounded-lg border border-outline-variant/10">
+<p class="text-[10px] text-[#44474c] uppercase mb-1">Inbound</p>
+<p class="text-2xl font-black font-headline text-[#fb6b00]">03</p>
+</div>
+</div>
+</div>
+<!-- Recent Entries -->
+<div class="bg-surface-container-low rounded-xl p-6 border border-outline-variant/5">
+<h3 class="text-[10px] uppercase tracking-[0.2em] font-bold text-[#bac8dc] mb-6">Recent Manifests</h3>
+<div class="space-y-6">
+<!-- Entry 1 -->
+<div class="flex items-start space-x-4 border-l-2 border-primary/20 pl-4 py-1">
+<div class="mt-1">
+<span class="material-symbols-outlined text-sm text-[#fb6b00]">anchor</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<p class="text-xs font-bold font-manrope text-[#d0e5f9]">SS NEPTUNE SPIRIT</p>
+<span class="text-[9px] font-mono text-[#44474c]">14:22</span>
+</div>
+<p class="text-[10px] text-[#8e9196] mt-0.5">ZONE B • DOCKED</p>
+</div>
+</div>
+<!-- Entry 2 -->
+<div class="flex items-start space-x-4 border-l-2 border-outline-variant/20 pl-4 py-1">
+<div class="mt-1">
+<span class="material-symbols-outlined text-sm text-[#bac8dc]">sailing</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<p class="text-xs font-bold font-manrope text-[#d0e5f9]">PACIFIC TRADER V</p>
+<span class="text-[9px] font-mono text-[#44474c]">12:10</span>
+</div>
+<p class="text-[10px] text-[#8e9196] mt-0.5">ZONE A • OUTBOUND</p>
+</div>
+</div>
+<!-- Entry 3 -->
+<div class="flex items-start space-x-4 border-l-2 border-outline-variant/20 pl-4 py-1">
+<div class="mt-1">
+<span class="material-symbols-outlined text-sm text-[#bac8dc]">radar</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<p class="text-xs font-bold font-manrope text-[#d0e5f9]">NORTHERN GALE</p>
+<span class="text-[9px] font-mono text-[#44474c]">11:05</span>
+</div>
+<p class="text-[10px] text-[#8e9196] mt-0.5">ZONE C • INBOUND</p>
+</div>
+</div>
+</div>
+<button class="w-full mt-6 py-2 text-[10px] uppercase font-bold text-[#44474c] hover:text-[#fb6b00] border border-outline-variant/20 rounded transition-colors">View All Logs</button>
+</div>
+<!-- Operational Map Context -->
+<div class="bg-surface-container-low rounded-xl overflow-hidden border border-outline-variant/5">
+<div class="relative h-48 bg-[#001523]">
+<img class="w-full h-full object-cover opacity-40 mix-blend-screen" data-alt="Technical blueprint-style map of a high-tech shipping port at night, glowing amber terminal highlights on dark navy schematic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDFn--KuSuv9JbgQAQRirztoQU3kTSmB3Vph-5b6bPAfeGUPxbh-UKpwIVYNlMy16-Qu8QKdSAG_Ok_PUEnkXZ6_PyVuJvC9PGgTNdowp1MjFyRHNugdwv-B6kSI3xTbNQqOIFDD45FzbAoxN5GCkcIyacomcGyRdWjxn4-p4tfeEYyrMxG34G13Mi_0hxHUHlbjX4NPt5m73zryc5rS5s_Y4h_1zyq7HAmAyNo0I3iQs0LlBk7fOE8s03L88EVQxH7vUiypxDWzYtF"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-low to-transparent"></div>
+<div class="absolute bottom-4 left-4">
+<p class="text-[10px] font-bold text-[#fb6b00] uppercase tracking-widest">Active Zone: 07A</p>
+<p class="text-xs text-[#d0e5f9]">Primary Logistics Hub</p>
+</div>
+</div>
+</div>
+</aside>
+</div>
+</div>
+</main>
+<!-- Floating Status HUD (Signature Component) -->
+<div class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-8 py-3 bg-surface-container-high/70 backdrop-blur-xl border-t border-primary/10 rounded-full shadow-2xl flex items-center space-x-8">
+<div class="flex items-center space-x-2">
+<span class="text-[10px] text-[#44474c] font-bold uppercase tracking-wider">LAT:</span>
+<span class="text-xs text-[#bac8dc] font-mono">51.5074° N</span>
+</div>
+<div class="flex items-center space-x-2">
+<span class="text-[10px] text-[#44474c] font-bold uppercase tracking-wider">LONG:</span>
+<span class="text-xs text-[#bac8dc] font-mono">0.1278° W</span>
+</div>
+<div class="h-4 w-px bg-outline-variant/30"></div>
+<div class="flex items-center space-x-2">
+<span class="material-symbols-outlined text-xs text-green-500" style="font-variation-settings: 'FILL' 1;">wifi</span>
+<span class="text-[10px] text-[#bac8dc] font-bold uppercase">Satellite Link Stable</span>
+</div>
+</div>
+</body></html>
