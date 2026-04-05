@@ -24,7 +24,7 @@
               "tertiary-container": "#551f00",
               "surface-tint": "#bac8dc",
               "on-secondary-fixed-variant": "#334861",
-              "outline-variant": "#454652",
+              "outline-variant": "#f5f4f1",
               "primary": "#bac8dc",
               "on-background": "#d8e4ec",
               "surface-container-high": "#18435a",
@@ -85,15 +85,15 @@
 </head>
 <body class="bg-surface text-on-surface font-body min-h-screen flex flex-col" x-data="{ tab: 'login' }">
 <!-- TopNavBar (Shared Component) -->
-<header class="bg-[#001523] flex justify-between items-center w-full px-6 py-4 fixed top-0 z-50">
+<header class="bg-[#0a151a] flex justify-between items-center w-full px-6 py-4 fixed top-0 z-50">
 <div class="flex items-center gap-4">
 <span class="text-xl font-black tracking-tighter text-[#bac8dc] uppercase font-['Manrope']">WEB NAME</span>
 </div>
 <div class="hidden md:flex items-center space-x-8">
-<nav class="flex space-x-6 font-['Manrope'] font-bold tracking-tight">
-<a class="text-[#bac8dc] hover:text-[#d8e4ec] transition-colors" href="#">a</a>
-<a class="text-[#c6c5d4] hover:text-[#d8e4ec] transition-colors" href="#">b</a>
-<a class="text-[#c6c5d4] border-b-2 border-[#bac8dc] pb-1 hover:text-[#d8e4ec] transition-colors" href="#">c</a>
+<nav class="flex space-x-12 font-['Manrope'] font-bold tracking-tight">
+<a class="text-[#bac8dc] hover:text-[#caf0f8] transition-colors" href="#">About</a>
+<a class="text-[#c6c5d4] border-b-2 border-[#bac8dc] pb-1 hover:text-[#caf0f8] transition-colors" href="#">Port</a>
+<a class="text-[#c6c5d4] hover:text-[#caf0f8] transition-colors" href="#">Shipment Tracking</a>
 </nav>
 </div>
 <div class="flex items-center gap-4 text-[#bac8dc]">
@@ -125,7 +125,7 @@
 <section x-show="tab === 'login'" x-transition:enter="transition ease-out duration-300" x-transition:enter-end="opacity-100 translate-y-0" x-transition:enter-start="opacity-0 translate-y-2">
 <div class="mb-8 text-center md:text-left">
 <h2 class="font-headline text-2xl font-bold text-on-surface mb-2">Operator Login</h2>
-<p class="text-sm text-on-surface-variant">Access the command center.</p>
+<p class="text-sm text-on-surface-variant">Access your control dashboard.</p>
 </div>
 <form class="space-y-6">
 <div class="space-y-1.5">
@@ -144,7 +144,15 @@
 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline" data-icon="lock">lock</span>
 <input class="w-full bg-surface-container-lowest border-none focus:ring-1 focus:ring-primary pl-10 py-3 text-sm rounded" placeholder="••••••••••••" type="password"/>
 </div>
+<label class="mt-10 flex items-center space-x-2 cursor-pointer">
+    <input type="checkbox" class="w-4 h-4 accent-[#bac8dc]">
+    <span class="text-sm text-[#c6c5d4] font-['Manrope']">
+      Remember me
+    </span>
+  </label>
+
 </div>
+
 <div class="pt-4">
 <button class="w-full py-4 bg-primary text-on-primary font-headline font-extrabold uppercase tracking-widest rounded transition-all hover:opacity-90 flex items-center justify-center gap-2 shadow-lg shadow-primary/10" type="submit">
                                     Authenticate Access
@@ -166,32 +174,60 @@
 <input class="w-full bg-surface-container-lowest border-none focus:ring-1 focus:ring-secondary py-3 px-3 text-sm rounded" placeholder="e.g. Port of Shanghai" type="text"/>
 </div>
 <div class="space-y-1.5">
+<label class="font-label text-[10px] font-bold text-outline uppercase tracking-widest">Work Email
+</label>
+<input class="w-full bg-surface-container-lowest border-none focus:ring-1 focus:ring-secondary py-3 px-3 text-sm rounded" placeholder="name@portauthority.com" type="text"/>
+</div>
+<div class="space-y-1.5">
 <label class="font-label text-[10px] font-bold text-outline uppercase tracking-widest">Authorized Port Representative
 </label>
 <input class="w-full bg-surface-container-lowest border-none focus:ring-1 focus:ring-secondary py-3 px-3 text-sm rounded" placeholder="e.g. John Smith" type="text"/>
 </div>
 <div class="space-y-1.5">
-<label class="font-label text-[10px] font-bold text-outline uppercase tracking-widest">Designation/Role
+<label class="font-label text-[10px] font-bold text-outline uppercase tracking-widest">Create Password
 </label>
-<input class="w-full bg-surface-container-lowest border-none focus:ring-1 focus:ring-secondary py-3 px-3 text-sm rounded" placeholder="e.g. Operations Director" type="text"/>
+<input class="w-full bg-surface-container-lowest border-none focus:ring-1 focus:ring-secondary py-3 px-3 text-sm rounded" placeholder="••••••••••••" type="text"/>
 </div>
+
 <div class="space-y-1.5">
 <label class="font-label text-[10px] font-bold text-outline uppercase tracking-widest">Geographic Location</label>
 <input class="w-full bg-surface-container-lowest border-none focus:ring-1 focus:ring-secondary py-3 px-3 text-sm rounded" placeholder="e.g. 51.9225° N, 4.4792° E" type="text"/>
 </div>
 </div>
 <div class="mt-4 p-4 bg-surface-container-highest rounded-lg border border-primary/10">
-<p class="font-headline text-[10px] font-bold text-primary uppercase tracking-widest mb-3">Storage Configuration</p>
-<div class="flex gap-4">
-<div class="flex-1 space-y-1">
-<label class="text-[9px] text-outline-variant uppercase">Zones</label>
-<input class="w-full bg-surface-container-lowest border-none text-sm py-2 px-2 rounded" type="number" value="4"/>
-</div>
-<div class="flex-[2] space-y-1">
-<label class="text-[9px] text-outline-variant uppercase">Capacity (Unit)</label>
-<input class="w-full bg-surface-container-lowest border-none text-sm py-2 px-2 rounded" placeholder="250,000" type="text"/>
-</div>
-</div>
+
+  <p class="font-headline text-[10px] font-bold text-primary uppercase tracking-widest mb-3">
+    Zone Capacity Configuration
+  </p>
+
+  <!-- ZONES CONTAINER -->
+  <div id="zones-container" class="space-y-3">
+
+    <!-- ONE ZONE ROW -->
+    <div class="flex items-center gap-3 zone-row">
+      
+      <span class="text-xs font-bold text-on-surface-variant w-10">A</span>
+
+      <input 
+        class="flex-1 bg-surface-container-lowest border-none text-sm py-2 px-2 rounded" 
+        placeholder="Capacity (e.g. 50,000)" 
+        type="number"
+      />
+
+      <!-- REMOVE BUTTON -->
+      <button class="text-error text-xs px-2">✕</button>
+
+    </div>
+
+  </div>
+
+  <!-- ADD BUTTON -->
+ <button type="button" onclick="addZone()" 
+class="mt-3 px-3 py-1 bg-primary text-on-primary text-xs rounded"
+id="add-zone">
+  + Add Zone
+</button>
+
 </div>
 <button class="w-full py-4 mt-4 border-2 border-primary text-primary font-headline font-extrabold uppercase tracking-widest rounded transition-all hover:bg-primary hover:text-on-primary text-s" type="submit">
                                 Register Port Facility
@@ -203,9 +239,43 @@
 </main>
 <!-- Footer Space -->
 <footer class="p-6 text-center text-outline text-[10px] font-label tracking-widest uppercase">
-        © 2024 Nautical Forge Systems. All Rights Reserved. Controlled Access Environment.
+        © 2026 Port Systems. All Rights Reserved. Controlled Access Environment.
     </footer>
 <style>
         [x-cloak] { display: none !important; }
     </style>
+    <script>
+let zoneCount =0;
+
+const container = document.getElementById("zones-container");
+const addBtn = document.getElementById("add-zone");
+
+addBtn.addEventListener("click", () => {
+  zoneCount++;
+
+  const div = document.createElement("div");
+  div.className = "flex items-center gap-3 zone-row";
+  const Zone=String.fromCharCode(zoneCount+65);
+  div.innerHTML = `
+    <span class="text-xs font-bold text-on-surface-variant w-10">${Zone}</span>
+
+    <input 
+      class="flex-1 bg-surface-container-lowest border-none text-sm py-2 px-2 rounded" 
+      placeholder="Capacity"
+      type="number"
+    />
+
+    <button class="text-error text-xs px-2 remove-zone">✕</button>
+  `;
+
+  container.appendChild(div);
+});
+
+// REMOVE ZONE
+container.addEventListener("click", (e) => {
+  if (e.target.classList.contains("remove-zone")) {
+    e.target.parentElement.remove();
+  }
+});
+</script>
 </body></html>
