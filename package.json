@@ -1,0 +1,28 @@
+{
+  "name": "gsc",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/Jiyeahrana/GSC#readme",
+  "bugs": {
+    "url": "https://github.com/Jiyeahrana/GSC/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jiyeahrana/GSC.git"
+  },
+  "license": "ISC",
+  "author": "Mokshita Rana, Ashutosh Tiwari, Saurabh Sati",
+  "type": "commonjs",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon app.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.0",
+    "mongoose": "^9.4.1",
+    "nodemon": "^3.1.14",
+    "path": "^0.12.7"
+  }
+}
