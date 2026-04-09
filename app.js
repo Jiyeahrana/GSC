@@ -20,6 +20,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Requiring Routes
 const portRoute = require("./routes/port");
+const shipmentRoute = require("./routes/shipment");
 
 
 const startServer = async()=>{
@@ -30,6 +31,7 @@ const startServer = async()=>{
 
             // Routes
             app.use("/api/v1/port", portRoute);
+            app.use("/api/v1/shipments",shipmentRoute);
 
             // Getting PORT
             const PORT = process.env.PORT || 3000;

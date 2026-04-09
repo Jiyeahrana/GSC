@@ -20,9 +20,10 @@ const auth = (req,res,next)=>{
     try {
         // Verifies and stores the user data inside payload
         const payload = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = { userId : payload.userId, name : payload.name};
+        req.user = { userId: payload.id, name: payload.name, port_id: payload.port_id };
         next();
     } catch (error) {
+        console.log(  "Error in authentication middleware: ", error);
         // Throwing error
         next(new UnauthenticatedError("Authentication Invalid"));
     }
