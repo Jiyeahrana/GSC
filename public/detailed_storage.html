@@ -3,7 +3,7 @@
 <html class="dark" lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>NAVIGATOR - Zone-Wise Capacity</title>
+<title>Web name - Zone-Wise Capacity</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
@@ -91,6 +91,27 @@
             transform-style: preserve-3d;
         }
         .no-scrollbar::-webkit-scrollbar { display: none; }
+        /* Scrollbar width */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+/* Track (background) */
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Thumb (the moving part) */
+::-webkit-scrollbar-thumb {
+  background: rgba(186, 200, 220, 0.3); /* matches your theme */
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+/* On hover */
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(251, 107, 0, 0.7); /* your primary accent */
+}
     </style>
 </head>
 <body class="bg-surface text-on-surface font-body selection:bg-tertiary selection:text-on-tertiary">
@@ -149,7 +170,7 @@
 <div class="flex gap-8">
 <div class="text-right">
 <p class="text-xs font-label uppercase tracking-widest text-on-surface-variant">Total Capacity</p>
-<p class="text-xl font-bold font-headline text-primary">124,500 TEU</p>
+<p class="text-xl font-bold font-headline text-primary">124,500 UNITS</p>
 </div>
 <div class="text-right border-l border-outline-variant/30 pl-8">
 <p class="text-xs font-label uppercase tracking-widest text-on-surface-variant">Global Occupancy</p>
@@ -157,7 +178,71 @@
 </div>
 </div>
 </div>
-<div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+
+<!-- POP UP MODAL -->
+<div id="popup" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50">  
+  <!-- CONTENT BOX -->
+    <div class="industrial-glass w-[85%] max-w-3xl h-[75vh] rounded-xl p-6 relative overflow-y-auto border border-outline-variant/30">
+    <!-- CLOSE BUTTON -->
+    <span id="closeBtn" class="absolute top-2 right-3 cursor-pointer text-lg">✕</span>
+
+    <!-- YOUR CARD CONTENT -->
+    <div class="space-y-6">
+
+  <!-- HEADER -->
+  <div class="flex justify-between items-center">
+    <div>
+      <h2 class="text-lg font-black text-primary">ZONE A</h2>
+      <p class="text-xs text-on-surface-variant uppercase">Dry Bulk / Container</p>
+    </div>
+    <span class="px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full">ACTIVE</span>
+  </div>
+
+  <!-- MAIN STATS -->
+  <div class="grid grid-cols-2 gap-4">
+    <div class="bg-black/20 p-3 rounded-lg">
+      <p class="text-[10px] uppercase text-on-surface-variant">Total</p>
+      <p class="text-lg font-bold">15,000</p>
+    </div>
+    <div class="bg-black/20 p-3 rounded-lg">
+      <p class="text-[10px] uppercase text-on-surface-variant">Occupied</p>
+      <p class="text-lg font-bold text-primary">12,400</p>
+    </div>
+    <div class="bg-black/20 p-3 rounded-lg">
+      <p class="text-[10px] uppercase text-on-surface-variant">Reserved</p>
+      <p class="text-lg font-bold">1,100</p>
+    </div>
+    <div class="bg-black/20 p-3 rounded-lg">
+      <p class="text-[10px] uppercase text-on-surface-variant">Available</p>
+      <p class="text-lg font-bold text-green-400">1,500</p>
+    </div>
+  </div>
+
+  <!-- PROGRESS BAR -->
+  <div>
+    <p class="text-xs mb-1 text-on-surface-variant">Capacity Usage</p>
+    <div class="w-full h-2 bg-black/20 rounded-full">
+      <div class="h-2 bg-primary rounded-full" style="width: 82%"></div>
+    </div>
+  </div>
+
+  <!-- PREDICTION -->
+  <div class="bg-primary/10 p-4 rounded-lg border border-primary/30">
+    <p class="text-xs font-bold text-primary">PREDICTION</p>
+    <p class="text-sm">91% full in 3 days</p>
+  </div>
+
+  <!-- AI INSIGHT -->
+  <div class="bg-black/20 p-4 rounded-lg">
+    <p class="text-xs font-bold text-on-surface-variant">AI INSIGHT</p>
+    <p class="text-sm">Zone may reach critical capacity soon. Consider load balancing.</p>
+  </div>
+
+</div>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
 <!-- Zone Capacity Visualization (Bento Grid 2/3) -->
 <section class="xl:col-span-2 space-y-6">
 <div class="flex justify-between items-end">
@@ -172,65 +257,112 @@
 <div class="industrial-glass rounded-xl p-6 relative overflow-hidden group">
 <div class="absolute top-0 left-0 w-1 h-full bg-[#fb6b00]"></div>
 <div class="flex justify-between mb-8">
-<span class="text-xs font-black font-headline text-primary">ZONE ALPHA</span>
+<span class="text-xs font-black font-headline text-primary">ZONE A</span>
 <span class="text-xs font-bold text-tertiary-container">82% FULL</span>
 </div>
 <div class="h-40 flex items-center justify-center">
-<div class="relative w-24 h-24">
-<!-- Wireframe/Empty Cube -->
-<div class="absolute inset-0 border-2 border-primary/20 isometric-cube opacity-40"></div>
-<!-- Filled Volume -->
-<div class="absolute bottom-0 left-0 right-0 bg-primary/40 border-t border-primary/60 isometric-cube" style="height: 82%;"></div>
-</div>
+  <div class="relative w-28 h-28">
+
+    <!-- Wireframe -->
+    <div class="absolute inset-0 border-2 border-primary/20 isometric-cube opacity-40"></div>
+
+    <!-- CLIP CONTAINER -->
+    <div class="absolute inset-0 overflow-hidden isometric-cube">
+      
+      <!-- Filled Volume -->
+      <div class="absolute bottom-0 left-0 right-0 bg-primary/40 border-t border-primary/60 transition-all duration-500"
+           style="height: 82%;">
+      </div>
+
+    </div>
+
+  </div>
 </div>
 <div class="mt-4 flex justify-between items-end">
 <div>
-<p class="text-[10px] text-on-surface-variant uppercase font-bold">Current TEU</p>
+<p class="text-[10px] text-on-surface-variant uppercase font-bold">Current UNITS</p>
 <p class="text-lg font-bold">12,400</p>
 </div>
-<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors" data-icon="open_in_full">open_in_full</span>
+<!-- ICON -->
+<span class="openBtn material-symbols-outlined cursor-pointer text-on-surface-variant hover:text-primary transition-colors">
+  open_in_full
+</span>
+
 </div>
 </div>
 <!-- Zone Card B -->
 <div class="industrial-glass rounded-xl p-6 relative overflow-hidden group">
 <div class="absolute top-0 left-0 w-1 h-full bg-primary"></div>
 <div class="flex justify-between mb-8">
-<span class="text-xs font-black font-headline text-primary">ZONE BRAVO</span>
+<span class="text-xs font-black font-headline text-primary">ZONE B</span>
 <span class="text-xs font-bold text-on-surface-variant">45% FULL</span>
 </div>
 <div class="h-40 flex items-center justify-center">
-<div class="relative w-24 h-24">
-<div class="absolute inset-0 border-2 border-primary/20 isometric-cube opacity-40"></div>
-<div class="absolute bottom-0 left-0 right-0 bg-primary/40 border-t border-primary/60 isometric-cube" style="height: 45%;"></div>
-</div>
+  <div class="relative w-28 h-28">
+
+    <!-- Wireframe -->
+    <div class="absolute inset-0 border-2 border-primary/20 isometric-cube opacity-40"></div>
+
+    <!-- CLIP CONTAINER -->
+    <div class="absolute inset-0 overflow-hidden isometric-cube">
+      
+      <!-- Filled Volume -->
+      <div class="absolute bottom-0 left-0 right-0 bg-primary/40 border-t border-primary/60 transition-all duration-500"
+           style="height: 45%;">
+      </div>
+
+    </div>
+
+  </div>
 </div>
 <div class="mt-4 flex justify-between items-end">
 <div>
-<p class="text-[10px] text-on-surface-variant uppercase font-bold">Current TEU</p>
+<p class="text-[10px] text-on-surface-variant uppercase font-bold">Current UNITS</p>
 <p class="text-lg font-bold">8,120</p>
 </div>
-<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors" data-icon="open_in_full">open_in_full</span>
+<!-- ICON -->
+<span class="openBtn material-symbols-outlined cursor-pointer text-on-surface-variant hover:text-primary transition-colors">
+  open_in_full
+</span>
 </div>
 </div>
 <!-- Zone Card C -->
 <div class="industrial-glass rounded-xl p-6 relative overflow-hidden group">
 <div class="absolute top-0 left-0 w-1 h-full bg-[#fb6b00]"></div>
 <div class="flex justify-between mb-8">
-<span class="text-xs font-black font-headline text-primary">SECTOR 07</span>
+<span class="text-xs font-black font-headline text-primary">ZONE C</span>
 <span class="text-xs font-bold text-tertiary-container">94% CRITICAL</span>
 </div>
 <div class="h-40 flex items-center justify-center">
-<div class="relative w-24 h-24">
-<div class="absolute inset-0 border-2 border-primary/20 isometric-cube opacity-40"></div>
-<div class="absolute bottom-0 left-0 right-0 bg-tertiary-container/40 border-t border-tertiary-container isometric-cube" style="height: 94%;"></div>
-</div>
+  <div class="relative w-28 h-28">
+
+    <!-- Wireframe (ONLY place with isometric) -->
+    <div class="absolute inset-0 border-2 border-primary/20 isometric-cube opacity-40"></div>
+
+    <!-- Clip container (NO isometric here) -->
+    <div class="absolute inset-0 overflow-hidden isometric-cube">
+
+      <!-- Filled Volume -->
+      <div class="absolute bottom-0 left-0 right-0 
+                  bg-tertiary-container/40 
+                  transition-all duration-500"
+           style="height: 94%;">
+      </div>
+
+
+    </div>
+
+  </div>
 </div>
 <div class="mt-4 flex justify-between items-end">
 <div>
-<p class="text-[10px] text-on-surface-variant uppercase font-bold">Current TEU</p>
+<p class="text-[10px] text-on-surface-variant uppercase font-bold">Current UNITS</p>
 <p class="text-lg font-bold">24,900</p>
 </div>
-<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors" data-icon="open_in_full">open_in_full</span>
+<!-- ICON -->
+<span class="openBtn material-symbols-outlined cursor-pointer text-on-surface-variant hover:text-primary transition-colors">
+  open_in_full
+</span>
 </div>
 </div>
 </div>
@@ -238,23 +370,23 @@
 <div class="industrial-glass rounded-xl p-8">
 <div class="flex justify-between items-center mb-10">
 <div>
-<h3 class="text-sm font-bold font-headline uppercase tracking-widest text-primary">AI Capacity Prediction</h3>
-<p class="text-xs text-on-surface-variant">Neural prediction for upcoming 10-day port traffic flow</p>
+<h3 class="text-sm font-bold font-headline uppercase tracking-widest text-primary">Capacity Forecast</h3>
+<p class="text-xs text-on-surface-variant">Predicted port utilization for the next 10 days</p>
 </div>
 <div class="flex items-center gap-4">
 <div class="flex items-center gap-2">
 <span class="w-3 h-[2px] bg-[#fb6b00]"></span>
-<span class="text-[10px] font-bold uppercase text-on-surface-variant">Forecast</span>
+<span class="text-[10px] font-bold uppercase text-on-surface-variant">Predicted Load</span>
 </div>
 <div class="flex items-center gap-2">
 <span class="w-3 h-[2px] bg-primary"></span>
-<span class="text-[10px] font-bold uppercase text-on-surface-variant">Baseline</span>
+<span class="text-[10px] font-bold uppercase text-on-surface-variant">Normal Capacity</span>
 </div>
 </div>
 </div>
-<div class="h-64 w-full relative flex items-end justify-between px-2 border-b border-l border-outline-variant/20">
-<!-- Pseudo-chart logic with SVG -->
-<svg class="absolute inset-0 w-full h-full" preserveaspectratio="none" viewbox="0 0 1000 100">
+<div class="h-80 md:h-96 w-full relative flex items-end justify-between px-4 pt-6 border-b border-l border-outline-variant/20">
+    <!-- Pseudo-chart logic with SVG -->
+<svg class="absolute inset-0 w-full h-full z-0 pointer-events-none" preserveaspectratio="none" viewBox="0 -20 1000 120">
 <!-- Gradient Area -->
 <path d="M0,80 Q100,70 200,60 T400,40 T600,70 T800,30 T1000,20 L1000,100 L0,100 Z" fill="url(#grad)" opacity="0.1"></path>
 <!-- Prediction Line -->
@@ -269,21 +401,20 @@
 </defs>
 </svg>
 <!-- Grid lines labels -->
-<div class="absolute left-0 bottom-0 flex flex-col justify-between h-full -ml-8 text-[9px] font-bold text-on-surface-variant py-2">
+<div class="absolute left-0 bottom-0 flex flex-col justify-between h-full -ml-6 text-[9px] font-bold text-on-surface-variant py-2">
 <span>100%</span><span>75%</span><span>50%</span><span>25%</span><span>0%</span>
 </div>
 <!-- Timeline labels -->
-<div class="absolute bottom-0 w-full flex justify-between translate-y-6 text-[9px] font-bold text-on-surface-variant px-4">
+<div class="absolute bottom-0 w-full flex justify-between translate-y-4 text-[9px] font-bold text-on-surface-variant px-4">
 <span>T+1</span><span>T+2</span><span>T+3</span><span>T+4</span><span>T+5</span><span>T+6</span><span>T+7</span><span>T+8</span><span>T+9</span><span>T+10</span>
 </div>
 </div>
 </div>
 </section>
 <!-- Zone Statistics (Right Sidebar Column) -->
-<aside class="space-y-6">
+<!-- <aside class="space-y-6">
 <h3 class="text-sm font-bold font-headline uppercase tracking-widest text-on-surface-variant px-2">Zone Statistics Detail</h3>
 <div class="space-y-4">
-<!-- Stat Card 1 -->
 <div class="surface-container-high rounded-xl p-5 border-l-4 border-primary">
 <div class="flex justify-between items-start mb-4">
 <div>
@@ -294,7 +425,7 @@
 </div>
 <div class="grid grid-cols-2 gap-y-4">
 <div>
-<p class="text-[10px] font-bold text-on-surface-variant/60 uppercase">Total TEU</p>
+<p class="text-[10px] font-bold text-on-surface-variant/60 uppercase">Total UNITS</p>
 <p class="text-sm font-bold">15,000</p>
 </div>
 <div>
@@ -311,7 +442,6 @@
 </div>
 </div>
 </div>
-<!-- Stat Card 2 -->
 <div class="surface-container-high rounded-xl p-5 border-l-4 border-primary">
 <div class="flex justify-between items-start mb-4">
 <div>
@@ -322,7 +452,7 @@
 </div>
 <div class="grid grid-cols-2 gap-y-4">
 <div>
-<p class="text-[10px] font-bold text-on-surface-variant/60 uppercase">Total TEU</p>
+<p class="text-[10px] font-bold text-on-surface-variant/60 uppercase">Total UNITS</p>
 <p class="text-sm font-bold">18,000</p>
 </div>
 <div>
@@ -339,7 +469,6 @@
 </div>
 </div>
 </div>
-<!-- Stat Card 3 -->
 <div class="surface-container-high rounded-xl p-5 border-l-4 border-[#fb6b00]">
 <div class="flex justify-between items-start mb-4">
 <div>
@@ -350,7 +479,7 @@
 </div>
 <div class="grid grid-cols-2 gap-y-4">
 <div>
-<p class="text-[10px] font-bold text-on-surface-variant/60 uppercase">Total TEU</p>
+<p class="text-[10px] font-bold text-on-surface-variant/60 uppercase">Total UNITS</p>
 <p class="text-sm font-bold">26,500</p>
 </div>
 <div>
@@ -368,7 +497,31 @@
 </div>
 </div>
 </div>
-</aside>
+</aside> -->
 </div>
 </main>
+<script>
+const buttons = document.querySelectorAll(".openBtn");
+const popup = document.getElementById("popup");
+const closeBtn = document.getElementById("closeBtn");
+
+buttons.forEach(btn => {
+  btn.addEventListener("click", () => {
+    popup.classList.remove("hidden");
+  popup.classList.add("flex");
+  });
+});
+closeBtn.addEventListener("click", () => {
+  popup.classList.add("hidden");
+  popup.classList.remove("flex");
+});
+
+// Optional: close when clicking outside
+popup.addEventListener("click", (e) => {
+  if (e.target === popup) {
+    popup.classList.add("hidden");
+    popup.classList.remove("flex");
+  }
+});
+</script>
 </body></html>
