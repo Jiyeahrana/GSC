@@ -201,6 +201,10 @@
                 <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-[#bac8dc]"></span><span>Inbound</span></div>
                 <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-[#fb6b00]"></span><span>Outbound</span></div>
                 <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-[#ffb4ab]"></span><span>Delayed / Issue</span></div>
+                <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-[#5DCAA5]"></span><span>Docked</span></div>
+                <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-[#639922]"></span><span>Inbound</span></div>
+                <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-[#E24B4A]"></span><span>Outbound</span></div>
+                <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-[#ffb692]"></span><span>Delayed / Issue</span></div>
             </div>
             <div class="relative overflow-x-auto pb-6 scrollbar-hide">
                 <div id="timelineContainer" class="min-w-[1200px]">
@@ -209,6 +213,10 @@
                       <div id="live-time-line" class="absolute top-0 bottom-0 w-px bg-[#fb6b00] z-10" style="left: 25%">
                           <div id="live-time-label" class="bg-[#fb6b00] text-[#031d34] text-[9px] px-1.5 py-0.5 rounded-full absolute top-6 -translate-x-1/2 whitespace-nowrap font-bold">LIVE: --:--</div>
                       </div>                      
+                    <div class="absolute top-0 bottom-0 left-[25%] w-px bg-[#ffb692] z-10">
+                        <div id="live-time-line" class="absolute top-0 bottom-0 w-px bg-[#ffb692] z-10" style="left: 25%">
+                            <div id="live-time-label" class="bg-[#ffb692] text-[#031d34] text-[9px] px-1.5 py-0.5 rounded-full absolute top-6 -translate-x-1/2 whitespace-nowrap font-bold">LIVE: --:--</div>
+                        </div>                   
                     </div>
                     <div id="timeline-rows" class="space-y-6"></div>
                 </div>
@@ -241,5 +249,8 @@
     </div>
 </main>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script src="firebaseClient.js"></script>
 <script src="Dashboardport.js"></script>
 </body></html>

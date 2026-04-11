@@ -43,27 +43,27 @@ const windowStart = getWindowStart();
 
 const STYLES = {
     docked: {
-        borderColor: "#b2c8e7",
-        textColor:   "#b2c8e7",
-        bgColor:     "rgba(178,200,231,0.10)",
+        borderColor: "#5DCAA5",
+        textColor:   "#5DCAA5",
+        bgColor:     "rgba(93,202,165,0.10)",
         label:       "DOCKED",
     },
     inbound: {
-        borderColor: "#bac8dc",
-        textColor:   "#bac8dc",
-        bgColor:     "rgba(186,200,220,0.10)",
+        borderColor: "#639922",
+        textColor:   "#639922",
+        bgColor:     "rgba(99,153,34,0.10)",
         label:       "INBOUND",
     },
     outbound: {
-        borderColor: "#ffb692",
-        textColor:   "#ffb692",
-        bgColor:     "rgba(255,182,146,0.10)",
+        borderColor: "#E24B4A",
+        textColor:   "#E24B4A",
+        bgColor:     "rgba(226,75,74,0.10)",
         label:       "OUTBOUND",
     },
     delayed: {
-        borderColor: "#ffb4ab",
-        textColor:   "#ffb4ab",
-        bgColor:     "rgba(255,180,171,0.10)",
+        borderColor: "#ffb692",
+        textColor:   "#ffb692",
+        bgColor:     "rgba(255,182,146,0.10)",
         label:       "DELAYED",
     },
 };
@@ -282,6 +282,101 @@ function populateDashboard(shipments) {
     renderTimelineRows(shipments);
 }
 
+// ── Live sensor listener ──────────────────────────────────────────────────────
+
+function startSensorListener() {
+    const portId = localStorage.getItem("port_id");
+    if (!portId) return;
+
+    const ref = firebaseDB.ref(`sensor_readings/${portId}`);
+
+    // .on("value") fires immediately with current data, then again on every change
+    ref.on("value", (snapshot) => {
+        const data = snapshot.val();
+        if (!data) return;
+        updateStorageUI(data);
+    });
+}
+
+// ── Update storage capacity UI from sensor data ───────────────────────────────
+
+function updateStorageUI(zonesData) {
+    let totalContainers = 0;
+    let totalCapacity   = 0;
+
+    // First try to get capacity from Firebase zone data (most accurate)
+    Object.values(zonesData).forEach(zone => {
+        totalContainers += zone.container_count || 0;
+        totalCapacity   += zone.max_capacity    || 0;
+    });
+
+    // Fallback to MongoDB value stored in localStorage
+    if (totalCapacity === 0) {
+        totalCapacity = parseInt(localStorage.getItem("total_capacity")) || 0;
+    }
+
+    console.log("Containers:", totalContainers, "/ Capacity:", totalCapacity);
+
+    if (totalCapacity === 0) {
+        document.getElementById("capacity-percent").textContent = "?";
+        document.getElementById("capacity-remaining-label").textContent = "Capacity data unavailable";
+        return;
+    }
+
+    const pct       = Math.min(Math.round((totalContainers / totalCapacity) * 100), 100);
+    const remaining = totalCapacity - totalContainers;
+
+    document.getElementById("capacity-percent").textContent             = pct;
+    document.getElementById("capacity-remaining-label").textContent     = `${remaining} UNITS REMAINING`;
+    document.getElementById("capacity-bar").style.width                 = `${pct}%`;
+    document.getElementById("capacity-cube-fill").style.setProperty("--fill", `${pct}%`);
+    document.getElementById("capacity-available").textContent           = `${remaining} UNITS`;
+
+    const bar = document.getElementById("capacity-bar");
+    if (pct >= 90)      bar.style.background = "#E24B4A";
+    else if (pct >= 70) bar.style.background = "#ffb692";
+    else                bar.style.background = "#bac8dc";
+}
+
+// ── Fetch port details from MongoDB ──────────────────────────────────────────
+
+async function fetchPortDetails() {
+    try {
+        const res = await fetch("http://localhost:3000/api/v1/port/me", {
+            method: "GET",
+            headers: {
+                "Content-Type":  "application/json",
+                "Authorization": `Bearer ${token}`
+            }
+        });
+
+        if (!res.ok) return;
+
+        const data = await res.json();
+        if (!data.success) return;
+
+        const port = data.data;
+
+        // Store in localStorage for use across the session
+        localStorage.setItem("total_capacity", port.total_capacity);
+        localStorage.setItem("port_name",      port.name);
+
+        // Update sidebar port name with real port name
+        document.getElementById("sidebar-port-name").textContent = port.name;
+
+        // Store zones for per-zone display if needed later
+        localStorage.setItem("zones", JSON.stringify(port.zones));
+
+        // Start sensor listener only AFTER we have capacity data
+        startSensorListener();
+
+    } catch (err) {
+        console.error("Error fetching port details:", err);
+        // Start listener anyway so dashboard doesn't stay blank
+        startSensorListener();
+    }
+}
+
 // ── Boot ──────────────────────────────────────────────────────────────────────
 
 renderTimeMarkers();
@@ -289,3 +384,4 @@ updateLiveTimeLine();
 setInterval(updateLiveTimeLine, 30000);
 activateToggle(btn24, btn48);
 fetchTodayShipments();
+fetchPortDetails(); 

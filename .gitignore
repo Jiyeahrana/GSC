@@ -1,3 +1,5 @@
+config/serviceAccountKey.json
+
 # OS junk
 .DS_Store
 Thumbs.db
