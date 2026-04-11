@@ -1,4 +1,6 @@
 config/serviceAccountKey.json
+public/config.js
+firebaseClient.js
 
 # OS junk
 .DS_Store
