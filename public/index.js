@@ -45,13 +45,15 @@ async function loginUser() {
 
     const data = await response.json();
 
-    if (data.success) {
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("port_id", data.data.port_id);
-      localStorage.setItem("user_name", data.data.name);
+if (data.success) {
+    localStorage.setItem("token",          data.token);
+    localStorage.setItem("port_id",        data.data.port_id);
+    localStorage.setItem("user_name",      data.data.name);
+    localStorage.setItem("total_capacity", data.data.port.total_capacity);
 
-      window.location.href = "/Dashboardport.html";
-    } else {
+    window.location.href = "/dashboard.html";
+}
+    else {
       showLoginError(data.message || "Login failed, please try again");
     }
   } catch (error) {

@@ -21,6 +21,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Requiring Routes
 const portRoute = require("./routes/port");
 const shipmentRoute = require("./routes/shipment");
+const sensorRoutes = require("./routes/sensorRoutes");
 
 
 const startServer = async()=>{
@@ -32,7 +33,7 @@ const startServer = async()=>{
             // Routes
             app.use("/api/v1/port", portRoute);
             app.use("/api/v1/shipments",shipmentRoute);
-
+            app.use("/api/v1/sensors", sensorRoutes);
             // Getting PORT
             const PORT = process.env.PORT || 3000;
             app.listen(PORT,()=>{

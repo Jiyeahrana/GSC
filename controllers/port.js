@@ -1,6 +1,7 @@
 const Port = require("../models/port");
 const User = require("../models/user");
 const reverseGeocode = require("../utils/reverseGeocode");
+const db = require("../config/firebase");
 
 
 const register = async (req, res) => {
@@ -63,7 +64,7 @@ const register = async (req, res) => {
       sensor_ids: [],
     }));
 
-    // ── 5. Create port ────────────────────────────────────────────────────────
+    // ── 5. Create port in MongoDB ─────────────────────────────────────────────
 
     const port = await Port.create({
       name: port_name,
@@ -75,23 +76,39 @@ const register = async (req, res) => {
         longitude: location.lng,
       },
       zones: formattedZones,
-      // total_capacity is auto-calculated in pre-save hook
     });
 
-    // ── 6. Create user linked to the new port ─────────────────────────────────
+    // ── 6. Auto-create Firebase sensor structure for each zone ────────────────
+
+    const firebaseZones = {};
+
+    port.zones.forEach(zone => {
+      const zoneKey = `zone_${zone.zone_id.toLowerCase()}`;
+      firebaseZones[zoneKey] = {
+        container_count: 0,
+        last_updated:    Date.now(),
+        last_event:      "none",
+        max_capacity:    zone.max_capacity,
+        zone_name:       zone.name
+      };
+    });
+
+    await db.ref(`sensor_readings/${port._id}`).set(firebaseZones);
+
+    // ── 7. Create user linked to the new port ─────────────────────────────────
 
     const user = await User.create({
       name: representative_name,
       email,
-      password, // hashed in pre-save hook
+      password,
       port_id: port._id,
     });
 
-    // ── 7. Generate JWT token ─────────────────────────────────────────────────
+    // ── 8. Generate JWT token ─────────────────────────────────────────────────
 
     const token = user.generateToken();
 
-    // ── 8. Send response ──────────────────────────────────────────────────────
+    // ── 9. Send response ──────────────────────────────────────────────────────
 
     return res.status(201).json({
       success: true,
@@ -99,22 +116,22 @@ const register = async (req, res) => {
       token,
       data: {
         user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
+          id:      user._id,
+          name:    user.name,
+          email:   user.email,
           port_id: user.port_id,
         },
         port: {
-          id: port._id,
-          name: port.name,
-          location: port.location,
+          id:             port._id,
+          name:           port.name,
+          location:       port.location,
           total_capacity: port.total_capacity,
-          zones: port.zones,
+          zones:          port.zones,
         },
       },
     });
+
   } catch (error) {
-    // Handle Mongoose validation errors cleanly
     if (error.name === "ValidationError") {
       const messages = Object.values(error.errors).map((e) => e.message);
       return res.status(400).json({
@@ -123,13 +140,11 @@ const register = async (req, res) => {
       });
     }
 
-    // Handle duplicate key error (race condition fallback)
     if (error.code === 11000) {
       return res.status(409).json({
         success: false,
         message: "An account with this email already exists",
       });
-
     }
 
     console.error("Register error:", error);
@@ -206,4 +221,29 @@ const login = async (req, res) => {
   }
 };
 
-module.exports = { register, login };
+const getPortDetails = async (req, res) => {
+    try {
+        const port = await Port.findById(req.user.port_id);
+
+        if (!port) {
+            return res.status(404).json({
+                success: false,
+                message: "Port not found"
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            data: port
+        });
+
+    } catch (err) {
+        console.error("Get port error:", err);
+        return res.status(500).json({
+            success: false,
+            message: "Server error"
+        });
+    }
+};
+
+module.exports = { register, login, getPortDetails };
