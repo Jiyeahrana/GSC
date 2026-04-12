@@ -49,9 +49,8 @@ if (data.success) {
     localStorage.setItem("token",          data.token);
     localStorage.setItem("port_id",        data.data.port_id);
     localStorage.setItem("user_name",      data.data.name);
-    localStorage.setItem("total_capacity", data.data.port.total_capacity);
 
-    window.location.href = "/dashboard.html";
+    window.location.href = "/Dashboardport.html";
 }
     else {
       showLoginError(data.message || "Login failed, please try again");

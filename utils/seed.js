@@ -104,7 +104,11 @@ const generateShipments = () => {
             shipments.push({
                 port_id:      PORT_ID,
                 type,
-                vessel:       { name: vessel.name, capacity: vessel.capacity },
+                vessel: { 
+                    name:            vessel.name, 
+                    capacity:        vessel.capacity,
+                    container_count: randomBetween(20, vessel.capacity)  // realistic — never more than vessel capacity
+                },
                 cargo:        { origin: route.origin, destination: route.destination },
                 schedule:     { arrival, departure },
                 actual:       { arrival: actualArrival, departure: actualDeparture },

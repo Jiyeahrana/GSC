@@ -6,7 +6,8 @@ const shipmentSchema = new mongoose.Schema({
 
     vessel: {
         name:     { type: String, required: true },
-        capacity: { type: Number, required: true }
+        capacity: { type: Number, required: true },
+        container_count: { type: Number, required: true, min: [1, "Container count must be at least 1"] }
     },
 
     cargo: {

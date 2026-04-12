@@ -1,293 +1,351 @@
 <!DOCTYPE html>
-
 <html class="dark" lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Shipment Data Entry | Web name</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <script id="tailwind-config">
-      tailwind.config = {
-        darkMode: "class",
-        theme: {
-          extend: {
-            "colors": {
-                    "on-tertiary-fixed": "#ffffff",
-                    "surface-container-high": "#172c3b",
-                    "on-secondary-fixed-variant": "#214b62",
-                    "secondary-fixed": "#c6e7ff",
-                    "background": "#00111C",
-                    "surface-dim": "#001523",
-                    "on-surface-variant": "#c4c6cc",
-                    "on-error": "#690005",
-                    "on-secondary-fixed": "#001e2d",
-                    "on-primary-fixed": "#0f1c2b",
-                    "on-background": "#d0e5f9",
-                    "on-tertiary": "#562000",
-                    "on-primary-container": "#465465",
-                    "primary-container": "#bac8dc",
-                    "secondary": "#a4cce8",
-                    "on-tertiary-fixed-variant": "#7a3000",
-                    "on-error-container": "#ffdad6",
-                    "surface-container-lowest": "#00101c",
-                    "error-container": "#93000a",
-                    "tertiary": "#ffdbcc",
-                    "error": "#ffb4ab",
-                    "secondary-fixed-dim": "#a4cce8",
-                    "primary-fixed-dim": "#bac8dc",
-                    "primary": "#d6e4f9",
-                    "inverse-on-surface": "#1e3342",
-                    "secondary-container": "#214b62",
-                    "outline": "#8e9196",
-                    "inverse-surface": "#d0e5f9",
-                    "surface-bright": "#273b4b",
-                    "tertiary-container": "#ffb693",
-                    "surface-container": "#0c2230",
-                    "tertiary-fixed": "#ffdbcb",
-                    "on-tertiary-container": "#8d3900",
-                    "on-primary-fixed-variant": "#3a4858",
-                    "inverse-primary": "#525f71",
-                    "surface": "#001523",
-                    "on-primary": "#243141",
-                    "tertiary-fixed-dim": "#ffb693",
-                    "surface-container-low": "#071d2c",
-                    "primary-fixed": "#d6e4f8",
-                    "on-secondary-container": "#93bad6",
-                    "on-secondary": "#02344b",
-                    "surface-tint": "#bac8dc",
-                    "outline-variant": "#44474c",
-                    "surface-container-highest": "#233746",
-                    "surface-variant": "#233746",
-                    "on-surface": "#d0e5f9"
-            },
-            "borderRadius": {
-                    "DEFAULT": "0.125rem",
-                    "lg": "0.25rem",
-                    "xl": "0.5rem",
-                    "full": "0.75rem"
-            },
-            "fontFamily": {
-                    "headline": ["Manrope"],
-                    "body": ["Inter"],
-                    "label": ["Inter"]
-            }
-          },
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+          "on-tertiary-fixed": "#ffffff",
+          "surface-container-high": "#172c3b",
+          "background": "#00111C",
+          "surface-dim": "#001523",
+          "on-surface-variant": "#c4c6cc",
+          "on-background": "#d0e5f9",
+          "on-primary-container": "#465465",
+          "primary-container": "#bac8dc",
+          "secondary": "#a4cce8",
+          "tertiary": "#ffdbcc",
+          "error": "#ffb4ab",
+          "surface-container-lowest": "#00101c",
+          "error-container": "#93000a",
+          "primary": "#d6e4f9",
+          "secondary-container": "#214b62",
+          "outline": "#8e9196",
+          "surface-bright": "#273b4b",
+          "tertiary-container": "#ffb693",
+          "surface-container": "#0c2230",
+          "on-tertiary-container": "#8d3900",
+          "surface": "#001523",
+          "on-primary": "#243141",
+          "tertiary-fixed-dim": "#ffb693",
+          "surface-container-low": "#071d2c",
+          "on-secondary-container": "#93bad6",
+          "outline-variant": "#44474c",
+          "surface-container-highest": "#233746",
+          "surface-variant": "#233746",
+          "on-surface": "#d0e5f9"
         },
-      }
-    </script>
+        "borderRadius": {"DEFAULT": "0.125rem","lg": "0.25rem","xl": "0.5rem","full": "0.75rem"},
+        "fontFamily": {"headline": ["Manrope"],"body": ["Inter"],"label": ["Inter"]}
+      },
+    },
+  }
+</script>
 <style>
-        body { background-color: #001523; color: #d0e5f9; font-family: 'Inter', sans-serif; }
-        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #001523; }
-        ::-webkit-scrollbar-thumb { background: #172c3b; border-radius: 10px; }
-    </style>
+  body { background-color: #001523; color: #d0e5f9; font-family: 'Inter', sans-serif; }
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: #001523; }
+  ::-webkit-scrollbar-thumb { background: #172c3b; border-radius: 10px; }
+</style>
 </head>
 <body class="overflow-x-hidden">
+
 <!-- Top Navigation -->
-<header class="flex justify-between items-center px-6 h-16 w-full fixed top-0 z-50 bg-[#00111C] dark:bg-[#001523]">
-<div class="flex items-left gap-4">
-<span class="text-2xl font-black text-[#bac8dc] tracking-tighter font-headline">Web Name</span>
-</div>
-<div class="flex items-center gap-6">
-<div class="relative">
-<span class="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant material-symbols-outlined text-sm">search</span>
-<input class="bg-surface-container-low border-none rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-1 focus:ring-primary w-64 text-on-surface" placeholder="Search manifest..." type="text"/>
-</div>
-<div class="flex items-center gap-4 text-[#bac8dc]">
-<button class="material-symbols-outlined p-2 hover:bg-[#162127] transition-colors rounded-lg">notifications</button>
-<div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center overflow-hidden border border-outline-variant/20">
-<img alt="User profile photo" data-alt="close-up portrait of a professional port manager in dark blue uniform with a determined expression, industrial lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAXOcUtaOA8hDlE41VOR1x-Z-MeqUyWWib2RZ81oFLRgPqNwgy-pf6g6XhYNGIUjoTX8xA7ZN0Hcb8FM70qcI17vdkkgIFSJ9FA8Re1z2ei73ljx7Cw7OBBajAAfY5QRiMvE_RpaEXuKazmUof15dLZBbXA6nSPKTSkgrCzDPMWm0e94Y_a3IzYzufVCr9TycGPwMhCY-zCq91bDwhUVdDPc_CEzXsmDgVMJzp_3RRdayfvQlg_4kxoEE8q2oVIFBYpTImypwJNkjyo"/>
-</div>
-</div>
-</div>
+<header class="flex justify-between items-center px-6 h-16 w-full fixed top-0 z-50 bg-[#00111C]">
+  <div class="flex items-center gap-4">
+    <span class="text-2xl font-black text-[#bac8dc] tracking-tighter font-headline">Web Name</span>
+  </div>
+  <div class="flex items-center gap-6">
+    <div class="relative">
+      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant material-symbols-outlined text-sm">search</span>
+      <input class="bg-surface-container-low border-none rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-1 focus:ring-primary w-64 text-on-surface" placeholder="Search manifest..." type="text"/>
+    </div>
+    <div class="flex items-center gap-4 text-[#bac8dc]">
+      <button class="material-symbols-outlined p-2 hover:bg-[#162127] transition-colors rounded-lg">notifications</button>
+      <div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center border border-outline-variant/20">
+        <span id="user-avatar" class="text-xs font-bold text-[#243141]">--</span>
+      </div>
+    </div>
+  </div>
 </header>
 
-<!-- SideNavBar -->
-<aside class="bg-[#00111C] dark:bg-[#001523] fixed left-0 top-16 h-[calc(100%-4rem)] flex flex-col border-r border-[#172c3b]/30 w-64 z-40 hidden md:flex">
-<div class="px-4 py-6 border-t border-[#172c3b]/30">
-<button class="w-full bg-[#fb6b00] text-on-tertiary-fixed font-bold py-3 rounded-md flex items-center justify-center space-x-2 shadow-lg shadow-tertiary/10 hover:brightness-110 transition-all">
-<span class="material-symbols-outlined text-sm">add</span>
-<span class="text-sm font-manrope uppercase tracking-tight">New Entry</span>
-</button>
-</div>
+<!-- Sidebar -->
+<aside class="bg-[#00111C] fixed left-0 top-16 h-[calc(100%-4rem)] flex flex-col border-r border-[#172c3b]/30 w-64 z-40 hidden md:flex">
+  <div class="px-6 mb-6 pt-6">
+    <p id="sidebar-port-name" class="text-[#d8e4ec] font-extrabold text-lg tracking-tight font-headline">Port Name</p>
+    <p id="sidebar-user-name" class="text-on-surface-variant text-xs mt-1">Loading...</p>
+  </div>
+  <div class="px-4 py-4 border-t border-[#172c3b]/30">
+    <!-- Back to dashboard button -->
+    <a href="Dashboardport.html" class="w-full bg-surface-container-high text-[#bac8dc] font-bold py-3 rounded-md flex items-center justify-center space-x-2 hover:bg-surface-container transition-all border border-outline-variant/20">
+      <span class="material-symbols-outlined text-sm">arrow_back</span>
+      <span class="text-sm font-headline uppercase tracking-tight">Back to Dashboard</span>
+    </a>
+  </div>
 </aside>
-<!-- Main Content Area -->
+
+<!-- Main Content -->
 <main class="md:ml-64 pt-24 min-h-screen">
-<div class="max-w-7xl mx-auto px-6 py-8">
-<!-- Header Section -->
-<div class="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
-<div>
-<h1 class="text-4xl font-black font-manrope  text-[#d0e5f9] mb-2 uppercase">Shipment Registration 
-</h1>
-<p class="text-[#8e9196] font-body max-w-xl">Use this page to enter shipment information such as arrival/departure dates, port details, and cargo amount for tracking and system use.</p>
-</div>
-</div>
-<!-- Bento Layout Content -->
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-<!-- Main Form Section -->
-<section class="lg:col-span-8">
-<div class="bg-surface-container rounded-xl p-8 border border-outline-variant/10 shadow-2xl relative overflow-hidden">
-<!-- Decorative Industrial background element -->
-<div class="absolute top-0 right-0 w-32 h-32 opacity-5 pointer-events-none">
-<span class="material-symbols-outlined text-[8rem]">precision_manufacturing</span>
-</div>
-<form class="space-y-8">
-<div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-<!-- Shipment ID (Read Only / Auto) -->
-<div class="flex flex-col space-y-2">
-<label class="text-[10px] uppercase tracking-widest font-bold text-[#8e9196] font-label">Shipment ID</label>
-<div class="flex items-center bg-surface-dim/50 border-b-2 border-outline-variant/30 p-3">
-<span class="material-symbols-outlined text-sm text-[#44474c] mr-3">fingerprint</span>
-<input 
-  id="shipmentInput"
-  class="bg-transparent border-none focus:ring-0 text-[#ffb693] font-mono text-sm w-full" 
-  readonly
-  type="text"
-/><!--auto generates the id-->
-</div>
-</div>
-<!-- Vessel Name -->
-<div class="flex flex-col space-y-2">
-<label class="text-[10px] uppercase tracking-widest font-bold text-[#8e9196] font-label">Vessel Name</label>
-<div class="flex items-center bg-surface-container-highest/30 border-b-2 border-primary/20 focus-within:border-[#fb6b00] transition-colors p-3">
-<span class="material-symbols-outlined text-sm text-[#bac8dc] mr-3">directions_boat</span>
-<input class="bg-transparent border-none focus:ring-0 text-[#d0e5f9] placeholder-[#44474c] text-sm w-full" placeholder="e.g. Iron Voyager" type="text"/>
-</div>
-</div>
-<!-- Departure -->
-<div class="flex flex-col space-y-2">
-<label class="text-[10px] uppercase tracking-widest font-bold text-[#8e9196] font-label">Departure Date/Time</label>
-<div class="flex items-center bg-surface-container-highest/30 border-b-2 border-primary/20 focus-within:border-[#fb6b00] transition-colors p-3">
-<span class="material-symbols-outlined text-sm text-[#bac8dc] mr-3">calendar_today</span>
-<input class="bg-transparent border-none focus:ring-0 text-[#d0e5f9] text-sm w-full [color-scheme:dark]" type="datetime-local"/>
-</div>
-</div>
-<!-- Arrival -->
-<div class="flex flex-col space-y-2">
-<label class="text-[10px] uppercase tracking-widest font-bold text-[#8e9196] font-label">Arrival Date/Time</label>
-<div class="flex items-center bg-surface-container-highest/30 border-b-2 border-primary/20 focus-within:border-[#fb6b00] transition-colors p-3">
-<span class="material-symbols-outlined text-sm text-[#bac8dc] mr-3">event_available</span>
-<input class="bg-transparent border-none focus:ring-0 text-[#d0e5f9] text-sm w-full [color-scheme:dark]" type="datetime-local"/>
-</div>
-</div>
-<!-- Zone Information -->
-<div class="flex flex-col space-y-2">
-<label class="text-[10px] uppercase tracking-widest font-bold text-[#8e9196] font-label">Zone Information</label>
-<div class="flex items-center bg-surface-container-highest/30 border-b-2 border-primary/20 focus-within:border-[#fb6b00] transition-colors p-3">
-<span class="material-symbols-outlined text-sm text-[#bac8dc] mr-3">location_on</span>
-<select class="bg-transparent border-none focus:ring-0 text-[#d0e5f9] text-sm w-full appearance-none">
-<option class="bg-surface-container">Zone A </option>
-<option class="bg-surface-container">Zone B </option>
-<option class="bg-surface-container">Zone C </option>
-<option class="bg-surface-container">Zone D </option>
-</select>
-</div>
-</div>
-<!-- Status -->
-<div class="flex flex-col space-y-2">
-<label class="text-[10px] uppercase tracking-widest font-bold text-[#8e9196] font-label">Logistics Status</label>
-<div class="flex items-center bg-surface-container-highest/30 border-b-2 border-primary/20 focus-within:border-[#fb6b00] transition-colors p-3">
-<span class="material-symbols-outlined text-sm text-[#bac8dc] mr-3">analytics</span>
-<select class="bg-transparent border-none focus:ring-0 text-[#d0e5f9] text-sm w-full appearance-none">
-<option class="bg-surface-container">Inbound</option>
-<option class="bg-surface-container">Outbound</option>
-<option class="bg-surface-container">Docked</option>
-<option class="bg-surface-container">Awaiting Clearance</option>
-</select>
-</div>
-</div>
-</div>
-<!-- Additional Notes -->
-<div class="flex flex-col space-y-2">
-<label class="text-[10px] uppercase tracking-widest font-bold text-[#8e9196] font-label">Additional Operational Notes</label>
-<div class="bg-surface-container-highest/30 border-b-2 border-primary/20 focus-within:border-[#fb6b00] transition-colors p-3">
-<textarea class="bg-transparent border-none focus:ring-0 text-[#d0e5f9] placeholder-[#44474c] text-sm w-full resize-none" placeholder="Enter cargo specifics, pilot instructions, or weather advisories..." rows="4"></textarea>
-</div>
-</div>
-<!-- Submit Button Section -->
-<div class="pt-4 flex items-center justify-between border-t border-outline-variant/10">
-<div class="flex items-center space-x-2 text-[10px] text-[#44474c] font-mono">
-<span class="material-symbols-outlined text-xs">shield</span>
-<span>ENCRYPTED SECURE ENTRY</span>
-</div>
-<button class="bg-gradient-to-br from-[#fb6b00] to-[#7a3000] text-on-tertiary-fixed px-10 py-4 rounded-md font-black font-manrope uppercase tracking-widest text-sm flex items-center group" type="submit">
-                                    Log Shipment
-                                    <span class="material-symbols-outlined ml-2 group-hover:translate-x-1 transition-transform">send</span>
-</button>
-</div>
-</form>
-</div>
-</section>
-<!-- Contextual Sidebar -->
-<aside class="lg:col-span-4 space-y-8">
-<!-- Statistics / HUD -->
-<div class="bg-surface-container-low rounded-xl p-6 border border-outline-variant/5">
-<h3 class="text-[10px] uppercase tracking-[0.2em] font-bold text-[#bac8dc] mb-4 flex items-center">
-<span class="w-1 h-4 bg-[#fb6b00] mr-2"></span>
-                            Sector Telemetry
-                        </h3>
-<div class="grid grid-cols-2 gap-4">
-<div class="bg-surface-dim p-4 rounded-lg border border-outline-variant/10">
-<p class="text-[10px] text-[#44474c] uppercase mb-1">Active Slots</p>
-<p class="text-2xl font-black font-headline text-[#d0e5f9]">14 / 20</p>
-</div>
-<div class="bg-surface-dim p-4 rounded-lg border border-outline-variant/10">
-<p class="text-[10px] text-[#44474c] uppercase mb-1">Inbound</p>
-<p class="text-2xl font-black font-headline text-[#ffb693]">03</p>
-</div>
-</div>
-</div>
-<!-- Recent Entries -->
-<div class="bg-surface-container-low rounded-xl p-6 border border-outline-variant/5">
-<h3 class="text-[10px] uppercase tracking-[0.2em] font-bold text-[#bac8dc] mb-6">Recent Manifests</h3>
-<div class="space-y-6">
-<!-- Entry 1 -->
-<div class="flex items-start space-x-4 border-l-2 border-primary/20 pl-4 py-1">
-<div class="flex-1">
-<div class="flex justify-between items-start">
-<p class="text-xs font-bold font-manrope text-[#d0e5f9]">SS NEPTUNE SPIRIT</p>
-<span class="text-[9px] font-mono text-[#44474c]">14:22</span>
-</div>
-<p class="text-[10px] text-[#8e9196] mt-0.5">ZONE B • DOCKED</p>
-</div>
-</div>
-<!-- Entry 2 -->
-<div class="flex items-start space-x-4 border-l-2 border-outline-variant/20 pl-4 py-1">
-<div class="mt-1">
-<span class="material-symbols-outlined text-sm text-[#bac8dc]">sailing</span>
-</div>
-<div class="flex-1">
-<div class="flex justify-between items-start">
-<p class="text-xs font-bold font-manrope text-[#d0e5f9]">PACIFIC TRADER V</p>
-<span class="text-[9px] font-mono text-[#44474c]">12:10</span>
-</div>
-<p class="text-[10px] text-[#8e9196] mt-0.5">ZONE A • OUTBOUND</p>
-</div>
-</div>
-<!-- Entry 3 -->
-<div class="flex items-start space-x-4 border-l-2 border-outline-variant/20 pl-4 py-1">
-<div class="mt-1">
-<span class="material-symbols-outlined text-sm text-[#bac8dc]">radar</span>
-</div>
-<div class="flex-1">
-<div class="flex justify-between items-start">
-<p class="text-xs font-bold font-manrope text-[#d0e5f9]">NORTHERN GALE</p>
-<span class="text-[9px] font-mono text-[#44474c]">11:05</span>
-</div>
-<p class="text-[10px] text-[#8e9196] mt-0.5">ZONE C • INBOUND</p>
-</div>
-</div>
-</div>
-<button class="w-full mt-6 py-2 text-[10px] uppercase font-bold text-[#44474c] hover:text-[#fb6b00] border border-outline-variant/20 rounded transition-colors">View All Logs</button>
-</div>
-</aside>
-</div>
-</div>
+  <div class="max-w-7xl mx-auto px-6 py-8">
+
+    <!-- Header -->
+    <div class="mb-10">
+      <h1 class="text-4xl font-black font-headline text-[#d0e5f9] mb-2 uppercase">Shipment Registration</h1>
+      <p class="text-[#8e9196] font-body max-w-xl">Enter shipment details including vessel info, cargo, schedule, and GPS device for tracking.</p>
+    </div>
+
+    <!-- Bento Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+      <!-- Main Form -->
+      <section class="lg:col-span-8">
+        <div class="bg-surface-container rounded-xl p-8 border border-outline-variant/10 shadow-2xl relative overflow-hidden">
+          <div class="absolute top-0 right-0 w-32 h-32 opacity-5 pointer-events-none">
+            <span class="material-symbols-outlined text-[8rem]">precision_manufacturing</span>
+          </div>
+
+          <form id="shipment-form" class="space-y-8">
+
+            <!-- Section: Vessel Info -->
+            <div>
+              <p class="text-[10px] uppercase tracking-widest font-bold text-[#fb6b00] mb-4 flex items-center gap-2">
+                <span class="w-1 h-3 bg-[#fb6b00]"></span>Vessel Information
+              </p>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+
+                <div class="flex flex-col space-y-2">
+                  <label class="text-[10px] uppercase tracking-widest font-bold text-[#8e9196] font-label">Vessel Name</label>
+                  <div class="flex items-center bg-surface-container-highest/30 border-b-2 border-primary/20 focus-within:border-[#fb6b00] transition-colors p-3">
+                    <span class="material-symbols-outlined text-sm text-[#bac8dc] mr-3">directions_boat</span>
+                    <input id="vessel-name" class="bg-transparent border-none focus:ring-0 text-[#d0e5f9] placeholder-[#44474c] text-sm w-full" placeholder="e.g. MSC Anna" type="text"/>
+                  </div>
+                </div>
+
+                <div class="flex flex-col space-y-2">
+                  <label class="text-[10px] uppercase tracking-widest font-bold text-[#8e9196] font-label">Vessel Capacity (TEU)</label>
+                  <div class="flex items-center bg-surface-container-highest/30 border-b-2 border-primary/20 focus-within:border-[#fb6b00] transition-colors p-3">
+                    <span class="material-symbols-outlined text-sm text-[#bac8dc] mr-3">inventory_2</span>
+                    <input id="vessel-capacity" class="bg-transparent border-none focus:ring-0 text-[#d0e5f9] placeholder-[#44474c] text-sm w-full" placeholder="e.g. 18000" type="number"/>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Section: Cargo Info -->
+            <div>
+              <p class="text-[10px] uppercase tracking-widest font-bold text-[#fb6b00] mb-4 flex items-center gap-2">
+                <span class="w-1 h-3 bg-[#fb6b00]"></span>Cargo Information
+              </p>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+
+            <div class="flex flex-col space-y-2">
+              <label class="text-[10px] uppercase tracking-widest font-bold text-[#8e9196] font-label">Container Count</label>
+              <div class="flex items-center bg-surface-container-highest/30 border-b-2 border-primary/20 focus-within:border-[#fb6b00] transition-colors p-3">
+                <span class="material-symbols-outlined text-sm text-[#bac8dc] mr-3">widgets</span>
+                <input id="vessel-container-count" class="bg-transparent border-none focus:ring-0 text-[#d0e5f9] placeholder-[#44474c] text-sm w-full" placeholder="e.g. 120" type="number"/>
+              </div>
+            </div>
+
+                <div class="flex flex-col space-y-2">
+                  <label class="text-[10px] uppercase tracking-widest font-bold text-[#8e9196] font-label">Origin</label>
+                  <div class="flex items-center bg-surface-container-highest/30 border-b-2 border-primary/20 focus-within:border-[#fb6b00] transition-colors p-3">
+                    <span class="material-symbols-outlined text-sm text-[#bac8dc] mr-3">location_on</span>
+                    <input id="cargo-origin" class="bg-transparent border-none focus:ring-0 text-[#d0e5f9] placeholder-[#44474c] text-sm w-full" placeholder="e.g. Mumbai, India" type="text"/>
+                  </div>
+                </div>
+
+                <div class="flex flex-col space-y-2">
+                  <label class="text-[10px] uppercase tracking-widest font-bold text-[#8e9196] font-label">Destination</label>
+                  <div class="flex items-center bg-surface-container-highest/30 border-b-2 border-primary/20 focus-within:border-[#fb6b00] transition-colors p-3">
+                    <span class="material-symbols-outlined text-sm text-[#bac8dc] mr-3">flag</span>
+                    <input id="cargo-destination" class="bg-transparent border-none focus:ring-0 text-[#d0e5f9] placeholder-[#44474c] text-sm w-full" placeholder="e.g. Rotterdam, Netherlands" type="text"/>
+                  </div>
+                </div>
+
+
+              </div>
+            </div>
+
+            <!-- Section: Schedule -->
+            <div>
+              <p class="text-[10px] uppercase tracking-widest font-bold text-[#fb6b00] mb-4 flex items-center gap-2">
+                <span class="w-1 h-3 bg-[#fb6b00]"></span>Schedule
+              </p>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+
+                <div class="flex flex-col space-y-2">
+                  <label class="text-[10px] uppercase tracking-widest font-bold text-[#8e9196] font-label">Arrival Date / Time</label>
+                  <div class="flex items-center bg-surface-container-highest/30 border-b-2 border-primary/20 focus-within:border-[#fb6b00] transition-colors p-3">
+                    <span class="material-symbols-outlined text-sm text-[#bac8dc] mr-3">event_available</span>
+                    <input id="schedule-arrival" class="bg-transparent border-none focus:ring-0 text-[#d0e5f9] text-sm w-full [color-scheme:dark]" type="datetime-local"/>
+                  </div>
+                </div>
+
+                <div class="flex flex-col space-y-2">
+                  <label class="text-[10px] uppercase tracking-widest font-bold text-[#8e9196] font-label">Departure Date / Time</label>
+                  <div class="flex items-center bg-surface-container-highest/30 border-b-2 border-primary/20 focus-within:border-[#fb6b00] transition-colors p-3">
+                    <span class="material-symbols-outlined text-sm text-[#bac8dc] mr-3">calendar_today</span>
+                    <input id="schedule-departure" class="bg-transparent border-none focus:ring-0 text-[#d0e5f9] text-sm w-full [color-scheme:dark]" type="datetime-local"/>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Section: Logistics -->
+            <div>
+              <p class="text-[10px] uppercase tracking-widest font-bold text-[#fb6b00] mb-4 flex items-center gap-2">
+                <span class="w-1 h-3 bg-[#fb6b00]"></span>Logistics
+              </p>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+
+                <div class="flex flex-col space-y-2">
+                  <label class="text-[10px] uppercase tracking-widest font-bold text-[#8e9196] font-label">Shipment Type</label>
+                  <div class="flex items-center bg-surface-container-highest/30 border-b-2 border-primary/20 focus-within:border-[#fb6b00] transition-colors p-3">
+                    <span class="material-symbols-outlined text-sm text-[#bac8dc] mr-3">swap_horiz</span>
+                    <select id="shipment-type" class="bg-transparent border-none focus:ring-0 text-[#d0e5f9] text-sm w-full appearance-none">
+                      <option class="bg-surface-container" value="incoming">Incoming</option>
+                      <option class="bg-surface-container" value="outgoing">Outgoing</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="flex flex-col space-y-2">
+                  <label class="text-[10px] uppercase tracking-widest font-bold text-[#8e9196] font-label">Status</label>
+                  <div class="flex items-center bg-surface-container-highest/30 border-b-2 border-primary/20 focus-within:border-[#fb6b00] transition-colors p-3">
+                    <span class="material-symbols-outlined text-sm text-[#bac8dc] mr-3">analytics</span>
+                    <select id="shipment-status" class="bg-transparent border-none focus:ring-0 text-[#d0e5f9] text-sm w-full appearance-none">
+                      <option class="bg-surface-container" value="registered">Registered</option>
+                      <option class="bg-surface-container" value="in_transit">In Transit</option>
+                      <option class="bg-surface-container" value="at_port">At Port</option>
+                      <option class="bg-surface-container" value="delayed">Delayed</option>
+                      <option class="bg-surface-container" value="departed">Departed</option>
+                      <option class="bg-surface-container" value="arrived">Arrived</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="flex flex-col space-y-2">
+                  <label class="text-[10px] uppercase tracking-widest font-bold text-[#8e9196] font-label">Assigned Zone</label>
+                  <div class="flex items-center bg-surface-container-highest/30 border-b-2 border-primary/20 focus-within:border-[#fb6b00] transition-colors p-3">
+                    <span class="material-symbols-outlined text-sm text-[#bac8dc] mr-3">grid_view</span>
+                    <select id="assigned-zone" class="bg-transparent border-none focus:ring-0 text-[#d0e5f9] text-sm w-full appearance-none">
+                      <option value="">-- Select Zone --</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="flex flex-col space-y-2">
+                  <label class="text-[10px] uppercase tracking-widest font-bold text-[#8e9196] font-label">GPS Device ID</label>
+                  <div class="flex items-center bg-surface-container-highest/30 border-b-2 border-primary/20 focus-within:border-[#fb6b00] transition-colors p-3">
+                    <span class="material-symbols-outlined text-sm text-[#bac8dc] mr-3">gps_fixed</span>
+                    <input id="gps-device-id" class="bg-transparent border-none focus:ring-0 text-[#d0e5f9] placeholder-[#44474c] text-sm w-full" placeholder="e.g. device_007" type="text"/>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Section: Sender Info -->
+            <div>
+              <p class="text-[10px] uppercase tracking-widest font-bold text-[#fb6b00] mb-4 flex items-center gap-2">
+                <span class="w-1 h-3 bg-[#fb6b00]"></span>Sender Information
+              </p>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+
+                <div class="flex flex-col space-y-2">
+                  <label class="text-[10px] uppercase tracking-widest font-bold text-[#8e9196] font-label">Sender Name</label>
+                  <div class="flex items-center bg-surface-container-highest/30 border-b-2 border-primary/20 focus-within:border-[#fb6b00] transition-colors p-3">
+                    <span class="material-symbols-outlined text-sm text-[#bac8dc] mr-3">person</span>
+                    <input id="sender-name" class="bg-transparent border-none focus:ring-0 text-[#d0e5f9] placeholder-[#44474c] text-sm w-full" placeholder="e.g. Adani Ports" type="text"/>
+                  </div>
+                </div>
+
+                <div class="flex flex-col space-y-2">
+                  <label class="text-[10px] uppercase tracking-widest font-bold text-[#8e9196] font-label">Sender Email</label>
+                  <div class="flex items-center bg-surface-container-highest/30 border-b-2 border-primary/20 focus-within:border-[#fb6b00] transition-colors p-3">
+                    <span class="material-symbols-outlined text-sm text-[#bac8dc] mr-3">email</span>
+                    <input id="sender-email" class="bg-transparent border-none focus:ring-0 text-[#d0e5f9] placeholder-[#44474c] text-sm w-full" placeholder="e.g. ops@adaniports.com" type="email"/>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Error div -->
+            <div id="form-error" class="hidden px-4 py-3 rounded bg-error-container text-on-error-container text-xs font-semibold tracking-wide">
+              <span class="material-symbols-outlined text-sm align-middle mr-1">error</span>
+              <span id="form-error-message"></span>
+            </div>
+
+            <!-- Success div -->
+            <div id="form-success" class="hidden px-4 py-3 rounded bg-surface-container-high text-[#bac8dc] text-xs font-semibold tracking-wide">
+              <span class="material-symbols-outlined text-sm align-middle mr-1">check_circle</span>
+              <span id="form-success-message"></span>
+            </div>
+
+            <!-- Submit -->
+            <div class="pt-4 flex items-center justify-between border-t border-outline-variant/10">
+              <div class="flex items-center space-x-2 text-[10px] text-[#44474c] font-mono">
+                <span class="material-symbols-outlined text-xs">shield</span>
+                <span>ENCRYPTED SECURE ENTRY</span>
+              </div>
+              <button id="submit-btn" class="bg-gradient-to-br from-[#fb6b00] to-[#7a3000] text-on-tertiary-fixed px-10 py-4 rounded-md font-black font-headline uppercase tracking-widest text-sm flex items-center group" type="submit">
+                Log Shipment
+                <span class="material-symbols-outlined ml-2 group-hover:translate-x-1 transition-transform">send</span>
+              </button>
+            </div>
+
+          </form>
+        </div>
+      </section>
+
+      <!-- Sidebar -->
+      <aside class="lg:col-span-4 space-y-8">
+
+        <!-- Sector Telemetry -->
+        <div class="bg-surface-container-low rounded-xl p-6 border border-outline-variant/5">
+          <h3 class="text-[10px] uppercase tracking-[0.2em] font-bold text-[#bac8dc] mb-4 flex items-center">
+            <span class="w-1 h-4 bg-[#fb6b00] mr-2"></span>
+            Sector Telemetry
+          </h3>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="bg-surface-dim p-4 rounded-lg border border-outline-variant/10">
+              <p class="text-[10px] text-[#44474c] uppercase mb-1">Total Capacity</p>
+              <p id="telemetry-capacity" class="text-2xl font-black font-headline text-[#d0e5f9]">—</p>
+            </div>
+            <div class="bg-surface-dim p-4 rounded-lg border border-outline-variant/10">
+              <p class="text-[10px] text-[#44474c] uppercase mb-1">Incoming Today</p>
+              <p id="telemetry-incoming" class="text-2xl font-black font-headline text-[#ffb693]">—</p>
+            </div>
+            <div class="bg-surface-dim p-4 rounded-lg border border-outline-variant/10">
+              <p class="text-[10px] text-[#44474c] uppercase mb-1">Outgoing Today</p>
+              <p id="telemetry-outgoing" class="text-2xl font-black font-headline text-[#a4cce8]">—</p>
+            </div>
+            <div class="bg-surface-dim p-4 rounded-lg border border-outline-variant/10">
+              <p class="text-[10px] text-[#44474c] uppercase mb-1">Total Zones</p>
+              <p id="telemetry-zones" class="text-2xl font-black font-headline text-[#d0e5f9]">—</p>
+            </div>
+          </div>
+        </div>
+
+      </aside>
+    </div>
+  </div>
 </main>
-<script>
-  document.getElementById("shipmentInput").value = "YOUR-ID-123";
-</script>
+
+<script src="config.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script src="firebaseClient.js"></script>
+<script src="add_shipment.js"></script>
 </body></html>
