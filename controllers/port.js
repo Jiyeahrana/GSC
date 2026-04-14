@@ -246,4 +246,32 @@ const getPortDetails = async (req, res) => {
     }
 };
 
-module.exports = { register, login, getPortDetails };
+
+const getPortZones = async (req, res) => {
+    try {
+        const port = await Port.findById(req.user.port_id);
+
+        if (!port) {
+            return res.status(404).json({
+                success: false,
+                message: "Port not found"
+            });
+        }
+
+        return res.status(200).json({
+            success:        true,
+            port_name:      port.name,
+            total_capacity: port.total_capacity,
+            zones:          port.zones
+        });
+
+    } catch (err) {
+        console.error("Get zones error:", err);
+        return res.status(500).json({
+            success: false,
+            message: "Server error"
+        });
+    }
+};
+
+module.exports = { register, login, getPortDetails, getPortZones };

@@ -4,11 +4,12 @@ const router = express.Router(); //Creating router to route incoming requests to
 const auth    = require("../middleware/authentication");
 
 // Requiring Controller Functions
-const {login, register, getPortDetails} = require("../controllers/port");
+const {login, register, getPortDetails, getPortZones} = require("../controllers/port");
 
 // Defining Routes
 router.route("/login").post(login);
 router.route("/register").post(register);
 router.get("/me", auth, getPortDetails);
+router.get("/zones", auth, getPortZones);
 
 module.exports = router; //Exporting the router to be used in app.js
