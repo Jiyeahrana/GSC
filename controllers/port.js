@@ -2,6 +2,7 @@ const Port = require("../models/port");
 const User = require("../models/user");
 const reverseGeocode = require("../utils/reverseGeocode");
 const db = require("../config/firebase");
+const Shipment = require("../models/shipment");
 
 
 const register = async (req, res) => {
@@ -274,4 +275,88 @@ const getPortZones = async (req, res) => {
     }
 };
 
-module.exports = { register, login, getPortDetails, getPortZones };
+// GET /api/v1/public/ports — returns all port names and IDs for dropdown
+const getPublicPorts = async (req, res) => {
+    try {
+        const ports = await Port.find({}, "name location.city location.country");
+
+        return res.status(200).json({
+            success: true,
+            data: ports.map(p => ({
+                id:   p._id,
+                name: p.name,
+                city: p.location?.city    || "",
+                country: p.location?.country || ""
+            }))
+        });
+
+    } catch (err) {
+        console.error("Get public ports error:", err);
+        return res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
+// GET /api/v1/public/ports/:portId/timeline — public timeline for a port
+const getPublicPortTimeline = async (req, res) => {
+    try {
+        const { portId } = req.params;
+
+        const port = await Port.findById(portId, "name location");
+        if (!port) {
+            return res.status(404).json({ success: false, message: "Port not found" });
+        }
+
+        // Only return safe fields — no sender details, no cargo specifics
+        const shipments = await Shipment.find(
+            { port_id: portId },
+            "vessel.name type status schedule.arrival schedule.departure"
+        ).sort({ "schedule.arrival": 1 });
+
+        return res.status(200).json({
+            success: true,
+            port: {
+                name:    port.name,
+                city:    port.location?.city    || "",
+                country: port.location?.country || ""
+            },
+            shipments
+        });
+
+    } catch (err) {
+        console.error("Get public timeline error:", err);
+        return res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
+// GET /api/v1/public/track/:trackingId — public shipment tracking by ID
+const trackShipment = async (req, res) => {
+    try {
+const shipment = await Shipment.findById(
+    req.params.trackingId,
+    "vessel.name type status schedule actual gps_device_id weather_snapshots"
+);
+
+        if (!shipment) {
+            return res.status(404).json({ success: false, message: "Shipment not found" });
+        }
+
+        return res.status(200).json({
+            success: true,
+            data: {
+                vessel_name:  shipment.vessel.name,
+                type:         shipment.type,
+                status:       shipment.status,
+                schedule:     shipment.schedule,
+                actual:       shipment.actual,
+                gps_device_id: shipment.gps_device_id,
+                latest_weather: shipment.weather_snapshots?.[-1] || null
+            }
+        });
+
+    } catch (err) {
+        console.error("Track shipment error:", err);
+        return res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
+module.exports = { register, login, getPortDetails, getPortZones, getPublicPorts, getPublicPortTimeline,trackShipment };

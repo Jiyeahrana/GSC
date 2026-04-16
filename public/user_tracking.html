@@ -136,86 +136,85 @@
 
         <!-- RIGHT SIDE (TRACK CARD) -->
         <div class="w-full max-w-md mx-auto">
-            <div class="glass-panel p-6 rounded-xl relative overflow-hidden shadow-xl">
+          <div class="glass-panel p-6 rounded-xl relative overflow-hidden shadow-xl">
 
-                <div class="absolute top-0 left-0 w-1 h-full bg-brand-action"></div>
+              <div class="absolute top-0 left-0 w-1 h-full bg-brand-action"></div>
 
-                <h2 class="font-headline text-lg font-bold mb-5 flex items-center gap-2">
-                    <span class="material-symbols-outlined text-brand-action">box_edit</span>
-                    TRACK SHIPMENT
-                </h2>
+              <h2 class="font-headline text-lg font-bold mb-5 flex items-center gap-2">
+                  <span class="material-symbols-outlined text-brand-action">box_edit</span>
+                  TRACK SHIPMENT
+              </h2>
 
-                <div class="space-y-4">
+              <div class="space-y-4">
 
-                    <!-- INPUT -->
-                    <div class="bg-surface-container-highest p-3 rounded-lg border-b-2 border-primary">
-                        <label class="block text-[10px] uppercase tracking-widest text-outline mb-1 font-bold text-right">
-                            Tracking ID
-                        </label>
+                  <div class="bg-surface-container-highest p-3 rounded-lg border-b-2 border-primary">
+                      <label class="block text-[10px] uppercase tracking-widest text-outline mb-1 font-bold">
+                          Tracking ID
+                      </label>
+                      <input id="trackingInput"
+                          class="bg-transparent border-none p-0 focus:ring-0 w-full text-primary font-mono text-base"
+                          placeholder="Enter your tracking ID..."
+                          type="text"/>
+                  </div>
 
-                        <input id="trackingInput"
-                            class="bg-transparent border-none p-0 focus:ring-0 w-full text-primary font-mono text-base"
-                            type="text" />
-                    </div>
+                  <!-- Error -->
+                  <div id="tracking-error" class="hidden text-xs text-on-error-container bg-error-container px-3 py-2 rounded font-semibold"></div>
 
-                    <!-- BUTTON -->
-                    <button id="searchbtn"
-                        class="w-full bg-surface-container-high hover:bg-surface-bright py-2.5 rounded-lg font-bold border border-outline-variant/30 transition">
-                        Search
-                    </button>
+                  <button id="searchbtn"
+                      class="w-full bg-surface-container-high hover:bg-surface-bright py-2.5 rounded-lg font-bold border border-outline-variant/30 transition">
+                      Search
+                  </button>
 
-                    <!-- RESULT -->
-                    <div id="trackingResult" class="hidden space-y-3">
+                  <!-- Result -->
+                  <div id="trackingResult" class="hidden p-3 bg-surface-container rounded-lg space-y-2 text-sm">
+                      <div class="flex justify-between">
+                          <span class="text-on-surface-variant">VESSEL</span>
+                          <span id="result-vessel" class="text-primary font-bold">—</span>
+                      </div>
+                      <div class="flex justify-between">
+                          <span class="text-on-surface-variant">TYPE</span>
+                          <span id="result-type" class="font-bold">—</span>
+                      </div>
+                      <div class="flex justify-between">
+                          <span class="text-on-surface-variant">STATUS</span>
+                          <span id="result-status" class="font-bold">—</span>
+                      </div>
+                      <div class="flex justify-between">
+                          <span class="text-on-surface-variant">EST. ARRIVAL</span>
+                          <span id="result-eta" class="font-bold">—</span>
+                      </div>
+                      <div id="weather-row" class="hidden">
+                          <div class="flex justify-between mt-2 pt-2 border-t border-outline-variant/20">
+                              <span class="text-on-surface-variant">WIND SPEED</span>
+                              <span id="result-wind" class="font-bold">—</span>
+                          </div>
+                          <div class="flex justify-between">
+                              <span class="text-on-surface-variant">STORM ALERT</span>
+                              <span id="result-storm" class="font-bold">—</span>
+                          </div>
+                      </div>
+                  </div>
 
-                        <div class="p-3 bg-surface-container rounded-lg space-y-2 text-sm">
+              </div>
+          </div>
 
-                            <div class="flex justify-between">
-                                <span class="text-on-surface-variant">CURRENT LOCATION</span>
-                                <span class="text-primary font-bold">NORTH ATLANTIC</span>
-                            </div>
-
-                            <div class="flex justify-between">
-                                <span class="text-on-surface-variant">STATUS</span>
-                                <span class="text-green-400 font-bold">On Schedule</span>
-                            </div>
-
-                            <div class="flex justify-between">
-                                <span class="text-on-surface-variant">EST. ARRIVAL</span>
-                                <span class="font-bold">OCT 24</span>
-                            </div>
-
-                        </div>
-
-                        <button class="w-full bg-surface-container-high hover:bg-surface-bright py-2.5 rounded-lg font-bold border border-outline-variant/30">
-                            VIEW LIVE MAP
-                        </button>
-
-                    </div>
-
-                </div>
-            </div>
-
-            <!-- TELEMETRY -->
-            <div id="trackingresult"
-                class="glass-panel mt-4 p-4 rounded-xl hidden">
-
-                <div class="flex justify-between text-xs mb-3">
-                    <span class="text-outline">NETWORK STATUS</span>
-                    <span class="text-green-400 font-bold">ACTIVE</span>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                        <div class="text-outline text-xs">LATITUDE</div>
-                        <div class="font-mono">° N</div>
-                    </div>
-                    <div>
-                        <div class="text-outline text-xs">LONGITUDE</div>
-                        <div class="font-mono">° E</div>
-                    </div>
-                </div>
-
-            </div>
+          <!-- Telemetry -->
+          <div id="trackingresult" class="glass-panel mt-4 p-4 rounded-xl hidden">
+              <div class="flex justify-between text-xs mb-3">
+                  <span class="text-outline">LAST KNOWN POSITION</span>
+                  <span class="text-green-400 font-bold">ACTIVE</span>
+              </div>
+              <div class="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                      <div class="text-outline text-xs">LATITUDE</div>
+                      <div id="result-lat" class="font-mono">—</div>
+                  </div>
+                  <div>
+                      <div class="text-outline text-xs">LONGITUDE</div>
+                      <div id="result-lng" class="font-mono">—</div>
+                  </div>
+              </div>
+          </div>
         </div>
 
     </div>
@@ -225,150 +224,49 @@
 
   <div class="max-w-xl mx-auto mb-12 text-center">
     <h2 class="text-3xl font-headline font-extrabold mb-4">Find Port Timeline</h2>
-    
+
     <div class="flex gap-2">
-      <input 
-        id="portSearch"
-        type="text"
-        placeholder="Enter port name (e.g. Rotterdam)"
-        class="flex-1 p-3 rounded-lg bg-surface-container border border-outline-variant text-sm focus:outline-none"
-      />
-      <button 
-        onclick="searchPort()"
-        class="px-6 bg-brand-action text-white rounded-lg font-bold"
-      >
-        Search
+      <select
+        id="portSelect"
+        class="flex-1 p-3 rounded-lg bg-surface-container border border-outline-variant text-sm focus:outline-none text-on-surface appearance-none">
+        <option value="">Loading ports...</option>
+      </select>
+      <button
+        onclick="loadPortTimeline()"
+        class="px-6 bg-brand-action text-white rounded-lg font-bold hover:opacity-90 transition">
+        View
       </button>
     </div>
   </div>
 
   <div id="portTimeline" class="hidden max-w-4xl mx-auto">
-
     <div class="bg-surface-container rounded-xl p-8 shadow-inner">
 
-      <!-- HEADER -->
       <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
         <div>
-          <h2 id="portTitle" class="font-headline text-3xl font-extrabold tracking-tight">
-            PORT OF ROTTERDAM
-          </h2>
-          <p class="text-on-surface-variant text-sm mt-1">
-            Live Operation Timeline & Schedule
-          </p>
+          <h2 id="portTitle" class="font-headline text-3xl font-extrabold tracking-tight">—</h2>
+          <p class="text-on-surface-variant text-sm mt-1">Live Operation Timeline & Schedule</p>
         </div>
-
         <div class="flex gap-2">
-          <span class="px-3 py-1 bg-surface-container-highest text-primary-fixed text-xs font-bold rounded-full">
-            UPCOMING: 12
-          </span>
-          <span class="px-3 py-1 bg-surface-container-highest text-primary-fixed text-xs font-bold rounded-full">
-            IN PORT: 45
-          </span>
+          <span id="timeline-upcoming" class="px-3 py-1 bg-surface-container-highest text-primary text-xs font-bold rounded-full">UPCOMING: —</span>
+          <span id="timeline-inport"   class="px-3 py-1 bg-surface-container-highest text-primary text-xs font-bold rounded-full">IN PORT: —</span>
         </div>
       </div>
 
-      <!-- TIMELINE -->
       <div class="relative">
         <div class="absolute left-4 top-0 bottom-0 w-0.5 bg-primary/30"></div>
-
-        <div class="space-y-8">
-
-          <!-- ITEM -->
-          <div class="relative pl-12 flex flex-col md:flex-row md:items-center gap-4">
-            <div class="absolute left-[13px] top-1.5 w-2 h-2 rounded-full bg-primary-fixed ring-4 ring-surface"></div>
-
-            <div class="w-24 shrink-0">
-              <div class="text-xs font-bold">06:45 AM</div>
-              <div class="text-[10px] text-outline">TODAY</div>
-            </div>
-
-            <div class="flex-1 bg-surface-container-low p-4 rounded-lg">
-              <div class="flex justify-between">
-                <div>
-                  <span class="text-[10px] text-primary font-bold uppercase block mb-1">
-                    Arrival
-                  </span>
-                  <h3 class="font-bold">Northern Star</h3>
-                </div>
-                <span class="text-xs text-outline">IMO: 9811000</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- ITEM -->
-          <div class="relative pl-12 flex flex-col md:flex-row md:items-center gap-4">
-            <div class="absolute left-[13px] top-1.5 w-2 h-2 rounded-full bg-primary-fixed ring-4 ring-surface"></div>
-
-            <div class="w-24 shrink-0">
-              <div class="text-xs font-bold">11:30 AM</div>
-              <div class="text-[10px] text-outline">TODAY</div>
-            </div>
-
-            <div class="flex-1 bg-surface-container-low p-4 rounded-lg">
-              <div class="flex justify-between">
-                <div>
-                  <span class="text-[10px] text-primary font-bold uppercase block mb-1">
-                    Arrival
-                  </span>
-                  <h3 class="font-bold">Baltic Horizon</h3>
-                </div>
-                <span class="text-xs text-outline">IMO: 9234510</span>
-              </div>
-            </div>
-          </div>
-
+        <div id="timeline-items" class="space-y-8">
+          <!-- dynamically rendered -->
         </div>
       </div>
 
-      <!-- BUTTON -->
       <div class="mt-10 text-center">
-        <button class="text-xs font-bold uppercase tracking-widest hover:text-brand-action">
-          LOAD FULL PORT SCHEDULE
-        </button>
+        <p class="text-xs text-outline">Showing next 10 scheduled shipments</p>
       </div>
-
     </div>
   </div>
 
 </section>
 </main>
-<script>
-const btn = document.getElementById("searchbtn");
-const result = document.getElementById("trackingResult");
-const input = document.getElementById("trackingInput");
-const result2 = document.getElementById("trackingresult");
-const webName=document.getElementById("webname");
-
-btn.addEventListener("click", () => {
-  if (input.value.trim() !== "") {
-    result.classList.remove("hidden");
-    result2.classList.remove("hidden");
-    webName.classList.add("hidden");
-
-  } else {
-    result.classList.add("hidden");
-    result2.classList.add("hidden");
-    webName.classList.remove("hidden");
-    
-
-
-  }
-});
-</script>
-<script>
-function searchPort() {
-  const input = document.getElementById("portSearch").value.toLowerCase();
-  const timeline = document.getElementById("portTimeline");
-  const title = document.getElementById("portTitle");
-
-  if (input === "rotterdam") {
-    timeline.classList.remove("hidden");
-    title.innerText = "PORT OF ROTTERDAM";
-  }
-  else {
-    timeline.classList.add("hidden");
-    alert("Port not found");
-  }
-}
-</script>
+<script src="user_tracking.js"></script>
 </body></html>
