@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>VesselOps Command | Master Shipment Ledger</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-dim": "#001523",
+                        "surface-container-high": "#172c3b",
+                        "surface-container-low": "#071d2c",
+                        "on-tertiary": "#562000",
+                        "tertiary-fixed-dim": "#ffb692",
+                        "primary-container": "#bac8dc",
+                        "on-error": "#690005",
+                        "on-tertiary-fixed-variant": "#7a3000",
+                        "on-tertiary-fixed": "#341000",
+                        "outline-variant": "#44474c",
+                        "surface-variant": "#233746",
+                        "inverse-surface": "#d0e5f9",
+                        "secondary": "#a4cce8",
+                        "on-secondary-fixed-variant": "#214b62",
+                        "secondary-fixed-dim": "#a4cce8",
+                        "surface-bright": "#273b4b",
+                        "inverse-primary": "#525f71",
+                        "on-secondary": "#02344b",
+                        "inverse-on-surface": "#1e3342",
+                        "on-primary": "#243141",
+                        "tertiary-fixed": "#ffdbcb",
+                        "primary-fixed-dim": "#bac8dc",
+                        "on-secondary-container": "#93bad6",
+                        "secondary-container": "#214b62",
+                        "primary-fixed": "#d6e4f8",
+                        "on-secondary-fixed": "#001e2d",
+                        "error": "#ffb4ab",
+                        "tertiary": "#ffdbcc",
+                        "surface-container-lowest": "#00101c",
+                        "on-surface": "#d0e5f9",
+                        "on-surface-variant": "#c4c6cc",
+                        "on-primary-container": "#465465",
+                        "primary": "#d6e4f9",
+                        "surface-container-highest": "#233746",
+                        "secondary-fixed": "#c6e7ff",
+                        "background": "#001523",
+                        "surface-container": "#0c2230",
+                        "on-primary-fixed-variant": "#3a4858",
+                        "tertiary-container": "#ffb693",
+                        "surface-tint": "#bac8dc",
+                        "outline": "#8e9196",
+                        "on-primary-fixed": "#0f1c2b",
+                        "error-container": "#93000a",
+                        "on-background": "#d0e5f9",
+                        "on-error-container": "#ffdad6",
+                        "surface": "#001523",
+                        "on-tertiary-container": "#8d3900",
+                        "accent-orange": "#fb6b00"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, .font-headline { font-family: 'Manrope', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background-color: rgba(23, 44, 59, 0.7);
+            backdrop-filter: blur(24px);
+            border-top: 1px solid rgba(186, 200, 220, 0.1);
+        }
+        .data-table-row:hover {
+            background-color: rgba(39, 59, 75, 0.4);
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen flex">
+<!-- TopNavBar -->
+<header class="flex justify-between items-center px-6 h-16 w-full fixed top-0 z-40 bg-[#001523] dark:bg-[#001523] pl-72">
+    <div class="flex items-left gap-4">
+        <span class="text-2xl font-black text-[#bac8dc] tracking-tighter font-headline">Web Name</span>
+    </div>
+</header>
+
+<!-- SideNavBar -->
+<aside class="flex flex-col h-screen fixed left-0 top-0 py-8 bg-[#00111C] dark:bg-[#011c2e] text-[#011c2e] font-inter font-medium text-sm shadow-[48px_0_48px_rgba(5,16,21,0.06)] w-64 z-50">
+    <div class="px-6 mb-10">
+        <h1 id="sidebar-port-name" class="text-[#d8e4ec] font-manrope font-extrabold text-xl tracking-tight">Port name</h1>
+        <p class="text-on-surface-variant text-xs mt-1">Real-Time Port Operations & Monitoring</p>
+    </div>
+    <nav class="flex-1 flex flex-col gap-2">
+        <a class="flex items-center gap-3 px-6 py-3 text-[#c6c5d4] opacity-80 hover:bg-[#202b32] hover:text-[#d8e4ec] transition-all hover:translate-x-1 duration-200" href="Dashboardport.html">
+            <span class="material-symbols-outlined">dashboard</span>Dashboard
+        </a>
+        <a class="bg-[#202b32] text-[#fb6b00] border-l-4 border-[#fb6b00] flex items-center gap-3 px-4 py-3 mx-2 rounded-sm transition-all hover:translate-x-1 duration-200">
+            <span class="material-symbols-outlined">inventory</span>Storage
+        </a>
+        <a class="flex items-center gap-3 px-6 py-3 text-[#c6c5d4] opacity-80 hover:bg-[#202b32] hover:text-[#d8e4ec] transition-all hover:translate-x-1 duration-200" href="#">
+            <span class="material-symbols-outlined">directions_boat</span>Shipments
+        </a>
+    </nav>
+    <div class="mt-auto flex flex-col gap-2 border-t border-outline-variant/10 pt-6">
+        <a id="logout-btn" class="flex items-center gap-3 px-6 py-3 text-[#c6c5d4] opacity-80 hover:bg-[#202b32] hover:text-[#d8e4ec] transition-all cursor-pointer" href="#">
+            <span class="material-symbols-outlined">logout</span>Logout
+        </a>
+    </div>
+</aside>
+
+<!-- Main Content Canvas -->
+<main class="ml-64 mt-10 p-8 min-h-screen">
+<!-- Page Hero / Stats Area -->
+<section class="p-8">
+<div class="flex flex-col lg:flex-row gap-6 mb-12">
+<div class="flex-1 flex flex-col">
+<h2 class="text-4xl font-headline font-extrabold tracking-tight text-on-surface mb-2 uppercase">Master Shipment Ledger</h2>
+<p class="text-on-surface-variant font-body text-sm max-w-lg">Active logistics tracking for deep sea terminal operations. Real-time berth coordination and vessel manifest synchronization.</p>
+</div>
+<div class="col-span-12 lg:col-span-7 grid grid-cols-1 md:grid-cols-3 gap-6">
+    <!--Total shipment-->
+    <div class="bg-surface-container p-6 rounded-xl border-l-4 border-[#ffb692] flex flex-col justify-between">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="text-on-surface-variant text-xs uppercase tracking-widest font-bold">Total Shipment Today</h3>
+                            <p id="outgoing-count" class="text-5xl font-headline font-extrabold mt-2">—</p>
+                        </div>
+                        <span class="material-symbols-outlined text-[#ffb692] text-4xl">sailing</span>
+                    </div>
+                </div>
+                        
+    <!-- Incoming Today -->
+                <div class="bg-surface-container p-6 rounded-xl border-l-4 border-[#b2c8e7] flex flex-col justify-between">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="text-on-surface-variant text-xs uppercase tracking-widest font-bold">Incoming Today</h3>
+                            <p id="incoming-count" class="text-5xl font-headline font-extrabold mt-2">—</p>
+                        </div>
+                        <span class="material-symbols-outlined text-[#b2c8e7] text-4xl">anchor</span>
+                    </div>
+                    <div class="mt-4 flex items-center gap-2 text-sm text-[#b2c8e7]">
+                        <span class="material-symbols-outlined text-sm">schedule</span>
+                        <span id="next-vessel-label">Loading...</span>
+                    </div>
+                </div>
+                <!-- Outgoing Today -->
+                <div class="bg-surface-container p-6 rounded-xl border-l-4 border-[#ffb692] flex flex-col justify-between">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="text-on-surface-variant text-xs uppercase tracking-widest font-bold">Outgoing Today</h3>
+                            <p id="outgoing-count" class="text-5xl font-headline font-extrabold mt-2">—</p>
+                        </div>
+                        <span class="material-symbols-outlined text-[#ffb692] text-4xl">sailing</span>
+                    </div>
+                </div>
+                      </div>
+</div>
+<!-- Interaction Bar -->
+<div class="flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
+<div class="flex items-center gap-2 bg-surface-container-low p-1 rounded-lg">
+<button class="bg-accent-orange text-on-tertiary px-4 py-2 rounded-md text-[10px] font-bold uppercase tracking-wider">Latest First</button>
+<button class="text-slate-500 hover:text-slate-300 px-4 py-2 text-[10px] font-bold uppercase tracking-wider">Oldest First</button>
+<div class="w-px h-4 bg-surface-container-high mx-1"></div>
+<button class="text-slate-500 hover:text-slate-300 px-4 py-2 text-[10px] font-bold uppercase tracking-wider">Incoming</button>
+<button class="text-slate-500 hover:text-slate-300 px-4 py-2 text-[10px] font-bold uppercase tracking-wider">Outgoing</button>
+</div>
+<div class="flex items-center gap-3">
+<span class="text-[10px] text-slate-500 font-bold uppercase">Displaying 1-25 of 1,402 entries</span>
+<div class="flex gap-1">
+<button class="w-8 h-8 flex items-center justify-center bg-surface-container-high hover:bg-surface-bright rounded text-slate-400">
+<span class="material-symbols-outlined text-sm">chevron_left</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center bg-surface-container-high hover:bg-surface-bright rounded text-slate-400">
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Detailed Data Table -->
+<div class="bg-surface-container rounded-xl overflow-hidden">
+<div class="grid grid-cols-12 gap-4 px-6 py-4 bg-surface-container-high text-[10px] font-bold uppercase tracking-widest text-slate-400">
+<div class="col-span-2">Shipment ID</div>
+<div class="col-span-3">Vessel Name</div>
+<div class="col-span-2">Date / Time</div>
+<div class="col-span-2">Zone</div>
+<div class="col-span-2">Status</div>
+<div class="col-span-1 text-right">Action</div>
+</div>
+<div class="divide-y divide-surface-container-high/50">
+<!-- Row 1 -->
+<div class="grid grid-cols-12 gap-4 px-6 py-5 items-center data-table-row cursor-pointer group transition-colors">
+<div class="col-span-2 flex items-center gap-3">
+<div class="w-1.5 h-8 bg-accent-orange rounded-full"></div>
+<span class="font-mono text-sm text-primary">VO-77821</span>
+</div>
+<div class="col-span-3 flex items-center gap-3">
+<img class="w-10 h-10 rounded object-cover" data-alt="Modern high-resolution top-down view of a massive colorful cargo container ship sailing on deep blue water" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAzpiNlwoRc00uM3R7hpK5A44E8oZ9kPjOBX7ZRVM5w8bOCcsD2oZuQVnDqbVSPSj7W1lS2DR9DTopv5FRwG-YgOiF1Z8IEKE36ZPmY6ACoD3RhrP3JRvcVUfi7J8OIvLVGzetNHZ_WtFA_D-LXYl9uBE_FcCXNGNDsnrZLB3eAvQoj6TYM5xoD1EK1V6skNd0ip72qxI-kSffm5OYiaTlq3-hgwfQ6QxXxF5Z_t_EXn_d5Va3dPVk1JWoV-jU6yfQh-i3yvYXQvQrt"/>
+<div>
+<div class="text-sm font-bold text-on-surface">Evergreen Triton</div>
+<div class="text-[10px] text-slate-500 uppercase tracking-tight">Panama Flag • 14,000 TEU</div>
+</div>
+</div>
+<div class="col-span-2">
+<div class="text-sm text-on-surface">Oct 24, 2023</div>
+<div class="text-[10px] text-slate-500 uppercase">14:30 ETA</div>
+</div>
+<div class="col-span-2">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm text-slate-500">grid_view</span>
+<span class="text-xs text-on-surface uppercase font-medium">Berth Alpha-4</span>
+</div>
+</div>
+<div class="col-span-2">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-900/40 text-green-400 border border-green-800/50 uppercase tracking-tighter">
+<span class="w-1 h-1 bg-green-400 rounded-full mr-1.5"></span>
+                                Docked
+                            </span>
+</div>
+<div class="col-span-1 text-right">
+<button class="text-slate-500 hover:text-accent-orange transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Row 2 -->
+<div class="grid grid-cols-12 gap-4 px-6 py-5 items-center data-table-row cursor-pointer group transition-colors">
+<div class="col-span-2 flex items-center gap-3">
+<div class="w-1.5 h-8 bg-blue-500 rounded-full"></div>
+<span class="font-mono text-sm text-primary">VO-78104</span>
+</div>
+<div class="col-span-3 flex items-center gap-3">
+<img class="w-10 h-10 rounded object-cover" data-alt="Massive white and blue industrial cargo vessel at sea with sunrise lighting reflecting off the hull" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBbfTKfNEUkKsnA4DcLtfNUVdkitZ-j5xOOZHv9hA8Pbl83ciQt88XSYw1hAGHWtQKVkh5RD5LTcsg6a1wCaewNbWHlGhfrqc9HLlUOXk6Dpx-X_F_azxCliQ_pW251snKo0JtyY7HGc57Jqi8nqxeRDV0XbUtqhbpn_p-TbviptQz-xmfoCdWLkl4aYspmRxkGHM8zYQFC2jI-CuviWj6QIVZVYWqDE7NxjF4Yn5eZKGyg2KILXEq9C0P8hBtoo01XGt-ZguawIqYa"/>
+<div>
+<div class="text-sm font-bold text-on-surface">Pacific Mariner</div>
+<div class="text-[10px] text-slate-500 uppercase tracking-tight">Liberia Flag • 12,500 TEU</div>
+</div>
+</div>
+<div class="col-span-2">
+<div class="text-sm text-on-surface">Oct 25, 2023</div>
+<div class="text-[10px] text-slate-500 uppercase">09:15 ETA</div>
+</div>
+<div class="col-span-2">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm text-slate-500">grid_view</span>
+<span class="text-xs text-on-surface uppercase font-medium">Berth Delta-1</span>
+</div>
+</div>
+<div class="col-span-2">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-900/40 text-blue-400 border border-blue-800/50 uppercase tracking-tighter">
+<span class="w-1 h-1 bg-blue-400 rounded-full mr-1.5"></span>
+                                In Transit
+                            </span>
+</div>
+<div class="col-span-1 text-right">
+<button class="text-slate-500 hover:text-accent-orange transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Row 3 (Delayed) -->
+<div class="grid grid-cols-12 gap-4 px-6 py-5 items-center data-table-row cursor-pointer group transition-colors">
+<div class="col-span-2 flex items-center gap-3">
+<div class="w-1.5 h-8 bg-red-500 rounded-full"></div>
+<span class="font-mono text-sm text-primary">VO-78009</span>
+</div>
+<div class="col-span-3 flex items-center gap-3">
+<img class="w-10 h-10 rounded object-cover" data-alt="Dark heavy container ship in stormy grey sea conditions with water spraying against the side of the hull" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAy1JjeCt6omx7o1ZkquyJuGT-iwXuDZztPgJnGy7mi2OuIZfxMkw48MtHoKM-7tH2-f_1CMfCYmPo7dJcq4XjlrjYnr4GnWcoGpNHEFhI8O68oyATW4NgVxRrGCj7WV4IjKHNLe2XeOH5kaNfTQXeTZcZ3Zsk4WABe02zD1ggRm9TZlx99ruU13j8LSGFP66qb3AN71dJPNzIs0ICVXyIWiPG8Lp7MjNOyO27ES6w4qOJSE8O-DsGhQM4eBgpVnQxO8D8ILCfO88Sx"/>
+<div>
+<div class="text-sm font-bold text-on-surface">Northern Star</div>
+<div class="text-[10px] text-slate-500 uppercase tracking-tight">Norway Flag • 8,200 TEU</div>
+</div>
+</div>
+<div class="col-span-2">
+<div class="text-sm text-on-surface">Oct 24, 2023</div>
+<div class="text-[10px] text-red-400 uppercase font-bold">Delayed (+6h)</div>
+</div>
+<div class="col-span-2">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm text-slate-500">grid_view</span>
+<span class="text-xs text-on-surface uppercase font-medium">Anchorage B</span>
+</div>
+</div>
+<div class="col-span-2">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-900/40 text-red-400 border border-red-800/50 uppercase tracking-tighter">
+<span class="w-1 h-1 bg-red-400 rounded-full mr-1.5"></span>
+                                Delayed
+                            </span>
+</div>
+<div class="col-span-1 text-right">
+<button class="text-slate-500 hover:text-accent-orange transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Row 4 -->
+<div class="grid grid-cols-12 gap-4 px-6 py-5 items-center data-table-row cursor-pointer group transition-colors">
+<div class="col-span-2 flex items-center gap-3">
+<div class="w-1.5 h-8 bg-slate-600 rounded-full"></div>
+<span class="font-mono text-sm text-primary">VO-77955</span>
+</div>
+<div class="col-span-3 flex items-center gap-3">
+<img class="w-10 h-10 rounded object-cover" data-alt="Sleek black tanker vessel viewed from a low angle against a clear sky with sharp metallic details" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD8MskrbuNtWEhJWw4lcR-aNrddC0zPZSHvbUf3J2rTWufwpOFVlW97_0YePZLptYJRF8OuSxXbfkBv3zr0whCjdG9EjxLwMc7r6YRur7WAeIAvHP6fi0j__V9rkxZoE-dYjg57NxgAXRKOhzzBz5Ws3WQZYJ5Q624nJ_YSZhSEyUSIzXUklFrPtPQfeHRTGuxJz18uh4HMdF-RUHVYSXw8qNirQMhn_ha2pR1GRM1-LGYYEfCRL-XxpaHJCJIiW_aNBp1O6mLiEN-a"/>
+<div>
+<div class="text-sm font-bold text-on-surface">Global Express</div>
+<div class="text-[10px] text-slate-500 uppercase tracking-tight">Marshall Is. • 15,500 TEU</div>
+</div>
+</div>
+<div class="col-span-2">
+<div class="text-sm text-on-surface">Oct 26, 2023</div>
+<div class="text-[10px] text-slate-500 uppercase">22:00 ETA</div>
+</div>
+<div class="col-span-2">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm text-slate-500">grid_view</span>
+<span class="text-xs text-on-surface uppercase font-medium">Berth Alpha-2</span>
+</div>
+</div>
+<div class="col-span-2">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-400 border border-slate-700 uppercase tracking-tighter">
+<span class="w-1 h-1 bg-slate-400 rounded-full mr-1.5"></span>
+                                Scheduled
+                            </span>
+</div>
+<div class="col-span-1 text-right">
+<button class="text-slate-500 hover:text-accent-orange transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Status HUD (Signature Component) -->
+<div class="fixed bottom-6 left-1/2 -translate-x-1/2 glass-panel w-auto min-w-[500px] px-8 py-3 rounded-full flex items-center justify-between gap-12 z-50 border border-white/5 shadow-2xl">
+<div class="flex items-center gap-3">
+<div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+<div class="flex flex-col">
+<span class="text-[9px] uppercase font-bold text-slate-400 tracking-widest">System Status</span>
+<span class="text-[11px] font-bold text-on-surface">Operational</span>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex flex-col">
+<span class="text-[9px] uppercase font-bold text-slate-400 tracking-widest">Active Berths</span>
+<span class="text-[11px] font-bold text-primary">14 / 20</span>
+</div>
+<div class="flex flex-col">
+<span class="text-[9px] uppercase font-bold text-slate-400 tracking-widest">Coordinates</span>
+<span class="text-[11px] font-bold text-primary">1.2848° N, 103.8519° E</span>
+</div>
+<div class="flex flex-col">
+<span class="text-[9px] uppercase font-bold text-slate-400 tracking-widest">Wind Speed</span>
+<span class="text-[11px] font-bold text-primary">12.4 KT</span>
+</div>
+</div>
+</div>
+</main>
+</body></html>
