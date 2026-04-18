@@ -3,7 +3,7 @@
 <html class="dark" lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>VesselOps Command | Master Shipment Ledger</title>
+<title>WEB NAME | Shipment Control Center</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
@@ -132,47 +132,76 @@
 <!-- Page Hero / Stats Area -->
 <section class="p-8">
 <div class="flex flex-col lg:flex-row gap-6 mb-12">
-<div class="flex-1 flex flex-col">
-<h2 class="text-4xl font-headline font-extrabold tracking-tight text-on-surface mb-2 uppercase">Master Shipment Ledger</h2>
-<p class="text-on-surface-variant font-body text-sm max-w-lg">Active logistics tracking for deep sea terminal operations. Real-time berth coordination and vessel manifest synchronization.</p>
-</div>
-<div class="col-span-12 lg:col-span-7 grid grid-cols-1 md:grid-cols-3 gap-6">
-    <!--Total shipment-->
-    <div class="bg-surface-container p-6 rounded-xl border-l-4 border-[#ffb692] flex flex-col justify-between">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <h3 class="text-on-surface-variant text-xs uppercase tracking-widest font-bold">Total Shipment Today</h3>
-                            <p id="outgoing-count" class="text-5xl font-headline font-extrabold mt-2">—</p>
-                        </div>
-                        <span class="material-symbols-outlined text-[#ffb692] text-4xl">sailing</span>
-                    </div>
-                </div>
-                        
-    <!-- Incoming Today -->
-                <div class="bg-surface-container p-6 rounded-xl border-l-4 border-[#b2c8e7] flex flex-col justify-between">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <h3 class="text-on-surface-variant text-xs uppercase tracking-widest font-bold">Incoming Today</h3>
-                            <p id="incoming-count" class="text-5xl font-headline font-extrabold mt-2">—</p>
-                        </div>
-                        <span class="material-symbols-outlined text-[#b2c8e7] text-4xl">anchor</span>
-                    </div>
-                    <div class="mt-4 flex items-center gap-2 text-sm text-[#b2c8e7]">
-                        <span class="material-symbols-outlined text-sm">schedule</span>
-                        <span id="next-vessel-label">Loading...</span>
-                    </div>
-                </div>
-                <!-- Outgoing Today -->
-                <div class="bg-surface-container p-6 rounded-xl border-l-4 border-[#ffb692] flex flex-col justify-between">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <h3 class="text-on-surface-variant text-xs uppercase tracking-widest font-bold">Outgoing Today</h3>
-                            <p id="outgoing-count" class="text-5xl font-headline font-extrabold mt-2">—</p>
-                        </div>
-                        <span class="material-symbols-outlined text-[#ffb692] text-4xl">sailing</span>
-                    </div>
-                </div>
-                      </div>
+
+  <!-- LEFT: Title -->
+  <div class="flex-1 flex flex-col justify-center">
+    <h2 class="text-4xl font-headline font-extrabold tracking-tight text-on-surface mb-2 uppercase">
+Shipment Control Center
+    </h2>
+    <p class="text-on-surface-variant font-body text-sm max-w-lg">
+Monitor vessel activity, arrivals, and departures in real time.    </p>
+  </div>
+
+  <!-- RIGHT: Cards -->
+  <div class="lg:w-[60%] grid grid-cols-1 md:grid-cols-3 gap-4">
+
+    <!-- TOTAL (Big Card) -->
+    <div class="bg-surface-container p-6 rounded-xl border-l-4 border-[#3b82f6] flex flex-col justify-between shadow-sm">
+      <div class="flex justify-between items-start">
+        <div>
+          <h3 class="text-on-surface-variant text-xs uppercase tracking-widest font-bold">
+            Total Shipment Today
+          </h3>
+          <p id="total-count" class="text-5xl font-headline font-extrabold mt-2">
+            —
+          </p>
+        </div>
+        <span class="material-symbols-outlined text-[#3b82f6] text-4xl">
+          inventory
+        </span>
+      </div>
+    </div>
+
+    <!-- INCOMING (Smaller) -->
+    <div class="bg-surface-container p-4 rounded-xl border-l-4 border-[#b2c8e7] flex flex-col justify-between shadow-sm">
+      <div class="flex justify-between items-start">
+        <div>
+          <h3 class="text-on-surface-variant text-[10px] uppercase tracking-wider font-bold">
+            Incoming
+          </h3>
+          <p id="incoming-count" class="text-3xl font-headline font-extrabold mt-1">
+            —
+          </p>
+        </div>
+        <span class="material-symbols-outlined text-[#b2c8e7] text-3xl">
+          anchor
+        </span>
+      </div>
+
+      <div class="mt-2 flex items-center gap-1 text-xs text-[#b2c8e7]">
+        <span class="material-symbols-outlined text-xs">schedule</span>
+        <span id="next-vessel-label">Loading...</span>
+      </div>
+    </div>
+
+    <!-- OUTGOING (Smaller) -->
+    <div class="bg-surface-container p-4 rounded-xl border-l-4 border-[#fb6b00] flex flex-col justify-between shadow-sm">
+      <div class="flex justify-between items-start">
+        <div>
+          <h3 class="text-on-surface-variant text-[10px] uppercase tracking-wider font-bold">
+            Outgoing
+          </h3>
+          <p id="outgoing-count" class="text-3xl font-headline font-extrabold mt-1">
+            —
+          </p>
+        </div>
+        <span class="material-symbols-outlined text-[#fb6b00] text-3xl">
+          sailing
+        </span>
+      </div>
+    </div>
+
+  </div>
 </div>
 <!-- Interaction Bar -->
 <div class="flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
@@ -184,7 +213,7 @@
 <button class="text-slate-500 hover:text-slate-300 px-4 py-2 text-[10px] font-bold uppercase tracking-wider">Outgoing</button>
 </div>
 <div class="flex items-center gap-3">
-<span class="text-[10px] text-slate-500 font-bold uppercase">Displaying 1-25 of 1,402 entries</span>
+<span class="text-[10px] text-slate-500 font-bold uppercase">Displaying 1-x of y entries</span>
 <div class="flex gap-1">
 <button class="w-8 h-8 flex items-center justify-center bg-surface-container-high hover:bg-surface-bright rounded text-slate-400">
 <span class="material-symbols-outlined text-sm">chevron_left</span>
@@ -196,7 +225,7 @@
 </div>
 </div>
 <!-- Detailed Data Table -->
-<div class="bg-surface-container rounded-xl overflow-hidden">
+<div class="bg-surface-container rounded-xl overflow-visible">
 <div class="grid grid-cols-12 gap-4 px-6 py-4 bg-surface-container-high text-[10px] font-bold uppercase tracking-widest text-slate-400">
 <div class="col-span-2">Shipment ID</div>
 <div class="col-span-3">Vessel Name</div>
@@ -207,16 +236,15 @@
 </div>
 <div class="divide-y divide-surface-container-high/50">
 <!-- Row 1 -->
-<div class="grid grid-cols-12 gap-4 px-6 py-5 items-center data-table-row cursor-pointer group transition-colors">
-<div class="col-span-2 flex items-center gap-3">
+<div class="grid grid-cols-12 gap-4 px-6 py-5 items-center data-table-row cursor-pointer group transition-colors"
+     data-id="ID1"><div class="col-span-2 flex items-center gap-3">
 <div class="w-1.5 h-8 bg-accent-orange rounded-full"></div>
-<span class="font-mono text-sm text-primary">VO-77821</span>
+<span class="font-mono text-sm text-primary">ID1</span>
 </div>
 <div class="col-span-3 flex items-center gap-3">
-<img class="w-10 h-10 rounded object-cover" data-alt="Modern high-resolution top-down view of a massive colorful cargo container ship sailing on deep blue water" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAzpiNlwoRc00uM3R7hpK5A44E8oZ9kPjOBX7ZRVM5w8bOCcsD2oZuQVnDqbVSPSj7W1lS2DR9DTopv5FRwG-YgOiF1Z8IEKE36ZPmY6ACoD3RhrP3JRvcVUfi7J8OIvLVGzetNHZ_WtFA_D-LXYl9uBE_FcCXNGNDsnrZLB3eAvQoj6TYM5xoD1EK1V6skNd0ip72qxI-kSffm5OYiaTlq3-hgwfQ6QxXxF5Z_t_EXn_d5Va3dPVk1JWoV-jU6yfQh-i3yvYXQvQrt"/>
 <div>
 <div class="text-sm font-bold text-on-surface">Evergreen Triton</div>
-<div class="text-[10px] text-slate-500 uppercase tracking-tight">Panama Flag • 14,000 TEU</div>
+<div class="text-[10px] text-slate-500 uppercase tracking-tight">Panama Flag •  UNITS</div>
 </div>
 </div>
 <div class="col-span-2">
@@ -226,7 +254,7 @@
 <div class="col-span-2">
 <div class="flex items-center gap-1.5">
 <span class="material-symbols-outlined text-sm text-slate-500">grid_view</span>
-<span class="text-xs text-on-surface uppercase font-medium">Berth Alpha-4</span>
+<span class="text-xs text-on-surface uppercase font-medium">ZONE A</span>
 </div>
 </div>
 <div class="col-span-2">
@@ -235,23 +263,44 @@
                                 Docked
                             </span>
 </div>
-<div class="col-span-1 text-right">
-<button class="text-slate-500 hover:text-accent-orange transition-colors">
-<span class="material-symbols-outlined">more_vert</span>
+<div class="col-span-1 text-right relative">
+
+  <!-- 3 DOT BUTTON -->
+  <button onclick="toggleMenu(this)" 
+    class="text-slate-500 hover:text-accent-orange transition-colors">
+    <span class="material-symbols-outlined">more_vert</span>
+  </button>
+
+  <!-- DROPDOWN MENU -->
+  <div class="menu hidden absolute right-0 mt-2 w-32 bg-slate-900 border border-slate-700 rounded-lg shadow-lg z-50">
+    
+    <!-- EDIT -->
+     <button onclick="editShipment(this)" 
+  class="w-full text-left px-4 py-2 text-sm hover:bg-slate-800 flex items-center gap-2">
+  <span class="material-symbols-outlined text-sm">edit</span>
+  Edit
 </button>
+    <!-- DELETE -->
+    <button onclick="deleteRow(this)" 
+      class="w-full text-left px-4 py-2 text-sm hover:bg-red-600/20 text-red-400 flex items-center gap-2">
+      <span class="material-symbols-outlined text-sm">delete</span>
+      Delete
+    </button>
+
+  </div>
+
 </div>
 </div>
 <!-- Row 2 -->
-<div class="grid grid-cols-12 gap-4 px-6 py-5 items-center data-table-row cursor-pointer group transition-colors">
-<div class="col-span-2 flex items-center gap-3">
+<div class="grid grid-cols-12 gap-4 px-6 py-5 items-center data-table-row cursor-pointer group transition-colors"
+     data-id="ID2"><div class="col-span-2 flex items-center gap-3">
 <div class="w-1.5 h-8 bg-blue-500 rounded-full"></div>
-<span class="font-mono text-sm text-primary">VO-78104</span>
+<span class="font-mono text-sm text-primary">ID2</span>
 </div>
 <div class="col-span-3 flex items-center gap-3">
-<img class="w-10 h-10 rounded object-cover" data-alt="Massive white and blue industrial cargo vessel at sea with sunrise lighting reflecting off the hull" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBbfTKfNEUkKsnA4DcLtfNUVdkitZ-j5xOOZHv9hA8Pbl83ciQt88XSYw1hAGHWtQKVkh5RD5LTcsg6a1wCaewNbWHlGhfrqc9HLlUOXk6Dpx-X_F_azxCliQ_pW251snKo0JtyY7HGc57Jqi8nqxeRDV0XbUtqhbpn_p-TbviptQz-xmfoCdWLkl4aYspmRxkGHM8zYQFC2jI-CuviWj6QIVZVYWqDE7NxjF4Yn5eZKGyg2KILXEq9C0P8hBtoo01XGt-ZguawIqYa"/>
 <div>
 <div class="text-sm font-bold text-on-surface">Pacific Mariner</div>
-<div class="text-[10px] text-slate-500 uppercase tracking-tight">Liberia Flag • 12,500 TEU</div>
+<div class="text-[10px] text-slate-500 uppercase tracking-tight">Liberia Flag • UNITS</div>
 </div>
 </div>
 <div class="col-span-2">
@@ -261,7 +310,7 @@
 <div class="col-span-2">
 <div class="flex items-center gap-1.5">
 <span class="material-symbols-outlined text-sm text-slate-500">grid_view</span>
-<span class="text-xs text-on-surface uppercase font-medium">Berth Delta-1</span>
+<span class="text-xs text-on-surface uppercase font-medium">ZONE D</span>
 </div>
 </div>
 <div class="col-span-2">
@@ -270,23 +319,44 @@
                                 In Transit
                             </span>
 </div>
-<div class="col-span-1 text-right">
-<button class="text-slate-500 hover:text-accent-orange transition-colors">
-<span class="material-symbols-outlined">more_vert</span>
+<div class="col-span-1 text-right relative">
+
+  <!-- 3 DOT BUTTON -->
+  <button onclick="toggleMenu(this)" 
+    class="text-slate-500 hover:text-accent-orange transition-colors">
+    <span class="material-symbols-outlined">more_vert</span>
+  </button>
+
+  <!-- DROPDOWN MENU -->
+  <div class="menu hidden absolute right-0 mt-2 w-32 bg-slate-900 border border-slate-700 rounded-lg shadow-lg z-50">
+    
+    <!-- EDIT -->
+     <button onclick="editShipment(this)" 
+  class="w-full text-left px-4 py-2 text-sm hover:bg-slate-800 flex items-center gap-2">
+  <span class="material-symbols-outlined text-sm">edit</span>
+  Edit
 </button>
+    <!-- DELETE -->
+    <button onclick="deleteRow(this)" 
+      class="w-full text-left px-4 py-2 text-sm hover:bg-red-600/20 text-red-400 flex items-center gap-2">
+      <span class="material-symbols-outlined text-sm">delete</span>
+      Delete
+    </button>
+
+  </div>
+
 </div>
 </div>
 <!-- Row 3 (Delayed) -->
-<div class="grid grid-cols-12 gap-4 px-6 py-5 items-center data-table-row cursor-pointer group transition-colors">
-<div class="col-span-2 flex items-center gap-3">
+<div class="grid grid-cols-12 gap-4 px-6 py-5 items-center data-table-row cursor-pointer group transition-colors"
+     data-id="ID3"><div class="col-span-2 flex items-center gap-3">
 <div class="w-1.5 h-8 bg-red-500 rounded-full"></div>
-<span class="font-mono text-sm text-primary">VO-78009</span>
+<span class="font-mono text-sm text-primary">ID3</span>
 </div>
 <div class="col-span-3 flex items-center gap-3">
-<img class="w-10 h-10 rounded object-cover" data-alt="Dark heavy container ship in stormy grey sea conditions with water spraying against the side of the hull" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAy1JjeCt6omx7o1ZkquyJuGT-iwXuDZztPgJnGy7mi2OuIZfxMkw48MtHoKM-7tH2-f_1CMfCYmPo7dJcq4XjlrjYnr4GnWcoGpNHEFhI8O68oyATW4NgVxRrGCj7WV4IjKHNLe2XeOH5kaNfTQXeTZcZ3Zsk4WABe02zD1ggRm9TZlx99ruU13j8LSGFP66qb3AN71dJPNzIs0ICVXyIWiPG8Lp7MjNOyO27ES6w4qOJSE8O-DsGhQM4eBgpVnQxO8D8ILCfO88Sx"/>
 <div>
 <div class="text-sm font-bold text-on-surface">Northern Star</div>
-<div class="text-[10px] text-slate-500 uppercase tracking-tight">Norway Flag • 8,200 TEU</div>
+<div class="text-[10px] text-slate-500 uppercase tracking-tight">Norway Flag •  UNITS</div>
 </div>
 </div>
 <div class="col-span-2">
@@ -296,7 +366,7 @@
 <div class="col-span-2">
 <div class="flex items-center gap-1.5">
 <span class="material-symbols-outlined text-sm text-slate-500">grid_view</span>
-<span class="text-xs text-on-surface uppercase font-medium">Anchorage B</span>
+<span class="text-xs text-on-surface uppercase font-medium">ZONE B</span>
 </div>
 </div>
 <div class="col-span-2">
@@ -305,23 +375,45 @@
                                 Delayed
                             </span>
 </div>
-<div class="col-span-1 text-right">
-<button class="text-slate-500 hover:text-accent-orange transition-colors">
-<span class="material-symbols-outlined">more_vert</span>
+<div class="col-span-1 text-right relative">
+
+  <!-- 3 DOT BUTTON -->
+  <button onclick="toggleMenu(this)" 
+    class="text-slate-500 hover:text-accent-orange transition-colors">
+    <span class="material-symbols-outlined">more_vert</span>
+  </button>
+
+  <!-- DROPDOWN MENU -->
+  <div class="menu hidden absolute right-0 mt-2 w-32 bg-slate-900 border border-slate-700 rounded-lg shadow-lg z-50">
+    
+    <!-- EDIT -->
+     <button onclick="editShipment(this)" 
+  class="w-full text-left px-4 py-2 text-sm hover:bg-slate-800 flex items-center gap-2">
+  <span class="material-symbols-outlined text-sm">edit</span>
+  Edit
 </button>
+    <!-- DELETE -->
+    <button onclick="deleteRow(this)" 
+      class="w-full text-left px-4 py-2 text-sm hover:bg-red-600/20 text-red-400 flex items-center gap-2">
+      <span class="material-symbols-outlined text-sm">delete</span>
+      Delete
+    </button>
+
+  </div>
+
 </div>
 </div>
 <!-- Row 4 -->
-<div class="grid grid-cols-12 gap-4 px-6 py-5 items-center data-table-row cursor-pointer group transition-colors">
+<div class="grid grid-cols-12 gap-4 px-6 py-5 items-center data-table-row cursor-pointer group transition-colors"
+     data-id="ID4">
 <div class="col-span-2 flex items-center gap-3">
 <div class="w-1.5 h-8 bg-slate-600 rounded-full"></div>
-<span class="font-mono text-sm text-primary">VO-77955</span>
+<span class="font-mono text-sm text-primary">ID4</span>
 </div>
 <div class="col-span-3 flex items-center gap-3">
-<img class="w-10 h-10 rounded object-cover" data-alt="Sleek black tanker vessel viewed from a low angle against a clear sky with sharp metallic details" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD8MskrbuNtWEhJWw4lcR-aNrddC0zPZSHvbUf3J2rTWufwpOFVlW97_0YePZLptYJRF8OuSxXbfkBv3zr0whCjdG9EjxLwMc7r6YRur7WAeIAvHP6fi0j__V9rkxZoE-dYjg57NxgAXRKOhzzBz5Ws3WQZYJ5Q624nJ_YSZhSEyUSIzXUklFrPtPQfeHRTGuxJz18uh4HMdF-RUHVYSXw8qNirQMhn_ha2pR1GRM1-LGYYEfCRL-XxpaHJCJIiW_aNBp1O6mLiEN-a"/>
 <div>
 <div class="text-sm font-bold text-on-surface">Global Express</div>
-<div class="text-[10px] text-slate-500 uppercase tracking-tight">Marshall Is. • 15,500 TEU</div>
+<div class="text-[10px] text-slate-500 uppercase tracking-tight">Marshall Is. • UNITS</div>
 </div>
 </div>
 <div class="col-span-2">
@@ -331,7 +423,7 @@
 <div class="col-span-2">
 <div class="flex items-center gap-1.5">
 <span class="material-symbols-outlined text-sm text-slate-500">grid_view</span>
-<span class="text-xs text-on-surface uppercase font-medium">Berth Alpha-2</span>
+<span class="text-xs text-on-surface uppercase font-medium">ZONE C</span>
 </div>
 </div>
 <div class="col-span-2">
@@ -340,38 +432,71 @@
                                 Scheduled
                             </span>
 </div>
-<div class="col-span-1 text-right">
-<button class="text-slate-500 hover:text-accent-orange transition-colors">
-<span class="material-symbols-outlined">more_vert</span>
+<div class="col-span-1 text-right relative">
+
+  <!-- 3 DOT BUTTON -->
+  <button onclick="toggleMenu(this)" 
+    class="text-slate-500 hover:text-accent-orange transition-colors">
+    <span class="material-symbols-outlined">more_vert</span>
+  </button>
+
+  <!-- DROPDOWN MENU -->
+  <div class="menu hidden absolute right-0 mt-2 w-32 bg-slate-900 border border-slate-700 rounded-lg shadow-lg z-50">
+    
+    <!-- EDIT -->
+    <button onclick="editShipment(this)" 
+  class="w-full text-left px-4 py-2 text-sm hover:bg-slate-800 flex items-center gap-2">
+  <span class="material-symbols-outlined text-sm">edit</span>
+  Edit
 </button>
+    <!-- DELETE -->
+    <button onclick="deleteRow(this)" 
+      class="w-full text-left px-4 py-2 text-sm hover:bg-red-600/20 text-red-400 flex items-center gap-2">
+      <span class="material-symbols-outlined text-sm">delete</span>
+      Delete
+    </button>
+
+  </div>
+
 </div>
 </div>
 </div>
 </div>
 </section>
-<!-- Status HUD (Signature Component) -->
-<div class="fixed bottom-6 left-1/2 -translate-x-1/2 glass-panel w-auto min-w-[500px] px-8 py-3 rounded-full flex items-center justify-between gap-12 z-50 border border-white/5 shadow-2xl">
-<div class="flex items-center gap-3">
-<div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-<div class="flex flex-col">
-<span class="text-[9px] uppercase font-bold text-slate-400 tracking-widest">System Status</span>
-<span class="text-[11px] font-bold text-on-surface">Operational</span>
-</div>
-</div>
-<div class="flex items-center gap-6">
-<div class="flex flex-col">
-<span class="text-[9px] uppercase font-bold text-slate-400 tracking-widest">Active Berths</span>
-<span class="text-[11px] font-bold text-primary">14 / 20</span>
-</div>
-<div class="flex flex-col">
-<span class="text-[9px] uppercase font-bold text-slate-400 tracking-widest">Coordinates</span>
-<span class="text-[11px] font-bold text-primary">1.2848° N, 103.8519° E</span>
-</div>
-<div class="flex flex-col">
-<span class="text-[9px] uppercase font-bold text-slate-400 tracking-widest">Wind Speed</span>
-<span class="text-[11px] font-bold text-primary">12.4 KT</span>
-</div>
-</div>
-</div>
 </main>
+<script>
+function toggleMenu(button) {
+  const menu = button.parentElement.querySelector(".menu");
+
+  document.querySelectorAll(".menu").forEach(m => {
+    if (m !== menu) m.classList.add("hidden");
+  });
+
+  menu.classList.toggle("hidden");
+}
+
+function deleteRow(btn) {
+  const row = btn.closest(".data-table-row");
+  const id = row.dataset.id;
+
+  // TEMP (UI only)
+  row.remove();
+
+  // 🔥 Later:
+  // fetch(`/api/shipments/${id}`, { method: "DELETE" })
+}
+
+function editShipment(btn) {
+  const row = btn.closest(".data-table-row");
+  const id = row.dataset.id;
+
+  window.location.href = `add_shipment.html?id=${id}`;
+}
+
+document.addEventListener("click", function(e) {
+  if (!e.target.closest(".menu") && !e.target.closest("button")) {
+    document.querySelectorAll(".menu").forEach(m => m.classList.add("hidden"));
+  }
+});
+</script>
 </body></html>
