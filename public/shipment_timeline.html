@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>WEB NAME | Shipment Calendar</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "background": "#001523",
+                        "surface": "#001523",
+                        "inverse-on-surface": "#1e3342",
+                        "surface-container-lowest": "#00101c",
+                        "on-primary-container": "#465465",
+                        "primary-fixed-dim": "#bac8dc",
+                        "on-error": "#690005",
+                        "primary-fixed": "#d6e4f8",
+                        "on-secondary": "#02344b",
+                        "surface-container-high": "#172c3b",
+                        "primary": "#d6e4f9",
+                        "surface-container": "#0c2230",
+                        "on-primary-fixed-variant": "#3a4858",
+                        "on-error-container": "#ffdad6",
+                        "primary-container": "#bac8dc",
+                        "on-background": "#d0e5f9",
+                        "on-surface": "#d0e5f9",
+                        "secondary-container": "#214b62",
+                        "surface-tint": "#bac8dc",
+                        "error": "#ffb4ab",
+                        "on-secondary-fixed": "#001e2d",
+                        "surface-dim": "#001523",
+                        "outline-variant": "#44474c",
+                        "on-primary-fixed": "#0f1c2b",
+                        "outline": "#8e9196",
+                        "tertiary": "#fb6b00",
+                        "on-primary": "#243141",
+                        "surface-bright": "#273b4b",
+                        "error-container": "#93000a",
+                        "surface-container-highest": "#233746",
+                        "secondary": "#a4cce8",
+                        "on-tertiary-container": "#8d3900",
+                        "tertiary-container": "#ffb693",
+                        "secondary-fixed": "#c6e7ff",
+                        "on-tertiary-fixed-variant": "#7a3000",
+                        "tertiary-fixed-dim": "#ffb692",
+                        "on-secondary-fixed-variant": "#214b62",
+                        "surface-container-low": "#071d2c",
+                        "surface-variant": "#233746",
+                        "on-secondary-container": "#93bad6",
+                        "on-tertiary-fixed": "#341000",
+                        "tertiary-fixed": "#ffdbcb",
+                        "inverse-primary": "#525f71",
+                        "inverse-surface": "#d0e5f9",
+                        "on-tertiary": "#562000",
+                        "on-surface-variant": "#c4c6cc",
+                        "secondary-fixed-dim": "#a4cce8"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            grid-auto-rows: minmax(85px, 1fr);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #001523;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #172c3b;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body selection:bg-tertiary/30">
+<!-- SideNavBar -->
+<aside class="flex flex-col h-screen fixed left-0 top-0 py-8 bg-[#00111C] dark:bg-[#011c2e] text-[#011c2e] font-inter font-medium text-sm shadow-[48px_0_48px_rgba(5,16,21,0.06)] w-64 z-50">
+    <div class="px-6 mb-10">
+        <h1 id="sidebar-port-name" class="text-[#d8e4ec] font-manrope font-extrabold text-xl tracking-tight">Port name</h1>
+        <p class="text-on-surface-variant text-xs mt-1">Real-Time Port Operations & Monitoring</p>
+    </div>
+    <nav class="flex-1 flex flex-col gap-2">
+        <a class="flex items-center gap-3 px-6 py-3 text-[#c6c5d4] opacity-80 hover:bg-[#202b32] hover:text-[#d8e4ec] transition-all hover:translate-x-1 duration-200" href="Dashboardport.html">
+            <span class="material-symbols-outlined">dashboard</span>Dashboard
+        </a>
+        <a class="flex items-center gap-3 px-6 py-3 text-[#c6c5d4] opacity-80 hover:bg-[#202b32] hover:text-[#d8e4ec] transition-all hover:translate-x-1 duration-200" href="detailed_storage.html">
+            <span class="material-symbols-outlined">inventory</span>Storage
+        </a>
+        <a class="flex items-center gap-3 px-6 py-3 text-[#c6c5d4] opacity-80 hover:bg-[#202b32] hover:text-[#d8e4ec] transition-all hover:translate-x-1 duration-200" href="detailed_shipment.html">
+            <span class="material-symbols-outlined">directions_boat</span>Shipments
+        </a>
+        
+        <a class="bg-[#202b32] text-[#fb6b00] border-l-4 border-[#fb6b00] flex items-center gap-3 px-4 py-3 mx-2 rounded-sm transition-all hover:translate-x-1 duration-200">
+            <span class="material-symbols-outlined">timeline</span> Shipment Timeline
+        </a>
+        
+    </nav>
+    <div class="mt-auto flex flex-col gap-2 border-t border-outline-variant/10 pt-6">
+        <a id="logout-btn" class="flex items-center gap-3 px-6 py-3 text-[#c6c5d4] opacity-80 hover:bg-[#202b32] hover:text-[#d8e4ec] transition-all cursor-pointer" href="#">
+            <span class="material-symbols-outlined">logout</span>Logout
+        </a>
+    </div>
+</aside>
+<!-- Main Content Wrapper -->
+<main class="ml-64 min-h-screen flex flex-col">
+<!-- TopNavBar -->
+<header class="bg-[#000d16]/80 backdrop-blur-xl docked full-width top-0 sticky z-50 border-b border-white/5 shadow-2xl shadow-black/50 flex justify-between items-center w-full px-6 h-16">
+<div class="flex items-center gap-4">
+<span class="text-lg font-black text-slate-200 dark:text-cyan-50 tracking-tighter uppercase font-headline">Shipment Calendar</span>
+<div class="h-4 w-[1px] bg-white/10"></div>
+<span class="text-cyan-400 font-bold border-b-2 border-cyan-400 pb-1 font-manrope tracking-tight text-sm">October 2024</span>
+</div>
+<div class="flex items-center gap-6">
+<!-- View Toggles -->
+<div class="flex bg-surface-container-lowest p-1 rounded-lg">
+<button class="px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors">Day</button>
+<button class="px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors">Week</button>
+<button class="px-4 py-1 text-[10px] font-bold uppercase tracking-widest bg-secondary-container text-on-secondary-container rounded shadow-sm">Month</button>
+</div>
+</div>
+</header>
+<!-- Calendar Canvas -->
+<div class="flex-1 p-6 overflow-y-auto custom-scrollbar">
+<!-- Calendar Header (Days of Week) -->
+<div class="grid grid-cols-7 mb-2">
+<div class="text-center py-2 text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant/60 font-headline">Monday</div>
+<div class="text-center py-2 text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant/60 font-headline">Tuesday</div>
+<div class="text-center py-2 text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant/60 font-headline">Wednesday</div>
+<div class="text-center py-2 text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant/60 font-headline">Thursday</div>
+<div class="text-center py-2 text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant/60 font-headline">Friday</div>
+<div class="text-center py-2 text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant/60 font-headline">Saturday</div>
+<div class="text-center py-2 text-[10px] font-black uppercase tracking-[0.2em] text-on-surface-variant/60 font-headline">Sunday</div>
+</div>
+<!-- Grid Container -->
+<div class="calendar-grid bg-surface-container-lowest rounded-xl overflow-hidden border border-white/5 shadow-inner">
+<!-- Week 1 Empty/Prev Month -->
+<div class="bg-surface-container-low/30 border-r border-b border-white/5 p-3 opacity-30 select-none">
+<span class="text-xs font-headline font-bold text-on-surface-variant">28</span>
+</div>
+<div class="bg-surface-container-low/30 border-r border-b border-white/5 p-3 opacity-30 select-none">
+<span class="text-xs font-headline font-bold text-on-surface-variant">29</span>
+</div>
+<div class="bg-surface-container-low/30 border-r border-b border-white/5 p-3 opacity-30 select-none">
+<span class="text-xs font-headline font-bold text-on-surface-variant">30</span>
+</div>
+<!-- Oct 1 -->
+<div class="group relative bg-surface border-r border-b border-white/5 p-3 hover:bg-surface-bright transition-colors cursor-pointer">
+<span class="text-xs font-headline font-bold text-on-surface">01</span>
+<div class="mt-4 flex flex-wrap gap-1.5">
+<div class="w-2 h-2 rounded-full bg-[#639922]" title="Inbound"></div>
+<div class="w-2 h-2 rounded-full bg-[#ffb692]" title="Outbound"></div>
+</div>
+</div>
+<!-- Oct 2 -->
+<div class="group relative bg-surface border-r border-b border-white/5 p-3 hover:bg-surface-bright transition-colors cursor-pointer">
+<span class="text-xs font-headline font-bold text-on-surface">02</span>
+<div class="mt-4 flex flex-wrap gap-1.5">
+<div class="w-2 h-2 rounded-full bg-[#5DCAA5]" title="Docked"></div>
+</div>
+</div>
+<!-- Oct 3 -->
+<div class="group relative bg-surface border-r border-b border-white/5 p-3 hover:bg-surface-bright transition-colors cursor-pointer">
+<span class="text-xs font-headline font-bold text-on-surface">03</span>
+</div>
+<!-- Oct 4 -->
+<div class="group relative bg-surface border-b border-white/5 p-3 hover:bg-surface-bright transition-colors cursor-pointer">
+<span class="text-xs font-headline font-bold text-on-surface">04</span>
+<div class="mt-4 flex flex-wrap gap-1.5">
+<div class="w-2 h-2 rounded-full bg-[#E24B4A]" title="Delayed"></div>
+<div class="w-2 h-2 rounded-full bg-[#ffb692]" title="Outbound"></div>
+</div>
+</div>
+<!-- Row 2 -->
+<div class="group relative bg-surface border-r border-b border-white/5 p-3 hover:bg-surface-bright transition-colors cursor-pointer">
+<span class="text-xs font-headline font-bold text-on-surface">05</span>
+</div>
+<div class="group relative bg-surface border-r border-b border-white/5 p-3 hover:bg-surface-bright transition-colors cursor-pointer">
+<span class="text-xs font-headline font-bold text-on-surface">06</span>
+<div class="mt-4 flex flex-wrap gap-1.5">
+<div class="w-2 h-2 rounded-full bg-[#639922]" title="Inbound"></div>
+</div>
+</div>
+<!-- Oct 7 (Highlighted / Today) -->
+<div onclick="togglePopup(event, 'day-07')" 
+     class="group relative bg-surface-container-high/50 border-r border-b border-white/5 p-2 min-h-[80px] hover:bg-surface-bright transition-colors cursor-pointer">
+
+  <span class="relative text-xs font-semibold text-tertiary">07</span>
+
+  <div class="mt-2 flex gap-1">
+    <span class="w-1.5 h-1.5 rounded-full bg-[#639922]"></span>
+    <span class="w-1.5 h-1.5 rounded-full bg-[#E24B4A]"></span>
+  </div>
+
+  <!-- POPUP -->
+  <div id="day-07" class="hidden absolute z-50 w-56 p-3 bg-surface-container-highest border border-white/10 rounded-lg shadow-xl">
+    
+    <!-- arrow -->
+    <div class="absolute -top-1 left-4 w-2 h-2 bg-surface-container-highest rotate-45 border-l border-t border-white/10"></div>
+
+    <h4 class="text-[10px] font-bold uppercase text-tertiary mb-2">
+      Oct 07 Shipments
+    </h4>
+
+    <ul class="flex flex-col gap-2 text-xs">
+      
+      <!-- inbound -->
+      <li class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="text-[#639922]">↓</span>
+          <span>Ever Given</span>
+        </div>
+        <span class="w-1.5 h-1.5 bg-[#639922] rounded-full"></span>
+      </li>
+
+      <!-- outbound -->
+      <li class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="text-[#E24B4A]">↑</span>
+          <span>Maersk Line</span>
+        </div>
+        <span class="w-1.5 h-1.5 bg-[#E24B4A] rounded-full"></span>
+      </li>
+
+      <!-- delayed -->
+      <li class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="text-[#ffb692]">⚠</span>
+          <span>Hapag Lloyd</span>
+        </div>
+        <span class="w-1.5 h-1.5 bg-[#ffb692] rounded-full"></span>
+      </li>
+
+    </ul>
+  </div>
+</div>
+<div class="group relative bg-surface border-r border-b border-white/5 p-3 hover:bg-surface-bright transition-colors cursor-pointer">
+<span class="text-xs font-headline font-bold text-on-surface">08</span>
+</div>
+<div class="group relative bg-surface border-r border-b border-white/5 p-3 hover:bg-surface-bright transition-colors cursor-pointer">
+<span class="text-xs font-headline font-bold text-on-surface">09</span>
+<div class="mt-4 flex flex-wrap gap-1.5">
+<div class="w-2 h-2 rounded-full bg-[#E24B4A]" title="Delayed"></div>
+</div>
+</div>
+<div class="group relative bg-surface border-r border-b border-white/5 p-3 hover:bg-surface-bright transition-colors cursor-pointer">
+<span class="text-xs font-headline font-bold text-on-surface">10</span>
+</div>
+<div class="group relative bg-surface border-b border-white/5 p-3 hover:bg-surface-bright transition-colors cursor-pointer">
+<span class="text-xs font-headline font-bold text-on-surface">11</span>
+</div>
+<!-- Row 3 -->
+<div class="group relative bg-surface border-r border-b border-white/5 p-3 hover:bg-surface-bright transition-colors cursor-pointer">
+<span class="text-xs font-headline font-bold text-on-surface">12</span>
+</div>
+<div class="group relative bg-surface border-r border-b border-white/5 p-3 hover:bg-surface-bright transition-colors cursor-pointer">
+<span class="text-xs font-headline font-bold text-on-surface">13</span>
+</div>
+<div class="group relative bg-surface border-r border-b border-white/5 p-3 hover:bg-surface-bright transition-colors cursor-pointer">
+<span class="text-xs font-headline font-bold text-on-surface">14</span>
+<div class="mt-4 flex flex-wrap gap-1.5">
+<div class="w-2 h-2 rounded-full bg-[#5DCAA5]" title="Docked"></div>
+</div>
+</div>
+<div class="group relative bg-surface border-r border-b border-white/5 p-3 hover:bg-surface-bright transition-colors cursor-pointer">
+<span class="text-xs font-headline font-bold text-on-surface">15</span>
+</div>
+<div class="group relative bg-surface border-r border-b border-white/5 p-3 hover:bg-surface-bright transition-colors cursor-pointer">
+<span class="text-xs font-headline font-bold text-on-surface">16</span>
+<div class="mt-4 flex flex-wrap gap-1.5">
+<div class="w-2 h-2 rounded-full bg-[#ffb692]" title="Outbound"></div>
+</div>
+</div>
+<div class="group relative bg-surface border-r border-b border-white/5 p-3 hover:bg-surface-bright transition-colors cursor-pointer">
+<span class="text-xs font-headline font-bold text-on-surface">17</span>
+</div>
+<div class="group relative bg-surface border-b border-white/5 p-3 hover:bg-surface-bright transition-colors cursor-pointer">
+<span class="text-xs font-headline font-bold text-on-surface">18</span>
+</div>
+<!-- Row 4 -->
+<div class="group relative bg-surface border-r border-b border-white/5 p-3 hover:bg-surface-bright transition-colors cursor-pointer">
+<span class="text-xs font-headline font-bold text-on-surface">19</span>
+</div>
+<div class="group relative bg-surface border-r border-b border-white/5 p-3 hover:bg-surface-bright transition-colors cursor-pointer">
+<span class="text-xs font-headline font-bold text-on-surface">20</span>
+</div>
+<div class="group relative bg-surface border-r border-b border-white/5 p-3 hover:bg-surface-bright transition-colors cursor-pointer">
+<span class="text-xs font-headline font-bold text-on-surface">21</span>
+<div class="mt-4 flex flex-wrap gap-1.5">
+<div class="w-2 h-2 rounded-full bg-[#639922]" title="Inbound"></div>
+</div>
+</div>
+<div class="group relative bg-surface border-r border-b border-white/5 p-3 hover:bg-surface-bright transition-colors cursor-pointer">
+<span class="text-xs font-headline font-bold text-on-surface">22</span>
+</div>
+<div class="group relative bg-surface border-r border-b border-white/5 p-3 hover:bg-surface-bright transition-colors cursor-pointer">
+<span class="text-xs font-headline font-bold text-on-surface">23</span>
+</div>
+<div class="group relative bg-surface border-r border-b border-white/5 p-3 hover:bg-surface-bright transition-colors cursor-pointer">
+<span class="text-xs font-headline font-bold text-on-surface">24</span>
+<div class="mt-4 flex flex-wrap gap-1.5">
+<div class="w-2 h-2 rounded-full bg-[#ffb692]" title="Delayed"></div>
+</div>
+</div>
+<div class="group relative bg-surface border-b border-white/5 p-3 hover:bg-surface-bright transition-colors cursor-pointer">
+<span class="text-xs font-headline font-bold text-on-surface">25</span>
+</div>
+<!-- Row 5 -->
+<div class="group relative bg-surface border-r border-white/5 p-3 hover:bg-surface-bright transition-colors cursor-pointer">
+<span class="text-xs font-headline font-bold text-on-surface">26</span>
+</div>
+<div class="group relative bg-surface border-r border-white/5 p-3 hover:bg-surface-bright transition-colors cursor-pointer">
+<span class="text-xs font-headline font-bold text-on-surface">27</span>
+</div>
+<div class="group relative bg-surface border-r border-white/5 p-3 hover:bg-surface-bright transition-colors cursor-pointer">
+<span class="text-xs font-headline font-bold text-on-surface">28</span>
+</div>
+<div class="group relative bg-surface border-r border-white/5 p-3 hover:bg-surface-bright transition-colors cursor-pointer">
+<span class="text-xs font-headline font-bold text-on-surface">29</span>
+</div>
+<div class="group relative bg-surface border-r border-white/5 p-3 hover:bg-surface-bright transition-colors cursor-pointer">
+<span class="text-xs font-headline font-bold text-on-surface">30</span>
+</div>
+<div class="group relative bg-surface border-r border-white/5 p-3 hover:bg-surface-bright transition-colors cursor-pointer">
+<span class="text-xs font-headline font-bold text-on-surface">31</span>
+<div class="mt-4 flex flex-wrap gap-1.5">
+<div class="w-2 h-2 rounded-full bg-[#639922]" title="Inbound"></div>
+<div class="w-2 h-2 rounded-full bg-[#639922]" title="Inbound"></div>
+</div>
+</div>
+<div class="bg-surface-container-low/30 border-white/5 p-3 opacity-30 select-none">
+<span class="text-xs font-headline font-bold text-on-surface-variant">01</span>
+</div>
+</div>
+<!-- Legend HUD -->
+<div class="mt-8 flex items-center justify-center gap-8 py-4 bg-surface-container-low/50 backdrop-blur rounded-xl border border-white/5">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-[#639922]"></div>
+<span class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant font-headline">Inbound Vessel</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-[#ffb692]"></div>
+<span class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant font-headline">Outbound Freight</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-[#5DCAA5]"></div>
+<span class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant font-headline">Currently Docked</span>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-[#E24B4A]"></div>
+<span class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant font-headline">Delayed / Alert</span>
+</div>
+</div>
+</div>
+</main>
+<script>
+function togglePopup(event, id) {
+  event.stopPropagation();
+
+  // close all popups
+  document.querySelectorAll('[id^="day-"]').forEach(p => {
+    if (p.id !== id) p.classList.add('hidden');
+  });
+
+  // toggle current
+  const popup = document.getElementById(id);
+  popup.classList.toggle('hidden');
+
+  // position near clicked cell
+  const rect = event.currentTarget.getBoundingClientRect();
+  popup.style.top = rect.height + "px";
+  popup.style.left = "0px";
+}
+
+// close on outside click
+document.addEventListener('click', () => {
+  document.querySelectorAll('[id^="day-"]').forEach(p => p.classList.add('hidden'));
+});
+</script>
+</body></html>

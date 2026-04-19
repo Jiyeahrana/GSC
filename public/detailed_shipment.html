@@ -113,12 +113,16 @@
         <a class="flex items-center gap-3 px-6 py-3 text-[#c6c5d4] opacity-80 hover:bg-[#202b32] hover:text-[#d8e4ec] transition-all hover:translate-x-1 duration-200" href="Dashboardport.html">
             <span class="material-symbols-outlined">dashboard</span>Dashboard
         </a>
-        <a class="bg-[#202b32] text-[#fb6b00] border-l-4 border-[#fb6b00] flex items-center gap-3 px-4 py-3 mx-2 rounded-sm transition-all hover:translate-x-1 duration-200">
+        <a class="flex items-center gap-3 px-6 py-3 text-[#c6c5d4] opacity-80 hover:bg-[#202b32] hover:text-[#d8e4ec] transition-all hover:translate-x-1 duration-200" href="detailed_storage.html">
             <span class="material-symbols-outlined">inventory</span>Storage
         </a>
-        <a class="flex items-center gap-3 px-6 py-3 text-[#c6c5d4] opacity-80 hover:bg-[#202b32] hover:text-[#d8e4ec] transition-all hover:translate-x-1 duration-200" href="#">
-            <span class="material-symbols-outlined">directions_boat</span>Shipments
+        <a class="bg-[#202b32] text-[#fb6b00] border-l-4 border-[#fb6b00] flex items-center gap-3 px-4 py-3 mx-2 rounded-sm transition-all hover:translate-x-1 duration-200">
+            <span class="material-symbols-outlined">directions_boat</span> Shipments
         </a>
+        <a class="flex items-center gap-3 px-6 py-3 text-[#c6c5d4] opacity-80 hover:bg-[#202b32] hover:text-[#d8e4ec] transition-all hover:translate-x-1 duration-200" href="shipment_timeline.html">
+            <span class="material-symbols-outlined">timeline</span>Shipment Timeline
+        </a>
+        
     </nav>
     <div class="mt-auto flex flex-col gap-2 border-t border-outline-variant/10 pt-6">
         <a id="logout-btn" class="flex items-center gap-3 px-6 py-3 text-[#c6c5d4] opacity-80 hover:bg-[#202b32] hover:text-[#d8e4ec] transition-all cursor-pointer" href="#">
@@ -238,7 +242,7 @@ Monitor vessel activity, arrivals, and departures in real time.    </p>
 <!-- Row 1 -->
 <div class="grid grid-cols-12 gap-4 px-6 py-5 items-center data-table-row cursor-pointer group transition-colors"
      data-id="ID1"><div class="col-span-2 flex items-center gap-3">
-<div class="w-1.5 h-8 bg-accent-orange rounded-full"></div>
+<div class="w-1.5 h-8 bg-[#4ADE80] rounded-full"></div>
 <span class="font-mono text-sm text-primary">ID1</span>
 </div>
 <div class="col-span-3 flex items-center gap-3">
@@ -261,6 +265,9 @@ Monitor vessel activity, arrivals, and departures in real time.    </p>
 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-900/40 text-green-400 border border-green-800/50 uppercase tracking-tighter">
 <span class="w-1 h-1 bg-green-400 rounded-full mr-1.5"></span>
                                 Docked
+<svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19V5m0 14l-7-7m7 7l7-7" />
+  </svg>
                             </span>
 </div>
 <div class="col-span-1 text-right relative">
@@ -317,7 +324,9 @@ Monitor vessel activity, arrivals, and departures in real time.    </p>
 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-900/40 text-blue-400 border border-blue-800/50 uppercase tracking-tighter">
 <span class="w-1 h-1 bg-blue-400 rounded-full mr-1.5"></span>
                                 In Transit
-                            </span>
+<svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19V5m0 14l-7-7m7 7l7-7" />
+  </svg>                            </span>
 </div>
 <div class="col-span-1 text-right relative">
 
@@ -373,6 +382,9 @@ Monitor vessel activity, arrivals, and departures in real time.    </p>
 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-900/40 text-red-400 border border-red-800/50 uppercase tracking-tighter">
 <span class="w-1 h-1 bg-red-400 rounded-full mr-1.5"></span>
                                 Delayed
+<svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19V5m0 14l-7-7m7 7l7-7" />
+  </svg>
                             </span>
 </div>
 <div class="col-span-1 text-right relative">
@@ -430,6 +442,9 @@ Monitor vessel activity, arrivals, and departures in real time.    </p>
 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-400 border border-slate-700 uppercase tracking-tighter">
 <span class="w-1 h-1 bg-slate-400 rounded-full mr-1.5"></span>
                                 Scheduled
+<svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19V5m0 14l-7-7m7 7l7-7" />
+  </svg>
                             </span>
 </div>
 <div class="col-span-1 text-right relative">
