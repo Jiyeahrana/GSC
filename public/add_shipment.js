@@ -15,14 +15,22 @@ document.getElementById("sidebar-user-name").textContent = userName;
 // ── Populate zone dropdown from localStorage ──────────────────────────────────
 
 function populateZones() {
-    const zones     = JSON.parse(localStorage.getItem("zones") || "[]");
-    const select    = document.getElementById("assigned-zone");
+    const zones  = JSON.parse(localStorage.getItem("zones") || "[]");
+    const select = document.getElementById("assigned-zone");
     select.innerHTML = `<option value="">-- Select Zone --</option>`;
 
-    zones.forEach(zone => {
-        const option   = document.createElement("option");
-        option.value   = zone.zone_id;
-        option.textContent = `Zone ${zone.zone_id} — ${zone.name} (max: ${zone.max_capacity})`;
+    zones.forEach((zone, index) => {
+        const option = document.createElement("option");
+
+        // Use zone_id if it exists, fall back to index-based letter
+        const letters  = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        const zoneId   = zone.zone_id || letters[index];
+        const zoneName = zone.name    || `Zone ${zoneId}`;
+        const maxCap   = zone.max_capacity || 0;
+
+        option.value       = zoneId;
+        option.textContent = `Zone ${zoneId} — ${zoneName} (max: ${maxCap})`;
+        option.className   = "bg-surface-container";    // ← add this line
         select.appendChild(option);
     });
 }

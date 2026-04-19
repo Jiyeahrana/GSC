@@ -359,4 +359,69 @@ const shipment = await Shipment.findById(
     }
 };
 
-module.exports = { register, login, getPortDetails, getPortZones, getPublicPorts, getPublicPortTimeline,trackShipment };
+const getCapacityPrediction = async (req, res) => {
+    try {
+        const { portId } = req.params;
+        const currentUsed = parseInt(req.query.current_used) || 0;
+
+        const port = await Port.findById(portId, "zones total_capacity");
+        if (!port) return res.status(404).json({ success: false, message: "Port not found" });
+
+        const totalCapacity = port.total_capacity || 0;
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tenDaysLater = new Date(today);
+        tenDaysLater.setDate(today.getDate() + 10);
+
+      const shipments = await Shipment.find({
+          port_id: portId,
+          "schedule.arrival": { $gte: today, $lte: tenDaysLater }
+      }, "type vessel.container_count schedule.arrival");
+
+        const days = [];
+        let runningCapacity = currentUsed;
+
+        for (let i = 0; i < 10; i++) {
+            const day = new Date(today);
+            day.setDate(today.getDate() + i);
+            const dayEnd = new Date(day);
+            dayEnd.setHours(23, 59, 59, 999);
+
+            const dayShipments = shipments.filter(s => {
+                const arrival = new Date(s.schedule.arrival);
+                return arrival >= day && arrival <= dayEnd;
+            });
+
+            dayShipments.forEach(s => {
+                if (s.type === "incoming") runningCapacity += (s.vessel?.container_count || 0);
+                if (s.type === "outgoing") runningCapacity -= (s.vessel?.container_count || 0);
+            });
+
+            runningCapacity = Math.max(0, runningCapacity);
+
+            days.push({
+                date: day.toISOString(),
+                predicted_used: runningCapacity,
+                total_capacity: totalCapacity,
+                pct: totalCapacity > 0 ? Math.min(Math.round((runningCapacity / totalCapacity) * 100), 100) : 0
+            });
+        }
+
+        const peakDay = days.reduce((max, d) => d.pct > max.pct ? d : max, days[0]);
+
+        return res.status(200).json({
+            success: true,
+            total_capacity: totalCapacity,
+            current_used: currentUsed,
+            days,
+            peak_date: peakDay.date
+        });
+
+    } catch (err) {
+        console.error("Capacity prediction error:", err);
+        return res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
+module.exports = { register, login, getPortDetails, getPortZones, getPublicPorts, getPublicPortTimeline,trackShipment, getCapacityPrediction };
