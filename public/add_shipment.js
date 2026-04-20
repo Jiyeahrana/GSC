@@ -76,6 +76,48 @@ async function fetchTelemetry() {
 
 fetchTelemetry();
 
+// ── Edit Mode ─────────────────────────────────────────────────────────────────
+
+const editId = new URLSearchParams(window.location.search).get("id");
+
+if (editId) {
+    document.querySelector("h1").textContent          = "EDIT SHIPMENT";
+    document.getElementById("submit-btn").innerHTML   = `Update Shipment <span class="material-symbols-outlined ml-2">update</span>`;
+    loadShipmentForEdit(editId);
+}
+
+async function loadShipmentForEdit(id) {
+    try {
+        const res  = await fetch(`http://localhost:3000/api/v1/shipments/${id}`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (!data.success) { showError("Could not load shipment data"); return; }
+
+        const s = data.data;
+
+        document.getElementById("vessel-name").value          = s.vessel.name;
+        document.getElementById("vessel-capacity").value      = s.vessel.capacity;
+        document.getElementById("vessel-container-count").value = s.vessel.container_count;
+        document.getElementById("cargo-origin").value         = s.cargo.origin;
+        document.getElementById("cargo-destination").value    = s.cargo.destination;
+        document.getElementById("gps-device-id").value        = s.gps_device_id;
+        document.getElementById("sender-name").value          = s.sender_name;
+        document.getElementById("sender-email").value         = s.sender_email;
+        document.getElementById("shipment-type").value        = s.type;
+        document.getElementById("shipment-status").value      = s.status;
+
+        // Format dates for datetime-local input (YYYY-MM-DDTHH:MM)
+        const fmt = (iso) => new Date(iso).toISOString().slice(0, 16);
+        document.getElementById("schedule-arrival").value   = fmt(s.schedule.arrival);
+        document.getElementById("schedule-departure").value = fmt(s.schedule.departure);
+
+    } catch (err) {
+        console.error("Load edit error:", err);
+        showError("Could not load shipment data");
+    }
+}
+
 // ── Error / success helpers ───────────────────────────────────────────────────
 
 function showError(message) {
@@ -164,22 +206,33 @@ document.getElementById("shipment-form").addEventListener("submit", async (e) =>
     btn.textContent = "Logging...";
 
     try {
-        const res  = await fetch("http://localhost:3000/api/v1/shipments", {
-            method:  "POST",
-            headers: {
-                "Content-Type":  "application/json",
-                "Authorization": `Bearer ${token}`
-            },
-            body: JSON.stringify(payload)
-        });
+        const isEdit = !!editId;
+
+        const res = await fetch(
+            isEdit
+                ? `http://localhost:3000/api/v1/shipments/${editId}`
+                : `http://localhost:3000/api/v1/shipments`,
+            {
+                method:  isEdit ? "PUT" : "POST",
+                headers: {
+                    "Content-Type":  "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            }
+        );
 
         const data = await res.json();
 
         if (data.success) {
-            showSuccess(`Shipment logged successfully! Tracking ID: ${data.data._id}`);
-            document.getElementById("shipment-form").reset();
+            if (isEdit) {
+                showSuccess("Shipment updated successfully!");
+            } else {
+                showSuccess(`Shipment logged successfully! Tracking ID: ${data.data._id}`);
+                document.getElementById("shipment-form").reset();
+            }
         } else {
-            showError(data.message || "Failed to log shipment");
+            showError(data.message || "Failed to save shipment");
         }
 
     } catch (err) {

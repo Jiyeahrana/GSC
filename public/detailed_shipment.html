@@ -210,22 +210,23 @@ Monitor vessel activity, arrivals, and departures in real time.    </p>
 <!-- Interaction Bar -->
 <div class="flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
 <div class="flex items-center gap-2 bg-surface-container-low p-1 rounded-lg">
-<button class="bg-accent-orange text-on-tertiary px-4 py-2 rounded-md text-[10px] font-bold uppercase tracking-wider">Latest First</button>
-<button class="text-slate-500 hover:text-slate-300 px-4 py-2 text-[10px] font-bold uppercase tracking-wider">Oldest First</button>
-<div class="w-px h-4 bg-surface-container-high mx-1"></div>
-<button class="text-slate-500 hover:text-slate-300 px-4 py-2 text-[10px] font-bold uppercase tracking-wider">Incoming</button>
-<button class="text-slate-500 hover:text-slate-300 px-4 py-2 text-[10px] font-bold uppercase tracking-wider">Outgoing</button>
+    <button id="btn-latest" data-group="sort" class="bg-accent-orange text-on-tertiary px-4 py-2 rounded-md text-[10px] font-bold uppercase tracking-wider">Latest First</button>
+    <button id="btn-oldest" data-group="sort" class="text-slate-500 hover:text-slate-300 px-4 py-2 text-[10px] font-bold uppercase tracking-wider">Oldest First</button>
+    <div class="w-px h-4 bg-surface-container-high mx-1"></div>
+    <button id="btn-all"      data-group="filter" class="bg-accent-orange text-on-tertiary px-4 py-2 rounded-md text-[10px] font-bold uppercase tracking-wider">All</button>
+    <button id="btn-incoming" data-group="filter" class="text-slate-500 hover:text-slate-300 px-4 py-2 text-[10px] font-bold uppercase tracking-wider">Incoming</button>
+    <button id="btn-outgoing" data-group="filter" class="text-slate-500 hover:text-slate-300 px-4 py-2 text-[10px] font-bold uppercase tracking-wider">Outgoing</button>
 </div>
 <div class="flex items-center gap-3">
-<span class="text-[10px] text-slate-500 font-bold uppercase">Displaying 1-x of y entries</span>
-<div class="flex gap-1">
-<button class="w-8 h-8 flex items-center justify-center bg-surface-container-high hover:bg-surface-bright rounded text-slate-400">
-<span class="material-symbols-outlined text-sm">chevron_left</span>
-</button>
-<button class="w-8 h-8 flex items-center justify-center bg-surface-container-high hover:bg-surface-bright rounded text-slate-400">
-<span class="material-symbols-outlined text-sm">chevron_right</span>
-</button>
-</div>
+    <span id="pagination-label" class="text-[10px] text-slate-500 font-bold uppercase">Loading...</span>
+    <div class="flex gap-1">
+        <button id="btn-prev" class="w-8 h-8 flex items-center justify-center bg-surface-container-high hover:bg-surface-bright rounded text-slate-400 disabled:opacity-30">
+            <span class="material-symbols-outlined text-sm">chevron_left</span>
+        </button>
+        <button id="btn-next" class="w-8 h-8 flex items-center justify-center bg-surface-container-high hover:bg-surface-bright rounded text-slate-400 disabled:opacity-30">
+            <span class="material-symbols-outlined text-sm">chevron_right</span>
+        </button>
+    </div>
 </div>
 </div>
 <!-- Detailed Data Table -->
@@ -238,280 +239,11 @@ Monitor vessel activity, arrivals, and departures in real time.    </p>
 <div class="col-span-2">Status</div>
 <div class="col-span-1 text-right">Action</div>
 </div>
-<div class="divide-y divide-surface-container-high/50">
-<!-- Row 1 -->
-<div class="grid grid-cols-12 gap-4 px-6 py-5 items-center data-table-row cursor-pointer group transition-colors"
-     data-id="ID1"><div class="col-span-2 flex items-center gap-3">
-<div class="w-1.5 h-8 bg-[#4ADE80] rounded-full"></div>
-<span class="font-mono text-sm text-primary">ID1</span>
-</div>
-<div class="col-span-3 flex items-center gap-3">
-<div>
-<div class="text-sm font-bold text-on-surface">Evergreen Triton</div>
-<div class="text-[10px] text-slate-500 uppercase tracking-tight">Panama Flag •  UNITS</div>
-</div>
-</div>
-<div class="col-span-2">
-<div class="text-sm text-on-surface">Oct 24, 2023</div>
-<div class="text-[10px] text-slate-500 uppercase">14:30 ETA</div>
-</div>
-<div class="col-span-2">
-<div class="flex items-center gap-1.5">
-<span class="material-symbols-outlined text-sm text-slate-500">grid_view</span>
-<span class="text-xs text-on-surface uppercase font-medium">ZONE A</span>
-</div>
-</div>
-<div class="col-span-2">
-<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-900/40 text-green-400 border border-green-800/50 uppercase tracking-tighter">
-<span class="w-1 h-1 bg-green-400 rounded-full mr-1.5"></span>
-                                Docked
-<svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19V5m0 14l-7-7m7 7l7-7" />
-  </svg>
-                            </span>
-</div>
-<div class="col-span-1 text-right relative">
-
-  <!-- 3 DOT BUTTON -->
-  <button onclick="toggleMenu(this)" 
-    class="text-slate-500 hover:text-accent-orange transition-colors">
-    <span class="material-symbols-outlined">more_vert</span>
-  </button>
-
-  <!-- DROPDOWN MENU -->
-  <div class="menu hidden absolute right-0 mt-2 w-32 bg-slate-900 border border-slate-700 rounded-lg shadow-lg z-50">
-    
-    <!-- EDIT -->
-     <button onclick="editShipment(this)" 
-  class="w-full text-left px-4 py-2 text-sm hover:bg-slate-800 flex items-center gap-2">
-  <span class="material-symbols-outlined text-sm">edit</span>
-  Edit
-</button>
-    <!-- DELETE -->
-    <button onclick="deleteRow(this)" 
-      class="w-full text-left px-4 py-2 text-sm hover:bg-red-600/20 text-red-400 flex items-center gap-2">
-      <span class="material-symbols-outlined text-sm">delete</span>
-      Delete
-    </button>
-
-  </div>
-
-</div>
-</div>
-<!-- Row 2 -->
-<div class="grid grid-cols-12 gap-4 px-6 py-5 items-center data-table-row cursor-pointer group transition-colors"
-     data-id="ID2"><div class="col-span-2 flex items-center gap-3">
-<div class="w-1.5 h-8 bg-blue-500 rounded-full"></div>
-<span class="font-mono text-sm text-primary">ID2</span>
-</div>
-<div class="col-span-3 flex items-center gap-3">
-<div>
-<div class="text-sm font-bold text-on-surface">Pacific Mariner</div>
-<div class="text-[10px] text-slate-500 uppercase tracking-tight">Liberia Flag • UNITS</div>
-</div>
-</div>
-<div class="col-span-2">
-<div class="text-sm text-on-surface">Oct 25, 2023</div>
-<div class="text-[10px] text-slate-500 uppercase">09:15 ETA</div>
-</div>
-<div class="col-span-2">
-<div class="flex items-center gap-1.5">
-<span class="material-symbols-outlined text-sm text-slate-500">grid_view</span>
-<span class="text-xs text-on-surface uppercase font-medium">ZONE D</span>
-</div>
-</div>
-<div class="col-span-2">
-<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-900/40 text-blue-400 border border-blue-800/50 uppercase tracking-tighter">
-<span class="w-1 h-1 bg-blue-400 rounded-full mr-1.5"></span>
-                                In Transit
-<svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19V5m0 14l-7-7m7 7l7-7" />
-  </svg>                            </span>
-</div>
-<div class="col-span-1 text-right relative">
-
-  <!-- 3 DOT BUTTON -->
-  <button onclick="toggleMenu(this)" 
-    class="text-slate-500 hover:text-accent-orange transition-colors">
-    <span class="material-symbols-outlined">more_vert</span>
-  </button>
-
-  <!-- DROPDOWN MENU -->
-  <div class="menu hidden absolute right-0 mt-2 w-32 bg-slate-900 border border-slate-700 rounded-lg shadow-lg z-50">
-    
-    <!-- EDIT -->
-     <button onclick="editShipment(this)" 
-  class="w-full text-left px-4 py-2 text-sm hover:bg-slate-800 flex items-center gap-2">
-  <span class="material-symbols-outlined text-sm">edit</span>
-  Edit
-</button>
-    <!-- DELETE -->
-    <button onclick="deleteRow(this)" 
-      class="w-full text-left px-4 py-2 text-sm hover:bg-red-600/20 text-red-400 flex items-center gap-2">
-      <span class="material-symbols-outlined text-sm">delete</span>
-      Delete
-    </button>
-
-  </div>
-
-</div>
-</div>
-<!-- Row 3 (Delayed) -->
-<div class="grid grid-cols-12 gap-4 px-6 py-5 items-center data-table-row cursor-pointer group transition-colors"
-     data-id="ID3"><div class="col-span-2 flex items-center gap-3">
-<div class="w-1.5 h-8 bg-red-500 rounded-full"></div>
-<span class="font-mono text-sm text-primary">ID3</span>
-</div>
-<div class="col-span-3 flex items-center gap-3">
-<div>
-<div class="text-sm font-bold text-on-surface">Northern Star</div>
-<div class="text-[10px] text-slate-500 uppercase tracking-tight">Norway Flag •  UNITS</div>
-</div>
-</div>
-<div class="col-span-2">
-<div class="text-sm text-on-surface">Oct 24, 2023</div>
-<div class="text-[10px] text-red-400 uppercase font-bold">Delayed (+6h)</div>
-</div>
-<div class="col-span-2">
-<div class="flex items-center gap-1.5">
-<span class="material-symbols-outlined text-sm text-slate-500">grid_view</span>
-<span class="text-xs text-on-surface uppercase font-medium">ZONE B</span>
-</div>
-</div>
-<div class="col-span-2">
-<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-900/40 text-red-400 border border-red-800/50 uppercase tracking-tighter">
-<span class="w-1 h-1 bg-red-400 rounded-full mr-1.5"></span>
-                                Delayed
-<svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19V5m0 14l-7-7m7 7l7-7" />
-  </svg>
-                            </span>
-</div>
-<div class="col-span-1 text-right relative">
-
-  <!-- 3 DOT BUTTON -->
-  <button onclick="toggleMenu(this)" 
-    class="text-slate-500 hover:text-accent-orange transition-colors">
-    <span class="material-symbols-outlined">more_vert</span>
-  </button>
-
-  <!-- DROPDOWN MENU -->
-  <div class="menu hidden absolute right-0 mt-2 w-32 bg-slate-900 border border-slate-700 rounded-lg shadow-lg z-50">
-    
-    <!-- EDIT -->
-     <button onclick="editShipment(this)" 
-  class="w-full text-left px-4 py-2 text-sm hover:bg-slate-800 flex items-center gap-2">
-  <span class="material-symbols-outlined text-sm">edit</span>
-  Edit
-</button>
-    <!-- DELETE -->
-    <button onclick="deleteRow(this)" 
-      class="w-full text-left px-4 py-2 text-sm hover:bg-red-600/20 text-red-400 flex items-center gap-2">
-      <span class="material-symbols-outlined text-sm">delete</span>
-      Delete
-    </button>
-
-  </div>
-
-</div>
-</div>
-<!-- Row 4 -->
-<div class="grid grid-cols-12 gap-4 px-6 py-5 items-center data-table-row cursor-pointer group transition-colors"
-     data-id="ID4">
-<div class="col-span-2 flex items-center gap-3">
-<div class="w-1.5 h-8 bg-slate-600 rounded-full"></div>
-<span class="font-mono text-sm text-primary">ID4</span>
-</div>
-<div class="col-span-3 flex items-center gap-3">
-<div>
-<div class="text-sm font-bold text-on-surface">Global Express</div>
-<div class="text-[10px] text-slate-500 uppercase tracking-tight">Marshall Is. • UNITS</div>
-</div>
-</div>
-<div class="col-span-2">
-<div class="text-sm text-on-surface">Oct 26, 2023</div>
-<div class="text-[10px] text-slate-500 uppercase">22:00 ETA</div>
-</div>
-<div class="col-span-2">
-<div class="flex items-center gap-1.5">
-<span class="material-symbols-outlined text-sm text-slate-500">grid_view</span>
-<span class="text-xs text-on-surface uppercase font-medium">ZONE C</span>
-</div>
-</div>
-<div class="col-span-2">
-<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-400 border border-slate-700 uppercase tracking-tighter">
-<span class="w-1 h-1 bg-slate-400 rounded-full mr-1.5"></span>
-                                Scheduled
-<svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19V5m0 14l-7-7m7 7l7-7" />
-  </svg>
-                            </span>
-</div>
-<div class="col-span-1 text-right relative">
-
-  <!-- 3 DOT BUTTON -->
-  <button onclick="toggleMenu(this)" 
-    class="text-slate-500 hover:text-accent-orange transition-colors">
-    <span class="material-symbols-outlined">more_vert</span>
-  </button>
-
-  <!-- DROPDOWN MENU -->
-  <div class="menu hidden absolute right-0 mt-2 w-32 bg-slate-900 border border-slate-700 rounded-lg shadow-lg z-50">
-    
-    <!-- EDIT -->
-    <button onclick="editShipment(this)" 
-  class="w-full text-left px-4 py-2 text-sm hover:bg-slate-800 flex items-center gap-2">
-  <span class="material-symbols-outlined text-sm">edit</span>
-  Edit
-</button>
-    <!-- DELETE -->
-    <button onclick="deleteRow(this)" 
-      class="w-full text-left px-4 py-2 text-sm hover:bg-red-600/20 text-red-400 flex items-center gap-2">
-      <span class="material-symbols-outlined text-sm">delete</span>
-      Delete
-    </button>
-
-  </div>
-
-</div>
-</div>
+<div id="shipments-tbody" class="divide-y divide-surface-container-high/50">
+    <!-- Dynamically rendered -->
 </div>
 </div>
 </section>
 </main>
-<script>
-function toggleMenu(button) {
-  const menu = button.parentElement.querySelector(".menu");
-
-  document.querySelectorAll(".menu").forEach(m => {
-    if (m !== menu) m.classList.add("hidden");
-  });
-
-  menu.classList.toggle("hidden");
-}
-
-function deleteRow(btn) {
-  const row = btn.closest(".data-table-row");
-  const id = row.dataset.id;
-
-  // TEMP (UI only)
-  row.remove();
-
-  // 🔥 Later:
-  // fetch(`/api/shipments/${id}`, { method: "DELETE" })
-}
-
-function editShipment(btn) {
-  const row = btn.closest(".data-table-row");
-  const id = row.dataset.id;
-
-  window.location.href = `add_shipment.html?id=${id}`;
-}
-
-document.addEventListener("click", function(e) {
-  if (!e.target.closest(".menu") && !e.target.closest("button")) {
-    document.querySelectorAll(".menu").forEach(m => m.classList.add("hidden"));
-  }
-});
-</script>
+<script src="detailed_shipment.js"></script>
 </body></html>

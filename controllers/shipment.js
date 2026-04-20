@@ -167,4 +167,73 @@ const createShipment = async (req, res) => {
     }
 };
 
-module.exports = { getAllShipments, getTodayShipments, getShipment, createShipment };
+const deleteShipment = async (req, res) => {
+    try {
+        const shipment = await Shipment.findOneAndDelete({
+            _id: req.params.id,
+            port_id: req.user.port_id
+        });
+        if (!shipment) return res.status(404).json({ success: false, message: "Shipment not found" });
+        return res.status(200).json({ success: true });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+const updateShipment = async (req, res) => {
+    try {
+        const shipment = await Shipment.findOne({
+            _id: req.params.id,
+            port_id: req.user.port_id
+        });
+
+        if (!shipment) {
+            return res.status(404).json({ success: false, message: "Shipment not found" });
+        }
+
+        const {
+            vessel, cargo, schedule, type,
+            status, gps_device_id, sender_name, sender_email
+        } = req.body;
+
+        if (vessel)   {
+            shipment.vessel.name            = vessel.name            || shipment.vessel.name;
+            shipment.vessel.capacity        = vessel.capacity        || shipment.vessel.capacity;
+            shipment.vessel.container_count = vessel.container_count || shipment.vessel.container_count;
+        }
+        if (cargo)    {
+            shipment.cargo.origin      = cargo.origin      || shipment.cargo.origin;
+            shipment.cargo.destination = cargo.destination || shipment.cargo.destination;
+        }
+        if (schedule) {
+            if (schedule.arrival)   shipment.schedule.arrival   = new Date(schedule.arrival);
+            if (schedule.departure) shipment.schedule.departure = new Date(schedule.departure);
+        }
+        if (type)          shipment.type          = type;
+        if (status)        shipment.status        = status;
+        if (gps_device_id) shipment.gps_device_id = gps_device_id;
+        if (sender_name)   shipment.sender_name   = sender_name;
+        if (sender_email)  shipment.sender_email  = sender_email;
+
+        if (shipment.schedule.arrival >= shipment.schedule.departure) {
+            return res.status(400).json({
+                success: false,
+                message: "Arrival date must be before departure date"
+            });
+        }
+
+        await shipment.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Shipment updated successfully",
+            data: shipment
+        });
+
+    } catch (error) {
+        console.error("Update shipment error:", error);
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+module.exports = { getAllShipments, getTodayShipments, getShipment, createShipment,deleteShipment,updateShipment };
