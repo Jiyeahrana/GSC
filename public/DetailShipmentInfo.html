@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>NAUTICAL.OS | Shipment Detail</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-fixed-dim": "#a4cce8",
+                        "inverse-primary": "#525f71",
+                        "primary-fixed": "#d6e4f8",
+                        "on-tertiary": "#562000",
+                        "on-primary-fixed": "#0f1c2b",
+                        "tertiary-fixed-dim": "#ffb692",
+                        "on-error": "#690005",
+                        "surface-variant": "#233746",
+                        "inverse-surface": "#d0e5f9",
+                        "on-primary-container": "#465465",
+                        "error": "#ffb4ab",
+                        "secondary-container": "#214b62",
+                        "on-error-container": "#ffdad6",
+                        "on-secondary-container": "#93bad6",
+                        "secondary-fixed": "#c6e7ff",
+                        "surface-container-highest": "#233746",
+                        "secondary": "#a4cce8",
+                        "primary-fixed-dim": "#bac8dc",
+                        "primary-container": "#bac8dc",
+                        "tertiary-container": "#ffb693",
+                        "on-secondary-fixed-variant": "#214b62",
+                        "tertiary": "#ffdbcc",
+                        "background": "#001523",
+                        "on-secondary": "#02344b",
+                        "on-background": "#d0e5f9",
+                        "on-tertiary-container": "#8d3900",
+                        "surface-container-high": "#172c3b",
+                        "surface-tint": "#bac8dc",
+                        "surface-dim": "#001523",
+                        "on-surface": "#d0e5f9",
+                        "inverse-on-surface": "#1e3342",
+                        "tertiary-fixed": "#ffdbcb",
+                        "error-container": "#93000a",
+                        "surface-bright": "#273b4b",
+                        "primary": "#d6e4f9",
+                        "on-surface-variant": "#c4c6cc",
+                        "on-secondary-fixed": "#001e2d",
+                        "surface-container-lowest": "#00101c",
+                        "surface-container": "#0c2230",
+                        "outline-variant": "#44474c",
+                        "on-tertiary-fixed-variant": "#7a3000",
+                        "outline": "#8e9196",
+                        "surface": "#001523",
+                        "surface-container-low": "#071d2c",
+                        "on-tertiary-fixed": "#341000",
+                        "on-primary": "#243141",
+                        "on-primary-fixed-variant": "#3a4858"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background: rgba(23, 44, 59, 0.7);
+            backdrop-filter: blur(24px);
+            border-top: 1px solid rgba(214, 228, 249, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body min-h-screen">
+<!-- TopNavBar -->
+<header class="bg-[#000d16]/80 backdrop-blur-xl docked full-width top-0 sticky z-50 border-b border-white/5 shadow-2xl shadow-black/50 flex justify-between items-center w-full px-6 h-16">
+<div class="flex items-center gap-4">
+<span class="text-lg font-black text-slate-200 dark:text-cyan-50 tracking-tighter uppercase font-headline">Shipment Info</span>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="min-h-screen w-full">
+<div class="pl-20 pr-20 max-w-full mx-auto px-6 pb-12 space-y-6">
+<!-- Ship Info Panel -->
+<section class="grid grid-cols-1 md:grid-cols-4 gap-4 p-6 surface-container glass-panel rounded-xl">
+<div class="md:col-span-1 space-y-1 border-r border-outline-variant/10">
+<p class="font-label text-xs text-on-surface-variant uppercase tracking-widest">Ship ID</p>
+<h2 class="font-headline text-2xl font-extrabold text-primary">SH-2024-X9</h2>
+<div class="mt-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#fb6b00]/10 text-[#fb6b00] border border-[#fb6b00]/20">
+<span class="w-1.5 h-1.5 rounded-full bg-[#fb6b00] mr-2"></span>
+                        On Time
+                    </div>
+</div>
+<div class="grid grid-cols-2 gap-4 md:col-span-2 px-4 border-r border-outline-variant/10">
+<div class="space-y-1">
+<p class="font-label text-[10px] text-on-surface-variant uppercase tracking-widest">Tracking ID</p>
+<p class="font-mono text-sm text-on-surface">TRK-8829-NM-10</p>
+</div>
+<div class="space-y-1">
+<p class="font-label text-[10px] text-on-surface-variant uppercase tracking-widest">GPS Device</p>
+<p class="font-mono text-sm text-on-surface">NAV-004-92</p>
+</div>
+<div class="space-y-1">
+<p class="font-label text-[10px] text-on-surface-variant uppercase tracking-widest">Route</p>
+<p class="text-sm font-semibold text-primary">Singapore → Rotterdam</p>
+</div>
+<div class="space-y-1">
+<p class="font-label text-[10px] text-on-surface-variant uppercase tracking-widest">Departure</p>
+<p class="text-sm text-on-surface">Oct 12, 2024</p>
+</div>
+</div>
+<div class="md:col-span-1 flex flex-col justify-center items-end space-y-1">
+<p class="font-label text-[10px] text-on-surface-variant uppercase tracking-widest">Est. Completion</p>
+<p class="font-headline text-xl text-primary-fixed">14.2 Days</p>
+<p class="text-[10px] text-on-surface-variant">ETA: Nov 04, 08:00 UTC</p>
+</div>
+</section>
+<!-- Map and Analytics Split -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[600px]">
+<!-- Live Checkpoint Map -->
+<div class="lg:col-span-8 relative overflow-hidden rounded-xl bg-surface-container-high border border-outline-variant/10 shadow-xl group">
+<div class="absolute inset-0 bg-[#001c2d]" data-alt="minimalist digital maritime chart of the Indian Ocean with deep navy waters and subtle glowing bathymetric lines" data-location="Indian Ocean" style="">
+<!-- Simulated Map SVG Path -->
+<svg class="w-full h-full" fill="none" viewbox="0 0 800 500" xmlns="http://www.w3.org/2000/svg">
+<!-- Completed Path -->
+<path d="M100 400 L250 320 L400 280" stroke="#fb6b00" stroke-linecap="round" stroke-width="3"></path>
+<!-- Upcoming Path -->
+<path d="M400 280 L550 200 L700 100" stroke="#fb6b00" stroke-dasharray="8 8" stroke-opacity="0.5" stroke-width="3"></path>
+<!-- Checkpoints -->
+<circle cx="100" cy="400" fill="#fb6b00" r="4"></circle>
+<circle cx="250" cy="320" fill="#fb6b00" r="4"></circle>
+<!-- Current Vessel Icon -->
+<g transform="translate(390, 270)">
+<rect fill="#fb6b00" height="20" rx="4" width="20"></rect>
+<text fill="#000" font-family="Material Symbols Outlined" font-size="14" x="3" y="15">directions_boat</text>
+<circle class="animate-pulse" cx="10" cy="10" r="15" stroke="#fb6b00" stroke-width="1"></circle>
+</g>
+<!-- Labels -->
+<text fill="#bac8dc" font-family="Inter" font-size="10" font-weight="600" x="100" y="420">Singapore</text>
+<text fill="#fb6b00" font-family="Inter" font-size="10" font-weight="800" x="380" y="260">Current: Laccadive Sea</text>
+<text fill="#bac8dc" font-family="Inter" font-size="10" font-weight="600" x="680" y="90">Rotterdam</text>
+</svg>
+</div>
+<!-- HUD Overlay -->
+<div class="absolute bottom-6 left-6 right-6 flex justify-between items-end">
+<div class="glass-panel p-4 rounded-lg flex gap-8">
+<div>
+<p class="text-[10px] text-on-surface-variant uppercase tracking-tighter">Lat / Long</p>
+<p class="text-sm font-mono text-primary">05.93° N, 77.24° E</p>
+</div>
+<div>
+<p class="text-[10px] text-on-surface-variant uppercase tracking-tighter">Knots</p>
+<p class="text-sm font-mono text-primary">18.4 kt</p>
+</div>
+<div>
+<p class="text-[10px] text-on-surface-variant uppercase tracking-tighter">Heading</p>
+<p class="text-sm font-mono text-primary">284° WNW</p>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="w-10 h-10 glass-panel flex items-center justify-center rounded hover:bg-surface-bright transition-colors">
+<span class="material-symbols-outlined text-sm">add</span>
+</button>
+<button class="w-10 h-10 glass-panel flex items-center justify-center rounded hover:bg-surface-bright transition-colors">
+<span class="material-symbols-outlined text-sm">remove</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Delay & Analytics Panel -->
+<div class="lg:col-span-4 flex flex-col gap-6">
+<!-- Progress Comparison -->
+<div class="surface-container bg-[#101E29] p-6 rounded-xl border-l-4 border-[#fb6b00] space-y-6">
+<h3 class="font-headline text-lg font-extrabold text-primary">Live Progress</h3>
+<div class="space-y-4">
+<div class="space-y-2">
+<div class="flex justify-between text-xs font-medium">
+<span class="text-on-surface-variant">Actual Progress</span>
+<span class="text-primary">42%</span>
+</div>
+<div class="h-2 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary" style="width: 42%"></div>
+</div>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between text-xs font-medium">
+<span class="text-on-surface-variant">Expected Arrival</span>
+<span class="text-on-surface">45% (Benchmark)</span>
+</div>
+<div class="h-2 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-surface-variant" style="width: 45%"></div>
+</div>
+</div>
+</div>
+<div class="pt-4 border-t border-outline-variant/10">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-error text-xl">warning</span>
+<div>
+<p class="text-sm font-bold text-error">Minor Delay Risk: 12%</p>
+<p class="text-xs text-on-surface-variant mt-1">Due to tropical depression 'K-19' moving toward Gulf of Aden.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Telemetry Bento Grid Section -->
+<div class="grid grid-cols-2 gap-4 flex-1">
+<div class=" bg-[#101E29] surface-container p-4 rounded-xl flex flex-col justify-between">
+<span class="material-symbols-outlined text-primary-fixed-dim">thermostat</span>
+<div>
+<p class="text-[10px] text-on-surface-variant uppercase tracking-widest">Ambient Temp</p>
+<p class="text-xl font-headline font-extrabold">28.4°C</p>
+</div>
+</div>
+<div class=" bg-[#101E29] surface-container p-4 rounded-xl flex flex-col justify-between">
+<span class="material-symbols-outlined text-primary-fixed-dim">air</span>
+<div>
+<p class="text-[10px] text-on-surface-variant uppercase tracking-widest">Wind Velocity</p>
+<p class="text-xl font-headline font-extrabold">12.2 kn</p>
+</div>
+</div>
+<div class="  bg-[#101E29] surface-container p-4 rounded-xl col-span-2 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-success/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-green-400 text-sm">check_circle</span>
+</div>
+<div>
+<p class="text-[10px] text-on-surface-variant uppercase tracking-widest">Hull Integrity</p>
+<p class="text-sm font-bold">Optimal (99.8%)</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant">chevron_right</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Detail Grid (Editorial Look) -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="md:col-span-2 glass-panel p-8 rounded-xl relative overflow-hidden">
+<div class="relative z-10 space-y-6">
+<div class="flex justify-between items-center">
+<h4 class="font-headline text-xl font-extrabold">Checkpoint Timeline</h4>
+<button class="text-xs font-bold text-primary uppercase tracking-widest border-b border-primary/30">Export Log</button>
+</div>
+<div class="space-y-6">
+<div class="flex gap-4 items-start relative pb-6">
+<div class="w-0.5 h-full absolute left-3 top-6 bg-outline-variant/30"></div>
+<div class="w-6 h-6 rounded-full bg-primary flex items-center justify-center relative z-10 ring-4 ring-background">
+<span class="material-symbols-outlined text-[12px] text-background" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<div>
+<p class="text-sm font-bold text-on-surface">Port of Singapore (Departure)</p>
+<p class="text-xs text-on-surface-variant">Cleared Oct 12, 04:12 UTC</p>
+</div>
+</div>
+<div class="flex gap-4 items-start relative pb-6">
+<div class="w-0.5 h-full absolute left-3 top-6 bg-outline-variant/30"></div>
+<div class="w-6 h-6 rounded-full bg-primary flex items-center justify-center relative z-10 ring-4 ring-background">
+<span class="material-symbols-outlined text-[12px] text-background" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<div>
+<p class="text-sm font-bold text-on-surface">Malacca Straits Crossing</p>
+<p class="text-xs text-on-surface-variant">Cleared Oct 14, 22:50 UTC</p>
+</div>
+</div>
+<div class="flex gap-4 items-start relative">
+<div class="w-6 h-6 rounded-full bg-[#fb6b00] flex items-center justify-center relative z-10 ring-4 ring-background animate-pulse">
+<span class="material-symbols-outlined text-[12px] text-background" style="font-variation-settings: 'FILL' 1;">radio_button_checked</span>
+</div>
+<div>
+<p class="text-sm font-bold text-[#fb6b00]">Current: Indian Ocean Sector 4</p>
+<p class="text-xs text-on-surface-variant">In Progress - Tracking Active</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Decorative Graphic -->
+<div class="absolute right-0 top-0 bottom-0 w-48 opacity-5 pointer-events-none">
+<svg class="w-full h-full" viewbox="0 0 100 200">
+<circle cx="100" cy="100" fill="none" r="80" stroke="white" stroke-width="0.5"></circle>
+<circle cx="100" cy="100" fill="none" r="60" stroke="white" stroke-width="0.5"></circle>
+<line stroke="white" stroke-width="0.5" x1="20" x2="100" y1="100" y2="100"></line>
+</svg>
+</div>
+</div>
+<div class="surface-container p-6 rounded-xl flex flex-col gap-4">
+<h4 class="font-headline text-lg font-extrabold text-primary">Cargo Health</h4>
+<div class="flex-1 rounded-lg overflow-hidden relative">
+<img class="w-full h-full object-cover grayscale opacity-40" data-alt="thermal imaging view of stacked industrial containers on a ship deck with subtle heat signatures in blue and orange" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBTQbxENyfyzgErRPxBklY46pL2BTv2YTi8FQ7Arlgu9hxFYRbGVXQCsABulZDwck5np0FegcVk5pWjzPt34odeqRDS8vkBKREBxLNfUBoDprXMp_qgchLke7QgFVK7-vQSEex7k3xROO3a-n78GX6Thlk7tu8hxtjl4sE_Jt4wWXN90MmT5pK3IHHt7fBVHv3I1k_k3RJ4rMSv5Q4iZ-rmWcxdnHMjhZLvLqbdZfE7S-RBZ2XlZutVrrhvbFBxw91RZFWNwPpZnitr"/>
+<div class="absolute inset-0 bg-gradient-to-t from-background to-transparent p-4 flex flex-col justify-end">
+<p class="text-[10px] text-on-surface-variant uppercase tracking-widest">Refrigerated Unit #A92</p>
+<p class="text-sm font-bold">-18.2°C <span class="text-green-400 ml-2 font-normal text-xs">(Stable)</span></p>
+</div>
+</div>
+<div class="space-y-3">
+<div class="flex justify-between items-center py-2 border-b border-outline-variant/10">
+<span class="text-xs text-on-surface-variant">Total Weight</span>
+<span class="text-xs font-bold">14,200 MT</span>
+</div>
+<div class="flex justify-between items-center py-2 border-b border-outline-variant/10">
+<span class="text-xs text-on-surface-variant">Hazmat Rating</span>
+<span class="text-xs font-bold text-yellow-500">CLASS 3 (Limited)</span>
+</div>
+<button class="w-full py-2 bg-surface-container-highest text-xs font-bold uppercase tracking-widest rounded hover:bg-surface-bright transition-colors">Full Manifest</button>
+</div>
+</div>
+</section>
+</div>
+</main>
+</body></html>
