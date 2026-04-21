@@ -236,4 +236,124 @@ const updateShipment = async (req, res) => {
     }
 };
 
-module.exports = { getAllShipments, getTodayShipments, getShipment, createShipment,deleteShipment,updateShipment };
+// GET /api/v1/shipments/calendar?year=2026&month=4
+const getCalendarShipments = async (req, res) => {
+    try {
+        const year  = parseInt(req.query.year)  || new Date().getFullYear();
+        const month = parseInt(req.query.month) || new Date().getMonth() + 1;
+
+        const startOfMonth = new Date(year, month - 1, 1);
+        const endOfMonth   = new Date(year, month, 0, 23, 59, 59, 999);
+
+        const shipments = await Shipment.find({
+            port_id: req.user.port_id,
+            $or: [
+                { "schedule.arrival":   { $gte: startOfMonth, $lte: endOfMonth } },
+                { "schedule.departure": { $gte: startOfMonth, $lte: endOfMonth } }
+            ]
+        }, "vessel.name type status schedule.arrival schedule.departure");
+
+        // Group by date string "YYYY-MM-DD"
+        const grouped = {};
+
+        shipments.forEach(s => {
+            const arrDate = new Date(s.schedule.arrival);
+            const depDate = new Date(s.schedule.departure);
+
+            const arrKey = `${arrDate.getFullYear()}-${String(arrDate.getMonth()+1).padStart(2,"0")}-${String(arrDate.getDate()).padStart(2,"0")}`;
+            const depKey = `${depDate.getFullYear()}-${String(depDate.getMonth()+1).padStart(2,"0")}-${String(depDate.getDate()).padStart(2,"0")}`;
+
+            // Add to arrival date
+            if (!grouped[arrKey]) grouped[arrKey] = [];
+            grouped[arrKey].push({
+                _id:          s._id,
+                vessel_name:  s.vessel.name,
+                type:         s.type,
+                status:       s.status,
+                arrival:      s.schedule.arrival,
+                departure:    s.schedule.departure,
+                event:        "arrival"
+            });
+
+            // Add to departure date only if different from arrival
+            if (depKey !== arrKey) {
+                if (!grouped[depKey]) grouped[depKey] = [];
+                grouped[depKey].push({
+                    _id:          s._id,
+                    vessel_name:  s.vessel.name,
+                    type:         s.type,
+                    status:       s.status,
+                    arrival:      s.schedule.arrival,
+                    departure:    s.schedule.departure,
+                    event:        "departure"
+                });
+            }
+        });
+
+        return res.status(200).json({
+            success: true,
+            year,
+            month,
+            data: grouped
+        });
+
+    } catch (err) {
+        console.error("Calendar shipments error:", err);
+        return res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
+const getShipmentDetail = async (req, res) => {
+    try {
+        const shipment = await Shipment.findOne({
+            _id: req.params.id,
+            port_id: req.user.port_id
+        });
+
+        if (!shipment) {
+            return res.status(404).json({ success: false, message: "Shipment not found" });
+        }
+
+        // Calculate progress % based on schedule
+        const now        = new Date();
+        const start      = new Date(shipment.schedule.arrival);
+        const end        = new Date(shipment.schedule.departure);
+        const totalMs    = end - start;
+        const elapsedMs  = now - start;
+        const progress   = totalMs > 0
+            ? Math.min(Math.max(Math.round((elapsedMs / totalMs) * 100), 0), 100)
+            : 0;
+
+        // Days remaining
+        const daysLeft = Math.max(Math.ceil((end - now) / (1000 * 60 * 60 * 24)), 0);
+
+        // Latest weather snapshot
+        const latest = shipment.weather_snapshots?.at(-1) || null;
+
+        return res.status(200).json({
+            success: true,
+            data: {
+                _id:            shipment._id,
+                vessel:         shipment.vessel,
+                cargo:          shipment.cargo,
+                type:           shipment.type,
+                status:         shipment.status,
+                schedule:       shipment.schedule,
+                actual:         shipment.actual,
+                gps_device_id:  shipment.gps_device_id,
+                sender_name:    shipment.sender_name,
+                sender_email:   shipment.sender_email,
+                weather_snapshots: shipment.weather_snapshots,
+                latest_weather: latest,
+                progress,
+                days_remaining: daysLeft
+            }
+        });
+
+    } catch (error) {
+        console.error("Shipment detail error:", error);
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+module.exports = { getAllShipments, getTodayShipments, getShipment, createShipment,deleteShipment,updateShipment, getCalendarShipments,getShipmentDetail };

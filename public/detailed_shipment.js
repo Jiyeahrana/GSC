@@ -173,6 +173,10 @@ function renderTable() {
                 </div>
             </div>
         `;
+        row.addEventListener("click", (e) => {
+            if (e.target.closest("button")) return; // don't trigger on menu clicks
+            window.location.href = `DetailShipmentInfo.html?id=${row.dataset.id}`;
+        });
 
         tbody.appendChild(row);
     });
