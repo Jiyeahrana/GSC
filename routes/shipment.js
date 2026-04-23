@@ -4,7 +4,7 @@ const router = express.Router();
 const auth = require("../middleware/authentication");
 
 // Requiring Controller Functions
-const { getAllShipments, getTodayShipments, getShipment, createShipment,deleteShipment, updateShipment, getCalendarShipments,getShipmentDetail  } = require("../controllers/shipment");
+const { getAllShipments, getTodayShipments, getShipment, createShipment,deleteShipment, updateShipment, getCalendarShipments,getShipmentDetail,syncShipmentStatuses  } = require("../controllers/shipment");
 
 // Defining Routes
 router.post("/",           auth, createShipment);
@@ -15,5 +15,6 @@ router.route("/:id/detail").get(auth, getShipmentDetail);
 router.route("/:id").get(auth, getShipment);
 router.route("/:id").delete(auth, deleteShipment);
 router.route("/:id").put(auth, updateShipment);
+router.post("/sync-statuses", auth, syncShipmentStatuses);
 
 module.exports = router;

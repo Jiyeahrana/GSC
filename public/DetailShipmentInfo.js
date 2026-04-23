@@ -129,76 +129,141 @@ function renderPage(s) {
 function renderMap(s) {
     const snapshots = s.weather_snapshots || [];
     const W = 800, H = 500;
+    const svg = document.getElementById("route-map-svg");
 
-    // Collect all points: snapshots + destination (approximate)
-    // We'll normalize coords to SVG space
-    if (snapshots.length === 0) return;
+    if (snapshots.length === 0) {
+        svg.innerHTML = `<text x="400" y="250" fill="#44474c" font-family="Inter" font-size="12" text-anchor="middle">No route data available</text>`;
+        return;
+    }
 
     const lats = snapshots.map(w => w.lat);
     const lngs = snapshots.map(w => w.lng);
 
-    const minLat = Math.min(...lats) - 3;
-    const maxLat = Math.max(...lats) + 3;
-    const minLng = Math.min(...lngs) - 3;
-    const maxLng = Math.max(...lngs) + 3;
+    // Add padding so points aren't at edges
+    const latPad = Math.max((Math.max(...lats) - Math.min(...lats)) * 0.3, 5);
+    const lngPad = Math.max((Math.max(...lngs) - Math.min(...lngs)) * 0.3, 5);
 
-    const toX = (lng) => ((lng - minLng) / (maxLng - minLng)) * (W - 100) + 50;
-    const toY = (lat) => H - ((lat - minLat) / (maxLat - minLat)) * (H - 100) - 50;
+    const minLat = Math.min(...lats) - latPad;
+    const maxLat = Math.max(...lats) + latPad;
+    const minLng = Math.min(...lngs) - lngPad;
+    const maxLng = Math.max(...lngs) + lngPad;
 
-    // Build solid path from snapshots (actual route taken)
-    const solidPoints = snapshots.map(w => `${toX(w.lng)},${toY(w.lat)}`).join(" L ");
-    const solidPath   = `M ${solidPoints}`;
+    const toX = (lng) => ((lng - minLng) / (maxLng - minLng)) * (W - 140) + 70;
+    const toY = (lat) => H - ((lat - minLat) / (maxLat - minLat)) * (H - 140) - 70;
 
-    // Current position = last snapshot
-    const last    = snapshots[snapshots.length - 1];
-    const currX   = toX(last.lng);
-    const currY   = toY(last.lat);
+    const first  = snapshots[0];
+    const last   = snapshots[snapshots.length - 1];
+    const firstX = toX(first.lng);
+    const firstY = toY(first.lat);
+    const currX  = toX(last.lng);
+    const currY  = toY(last.lat);
 
-    // First position
-    const first   = snapshots[0];
-    const firstX  = toX(first.lng);
-    const firstY  = toY(first.lat);
+    // Destination placed intelligently relative to current pos
+    // Put it offset from current so dotted line is visible
+    const isArrived = ["arrived", "at_port", "departed"].includes(s.status);
 
-    // Destination dot — place at far right as placeholder since we don't have dest coords
-    const destX = W - 60;
-    const destY = 60;
+    // Destination X/Y: place toward upper-right of the map but away from curr
+    const destX = Math.min(currX + 180, W - 80);
+    const destY = Math.max(currY - 120, 60);
 
-    const svg = document.getElementById("route-map-svg");
+    // Build smooth path using quadratic curves between snapshots
+    let pathD = "";
+    if (snapshots.length === 1) {
+        pathD = `M ${currX},${currY}`;
+    } else {
+        pathD = `M ${toX(snapshots[0].lng)},${toY(snapshots[0].lat)}`;
+        for (let i = 1; i < snapshots.length; i++) {
+            const px = toX(snapshots[i].lng);
+            const py = toY(snapshots[i].lat);
+            if (i === 1) {
+                pathD += ` L ${px},${py}`;
+            } else {
+                // Midpoint smoothing
+                const prevX = toX(snapshots[i-1].lng);
+                const prevY = toY(snapshots[i-1].lat);
+                const midX  = (prevX + px) / 2;
+                const midY  = (prevY + py) / 2;
+                pathD += ` Q ${prevX},${prevY} ${midX},${midY}`;
+            }
+        }
+        pathD += ` L ${currX},${currY}`;
+    }
+
+    // Label placement — keep origin label away from vessel
+    const originLabelX = firstX > 400 ? firstX - 80 : firstX + 10;
+    const originLabelY = firstY > 400 ? firstY - 10 : firstY + 18;
+
+    // Coords label — place below vessel if near top, above if near bottom
+    const coordLabelX = currX + 20;
+    const coordLabelY = currY > 400 ? currY - 20 : currY + 25;
+
+    // Dest label placement
+    const destLabelX = destX > 650 ? destX - 100 : destX + 12;
+    const destLabelY = destY < 80 ? destY + 18 : destY - 10;
+
     svg.innerHTML = `
-        <!-- Grid lines -->
-        <line x1="0" y1="${H*0.25}" x2="${W}" y2="${H*0.25}" stroke="rgba(186,200,220,0.05)" stroke-width="1"/>
-        <line x1="0" y1="${H*0.5}"  x2="${W}" y2="${H*0.5}"  stroke="rgba(186,200,220,0.05)" stroke-width="1"/>
-        <line x1="0" y1="${H*0.75}" x2="${W}" y2="${H*0.75}" stroke="rgba(186,200,220,0.05)" stroke-width="1"/>
+        <!-- Background grid -->
+        <line x1="0" y1="${H*0.25}" x2="${W}" y2="${H*0.25}" stroke="rgba(186,200,220,0.04)" stroke-width="1"/>
+        <line x1="0" y1="${H*0.5}"  x2="${W}" y2="${H*0.5}"  stroke="rgba(186,200,220,0.04)" stroke-width="1"/>
+        <line x1="0" y1="${H*0.75}" x2="${W}" y2="${H*0.75}" stroke="rgba(186,200,220,0.04)" stroke-width="1"/>
+        <line x1="${W*0.33}" y1="0" x2="${W*0.33}" y2="${H}" stroke="rgba(186,200,220,0.04)" stroke-width="1"/>
+        <line x1="${W*0.66}" y1="0" x2="${W*0.66}" y2="${H}" stroke="rgba(186,200,220,0.04)" stroke-width="1"/>
 
-        <!-- Dotted future path to destination -->
-        <line x1="${currX}" y1="${currY}" x2="${destX}" y2="${destY}"
-              stroke="#fb6b00" stroke-width="2" stroke-dasharray="8 6" stroke-opacity="0.5"/>
+        <!-- Glow under route -->
+        <path d="${pathD}" stroke="#fb6b00" stroke-width="6"
+              fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.15"/>
 
         <!-- Solid actual route -->
-        <path d="${solidPath}" stroke="#fb6b00" stroke-width="3"
+        <path d="${pathD}" stroke="#fb6b00" stroke-width="2.5"
               fill="none" stroke-linecap="round" stroke-linejoin="round"/>
 
-        <!-- Origin dot -->
-        <circle cx="${firstX}" cy="${firstY}" r="5" fill="#fb6b00"/>
-        <text x="${firstX + 8}" y="${firstY + 4}" fill="#bac8dc" font-family="Inter"
+        ${!isArrived ? `
+        <!-- Dotted future path to destination -->
+        <line x1="${currX}" y1="${currY}" x2="${destX}" y2="${destY}"
+              stroke="#bac8dc" stroke-width="1.5" stroke-dasharray="6 5" stroke-opacity="0.4"/>
+        ` : ""}
+
+        <!-- Origin dot + label -->
+        <circle cx="${firstX}" cy="${firstY}" r="5" fill="#fb6b00" opacity="0.8"/>
+        <circle cx="${firstX}" cy="${firstY}" r="9" stroke="#fb6b00" stroke-width="1"
+                fill="none" opacity="0.3"/>
+        <text x="${originLabelX}" y="${originLabelY}" fill="#bac8dc" font-family="Inter"
               font-size="10" font-weight="600">${s.cargo.origin}</text>
 
-        <!-- Destination dot -->
-        <circle cx="${destX}" cy="${destY}" r="5" fill="#bac8dc" opacity="0.6"/>
-        <text x="${destX - 10}" y="${destY - 10}" fill="#bac8dc" font-family="Inter"
+        <!-- Destination dot + label -->
+        <circle cx="${destX}" cy="${destY}" r="5"
+                fill="${isArrived ? '#4ADE80' : '#bac8dc'}" opacity="0.7"/>
+        <circle cx="${destX}" cy="${destY}" r="9"
+                stroke="${isArrived ? '#4ADE80' : '#bac8dc'}" stroke-width="1"
+                fill="none" opacity="0.3"/>
+        <text x="${destLabelX}" y="${destLabelY}" fill="#bac8dc" font-family="Inter"
               font-size="10" font-weight="600">${s.cargo.destination}</text>
 
-        <!-- Current vessel -->
-        <circle cx="${currX}" cy="${currY}" r="14" stroke="#fb6b00"
-                stroke-width="1.5" fill="rgba(251,107,0,0.1)" class="animate-pulse"/>
+        ${isArrived ? `
+        <!-- Arrived — vessel shown at destination -->
+        <circle cx="${destX}" cy="${destY}" r="16" stroke="#4ADE80"
+                stroke-width="1.5" fill="rgba(74,222,128,0.1)"/>
+        <rect x="${destX - 10}" y="${destY - 10}" width="20" height="20"
+              rx="4" fill="#4ADE80"/>
+        <text x="${destX - 6}" y="${destY + 5}" fill="#000" font-family="Inter"
+              font-size="10" font-weight="900">▲</text>
+        <text x="${destX + 20}" y="${destY + 4}" fill="#4ADE80" font-family="Inter"
+              font-size="9" font-weight="700">ARRIVED</text>
+        ` : `
+        <!-- In transit — vessel at current position -->
+        <circle cx="${currX}" cy="${currY}" r="16" stroke="#fb6b00"
+                stroke-width="1.5" fill="rgba(251,107,0,0.1)"/>
         <rect x="${currX - 10}" y="${currY - 10}" width="20" height="20"
               rx="4" fill="#fb6b00"/>
         <text x="${currX - 6}" y="${currY + 5}" fill="#000" font-family="Inter"
               font-size="10" font-weight="900">▲</text>
 
-        <!-- Coords label -->
-        <text x="${currX + 18}" y="${currY - 4}" fill="#fb6b00" font-family="Inter"
-              font-size="9" font-weight="700">${last.lat.toFixed(2)}°N, ${last.lng.toFixed(2)}°E</text>
+        <!-- Coords label — separated from vessel icon -->
+        <rect x="${coordLabelX - 2}" y="${coordLabelY - 12}" width="130" height="16"
+              rx="3" fill="rgba(0,21,35,0.7)"/>
+        <text x="${coordLabelX + 2}" y="${coordLabelY}" fill="#fb6b00" font-family="Inter"
+              font-size="9" font-weight="700">${last.lat.toFixed(2)}°N  ${last.lng.toFixed(2)}°E</text>
+        `}
     `;
 }
 
@@ -231,8 +296,9 @@ function renderTimeline(s) {
         });
     });
 
-    // Current position
-    if (snapshots.length > 0) {
+    // Current position — only show if not yet arrived
+    const isArrived = ["arrived", "at_port", "departed"].includes(s.status);
+    if (snapshots.length > 0 && !isArrived) {
         const last = snapshots[snapshots.length - 1];
         events.push({
             label:   `Current Position — ${last.lat.toFixed(2)}°N ${last.lng.toFixed(2)}°E`,
@@ -243,11 +309,14 @@ function renderTimeline(s) {
     }
 
     // Destination
+    const isArrivedFinal = ["arrived", "at_port", "departed"].includes(s.status);
     events.push({
         label:   `${s.cargo.destination} (${s.type === "incoming" ? "Destination" : "Arrival"})`,
-        sub:     `ETA: ${new Date(s.schedule.departure).toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}`,
-        done:    false,
-        current: false
+        sub:     isArrivedFinal
+            ? `Arrived: ${new Date(s.actual?.arrival || s.schedule.departure).toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}`
+            : `ETA: ${new Date(s.schedule.departure).toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}`,
+        done:    isArrivedFinal,
+        current: isArrivedFinal
     });
 
     container.innerHTML = "";

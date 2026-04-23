@@ -356,4 +356,76 @@ const getShipmentDetail = async (req, res) => {
     }
 };
 
-module.exports = { getAllShipments, getTodayShipments, getShipment, createShipment,deleteShipment,updateShipment, getCalendarShipments,getShipmentDetail };
+const PORT_COORDS = { lat: 18.95, lng: 72.85 }; // Mumbai — update to your port's coords
+const ARRIVAL_RADIUS_KM = 50; // consider "at port" if within 50km
+
+function distanceKm(lat1, lng1, lat2, lng2) {
+    const R    = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a    = Math.sin(dLat/2) ** 2 +
+                 Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) *
+                 Math.sin(dLng/2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+const syncShipmentStatuses = async (req, res) => {
+    try {
+        const shipments = await Shipment.find({ port_id: req.user.port_id });
+        const now       = new Date();
+        let   updated   = 0;
+
+        for (const s of shipments) {
+            const latest  = s.weather_snapshots?.at(-1);
+            const arrival = new Date(s.schedule.arrival);
+            const depart  = new Date(s.schedule.departure);
+            let   newStatus = s.status;
+
+            if (latest) {
+                const dist = distanceKm(latest.lat, latest.lng, PORT_COORDS.lat, PORT_COORDS.lng);
+
+                if (dist <= ARRIVAL_RADIUS_KM) {
+                    // Near port
+                    if (now > depart) {
+                        newStatus = "departed";
+                    } else {
+                        newStatus = "at_port";
+                    }
+                } else {
+                    // Away from port
+                    if (now < arrival) {
+                        newStatus = "registered";
+                    } else if (now > depart) {
+                        newStatus = "arrived";
+                    } else {
+                        newStatus = "in_transit";
+                    }
+                }
+            } else {
+                // No snapshots — fall back to schedule-based
+                if (now < arrival)      newStatus = "registered";
+                else if (now > depart)  newStatus = "arrived";
+                else                    newStatus = "in_transit";
+            }
+
+            if (newStatus !== s.status) {
+                s.status = newStatus;
+                if (newStatus === "at_port"  && !s.actual.arrival)   s.actual.arrival   = now;
+                if (newStatus === "departed" && !s.actual.departure)  s.actual.departure = now;
+                await s.save();
+                updated++;
+            }
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: `Updated ${updated} shipment statuses`
+        });
+
+    } catch (error) {
+        console.error("Sync statuses error:", error);
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+module.exports = { getAllShipments, getTodayShipments, getShipment, createShipment,deleteShipment,updateShipment, getCalendarShipments,getShipmentDetail,syncShipmentStatuses };

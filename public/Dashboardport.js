@@ -238,6 +238,10 @@ async function fetchTodayShipments() {
                 "Authorization": `Bearer ${token}`
             }
         });
+        await fetch("http://localhost:3000/api/v1/shipments/sync-statuses", {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${token}` }
+        });
 
         if (res.status === 401) {
             localStorage.clear();
