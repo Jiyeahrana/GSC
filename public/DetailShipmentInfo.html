@@ -1,270 +1,438 @@
 <!DOCTYPE html>
-
 <html class="dark" lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>NAUTICAL.OS | Shipment Detail</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <script id="tailwind-config">
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    "colors": {
-                        "secondary-fixed-dim": "#a4cce8",
-                        "inverse-primary": "#525f71",
-                        "primary-fixed": "#d6e4f8",
-                        "on-tertiary": "#562000",
-                        "on-primary-fixed": "#0f1c2b",
-                        "tertiary-fixed-dim": "#ffb692",
-                        "on-error": "#690005",
-                        "surface-variant": "#233746",
-                        "inverse-surface": "#d0e5f9",
-                        "on-primary-container": "#465465",
-                        "error": "#ffb4ab",
-                        "secondary-container": "#214b62",
-                        "on-error-container": "#ffdad6",
-                        "on-secondary-container": "#93bad6",
-                        "secondary-fixed": "#c6e7ff",
-                        "surface-container-highest": "#233746",
-                        "secondary": "#a4cce8",
-                        "primary-fixed-dim": "#bac8dc",
-                        "primary-container": "#bac8dc",
-                        "tertiary-container": "#ffb693",
-                        "on-secondary-fixed-variant": "#214b62",
-                        "tertiary": "#ffdbcc",
-                        "background": "#001523",
-                        "on-secondary": "#02344b",
-                        "on-background": "#d0e5f9",
-                        "on-tertiary-container": "#8d3900",
-                        "surface-container-high": "#172c3b",
-                        "surface-tint": "#bac8dc",
-                        "surface-dim": "#001523",
-                        "on-surface": "#d0e5f9",
-                        "inverse-on-surface": "#1e3342",
-                        "tertiary-fixed": "#ffdbcb",
-                        "error-container": "#93000a",
-                        "surface-bright": "#273b4b",
-                        "primary": "#d6e4f9",
-                        "on-surface-variant": "#c4c6cc",
-                        "on-secondary-fixed": "#001e2d",
-                        "surface-container-lowest": "#00101c",
-                        "surface-container": "#0c2230",
-                        "outline-variant": "#44474c",
-                        "on-tertiary-fixed-variant": "#7a3000",
-                        "outline": "#8e9196",
-                        "surface": "#001523",
-                        "surface-container-low": "#071d2c",
-                        "on-tertiary-fixed": "#341000",
-                        "on-primary": "#243141",
-                        "on-primary-fixed-variant": "#3a4858"
-                    },
-                    "borderRadius": {
-                        "DEFAULT": "0.125rem",
-                        "lg": "0.25rem",
-                        "xl": "0.5rem",
-                        "full": "0.75rem"
-                    },
-                    "fontFamily": {
-                        "headline": ["Manrope"],
-                        "body": ["Inter"],
-                        "label": ["Inter"]
-                    }
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                "colors": {
+                    "secondary-fixed-dim": "#a4cce8",
+                    "inverse-primary": "#525f71",
+                    "primary-fixed": "#d6e4f8",
+                    "on-tertiary": "#562000",
+                    "on-primary-fixed": "#0f1c2b",
+                    "tertiary-fixed-dim": "#ffb692",
+                    "on-error": "#690005",
+                    "surface-variant": "#233746",
+                    "inverse-surface": "#d0e5f9",
+                    "on-primary-container": "#465465",
+                    "error": "#ffb4ab",
+                    "secondary-container": "#214b62",
+                    "on-error-container": "#ffdad6",
+                    "on-secondary-container": "#93bad6",
+                    "secondary-fixed": "#c6e7ff",
+                    "surface-container-highest": "#233746",
+                    "secondary": "#a4cce8",
+                    "primary-fixed-dim": "#bac8dc",
+                    "primary-container": "#bac8dc",
+                    "tertiary-container": "#ffb693",
+                    "on-secondary-fixed-variant": "#214b62",
+                    "tertiary": "#ffdbcc",
+                    "background": "#001523",
+                    "on-secondary": "#02344b",
+                    "on-background": "#d0e5f9",
+                    "on-tertiary-container": "#8d3900",
+                    "surface-container-high": "#172c3b",
+                    "surface-tint": "#bac8dc",
+                    "surface-dim": "#001523",
+                    "on-surface": "#d0e5f9",
+                    "inverse-on-surface": "#1e3342",
+                    "tertiary-fixed": "#ffdbcb",
+                    "error-container": "#93000a",
+                    "surface-bright": "#273b4b",
+                    "primary": "#d6e4f9",
+                    "on-surface-variant": "#c4c6cc",
+                    "on-secondary-fixed": "#001e2d",
+                    "surface-container-lowest": "#00101c",
+                    "surface-container": "#0c2230",
+                    "outline-variant": "#44474c",
+                    "on-tertiary-fixed-variant": "#7a3000",
+                    "outline": "#8e9196",
+                    "surface": "#001523",
+                    "surface-container-low": "#071d2c",
+                    "on-tertiary-fixed": "#341000",
+                    "on-primary": "#243141",
+                    "on-primary-fixed-variant": "#3a4858"
+                },
+                "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+                },
+                "fontFamily": {
+                    "headline": ["Manrope"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
                 }
             }
         }
-    </script>
+    }
+</script>
 <style>
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-        }
-        .glass-panel {
-            background: rgba(23, 44, 59, 0.7);
-            backdrop-filter: blur(24px);
-            border-top: 1px solid rgba(214, 228, 249, 0.1);
-        }
-    </style>
+    .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .glass-panel {
+        background: rgba(23, 44, 59, 0.7);
+        backdrop-filter: blur(24px);
+        border-top: 1px solid rgba(214, 228, 249, 0.1);
+    }
+    #map-container {
+        position: relative;
+        overflow: hidden;
+        border-radius: 0.75rem;
+    }
+    #leaflet-map {
+        width: 100%;
+        height: 100%;
+        border-radius: 0.75rem;
+    }
+    .leaflet-popup-content-wrapper {
+        background: rgba(12, 34, 48, 0.95) !important;
+        color: #d0e5f9 !important;
+        border: 1px solid rgba(68, 71, 76, 0.5) !important;
+        border-radius: 0.5rem !important;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.6) !important;
+        font-family: Inter, sans-serif !important;
+        font-size: 12px !important;
+    }
+    .leaflet-popup-tip { background: rgba(12, 34, 48, 0.95) !important; }
+    .leaflet-popup-content b { color: #fb6b00; }
+    .leaflet-container { background: #001523; }
+
+    #map-loading {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #001c2d;
+        z-index: 500;
+        pointer-events: none;
+        transition: opacity 0.5s;
+        border-radius: 0.75rem;
+    }
+    #map-loading.hidden { opacity: 0; pointer-events: none; }
+
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to   { transform: rotate(360deg); }
+    }
+    @keyframes gpsActivePulse {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.4); }
+        50%       { box-shadow: 0 0 0 8px rgba(74, 222, 128, 0); }
+    }
+    @keyframes shimmer {
+        0%   { background-position: -400px 0; }
+        100% { background-position: 400px 0; }
+    }
+    .shimmer {
+        background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.04) 50%, transparent 100%);
+        background-size: 400px 100%;
+        animation: shimmer 1.5s infinite;
+    }
+
+    /* Compact header strip */
+    .meta-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(186,200,220,0.12);
+        color: #8e9196;
+    }
+
+    /* Checkpoint expand */
+    .cp-extra { display: none; }
+    .cp-extra.visible { display: flex; }
+
+    /* Scrollable intelligence panel */
+    #intelligence-scroll {
+        max-height: 680px;
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(186,200,220,0.15) transparent;
+    }
+    #intelligence-scroll::-webkit-scrollbar { width: 4px; }
+    #intelligence-scroll::-webkit-scrollbar-thumb { background: rgba(186,200,220,0.15); border-radius: 4px; }
+</style>
 </head>
 <body class="bg-background text-on-surface font-body min-h-screen">
-<!-- TopNavBar -->
-<header class="bg-[#000d16]/80 backdrop-blur-xl docked full-width top-0 sticky z-50 border-b border-white/5 shadow-2xl shadow-black/50 flex justify-between items-center w-full px-6 h-16">
-<div class="flex items-center gap-4">
-<span class="text-lg font-black text-slate-200 dark:text-cyan-50 tracking-tighter uppercase font-headline">Shipment Info</span>
-</div>
-</header>
-<!-- Main Canvas -->
-<main class="min-h-screen w-full">
-<div class="px-10 max-w-full mx-auto pb-12 space-y-6">
 
-  <!-- Ship Info Panel -->
-  <section class="grid grid-cols-1 md:grid-cols-4 gap-4 p-6 glass-panel rounded-xl">
-    <div class="md:col-span-1 space-y-1 border-r border-outline-variant/10">
-      <p class="font-label text-xs text-on-surface-variant uppercase tracking-widest">Vessel</p>
-      <h2 id="vessel-name" class="font-headline text-2xl font-extrabold text-primary">—</h2>
-      <p id="ship-id" class="font-mono text-xs text-on-surface-variant">—</p>
-      <div class="mt-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-surface-container-high border border-outline-variant/20">
-        <span id="status-dot" class="w-1.5 h-1.5 rounded-full mr-2 bg-outline"></span>
+<!-- TopNavBar -->
+<header class="bg-[#000d16]/80 backdrop-blur-xl top-0 sticky z-50 border-b border-white/5 shadow-2xl shadow-black/50 flex justify-between items-center w-full px-6 h-14">
+    <div class="flex items-center gap-3">
+        <a href="detailed_shipment.html" class="text-on-surface-variant hover:text-on-surface transition-colors">
+            <span class="material-symbols-outlined text-lg">arrow_back</span>
+        </a>
+        <span class="text-sm font-black text-slate-200 tracking-tighter uppercase font-headline">Shipment Info</span>
+    </div>
+    <!-- Inline vessel meta in header for large screens -->
+    <div class="hidden md:flex items-center gap-3">
+        <span id="header-vessel" class="font-headline text-sm font-extrabold text-primary">—</span>
+        <span id="header-id" class="font-mono text-xs text-on-surface-variant">—</span>
+        <span id="header-status-wrap" class="meta-chip">
+            <span id="header-dot" class="w-1.5 h-1.5 rounded-full bg-outline inline-block"></span>
+            <span id="header-status">—</span>
+        </span>
+    </div>
+    <div class="flex items-center gap-2">
+        <span id="header-route" class="hidden lg:block text-xs text-on-surface-variant font-mono">—</span>
+    </div>
+</header>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     COMPACT SHIP INFO BAR (replaces the big top panel)
+════════════════════════════════════════════════════════════════════ -->
+<div class="px-6 pt-4 pb-0">
+  <div class="flex flex-wrap items-center gap-3 px-5 py-3 rounded-xl border border-outline-variant/10 bg-surface-container-low">
+    <!-- Vessel name -->
+    <div class="flex items-center gap-2 mr-4">
+      <span class="material-symbols-outlined text-[#fb6b00] text-base">directions_boat</span>
+      <div>
+        <p id="vessel-name" class="font-headline text-base font-extrabold text-primary leading-none">—</p>
+        <p id="ship-id" class="font-mono text-[10px] text-on-surface-variant mt-0.5">—</p>
+      </div>
+    </div>
+
+    <!-- Divider -->
+    <div class="w-px h-8 bg-outline-variant/20 hidden sm:block"></div>
+
+    <!-- Route -->
+    <div class="flex items-center gap-1.5">
+      <span class="material-symbols-outlined text-xs text-on-surface-variant">route</span>
+      <p id="route-text" class="text-xs font-semibold text-on-surface">—</p>
+    </div>
+
+    <!-- Chips row -->
+    <div class="flex flex-wrap items-center gap-2 ml-auto">
+      <span class="meta-chip">
+        <span class="material-symbols-outlined text-[11px]">gps_fixed</span>
+        <span id="gps-device">—</span>
+      </span>
+      <span class="meta-chip">
+        <span class="material-symbols-outlined text-[11px]">swap_vert</span>
+        <span id="ship-type">—</span>
+      </span>
+      <span class="meta-chip">
+        <span class="material-symbols-outlined text-[11px]">inventory_2</span>
+        <span id="container-count">—</span>
+      </span>
+      <span class="meta-chip">
+        <span class="material-symbols-outlined text-[11px]">flight_land</span>
+        <span id="arrival-date">—</span>
+      </span>
+      <span class="meta-chip">
+        <span class="material-symbols-outlined text-[11px]">schedule</span>
+        <span id="days-remaining">—</span> left
+      </span>
+      <!-- Status badge -->
+      <div class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-surface-container-high border border-outline-variant/20">
+        <span id="status-dot" class="w-1.5 h-1.5 rounded-full mr-2 bg-outline animate-pulse"></span>
         <span id="ship-status">—</span>
       </div>
     </div>
-    <div class="grid grid-cols-2 gap-4 md:col-span-2 px-4 border-r border-outline-variant/10">
-      <div class="space-y-1">
-        <p class="font-label text-[10px] text-on-surface-variant uppercase tracking-widest">GPS Device</p>
-        <p id="gps-device" class="font-mono text-sm text-on-surface">—</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     MAIN CONTENT — Map dominant + Intelligence side
+════════════════════════════════════════════════════════════════════ -->
+<main class="px-6 pt-4 pb-10">
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+
+    <!-- ── LEFT COLUMN: Map + Route Progress + Timeline ── -->
+    <div class="lg:col-span-8 flex flex-col gap-5">
+
+      <!-- MAP (tall, dominant) -->
+      <div id="map-container" class="bg-[#001c2d] border border-outline-variant/10 shadow-xl" style="height: 540px; border-radius: 0.75rem; position: relative;">
+        <div id="leaflet-map"></div>
+        <div id="map-loading">
+          <div class="text-center space-y-2">
+            <span class="material-symbols-outlined text-3xl text-on-surface-variant" style="animation:spin 2s linear infinite;display:inline-block;">radar</span>
+            <p class="text-xs text-on-surface-variant font-mono">Acquiring GPS signal...</p>
+          </div>
+        </div>
+        <!-- HUD -->
+        <div class="absolute bottom-5 left-5 right-5 flex justify-between items-end" style="z-index:1000;pointer-events:none;">
+          <div class="glass-panel p-3 rounded-lg flex gap-5 flex-wrap" style="pointer-events:auto;">
+            <div>
+              <p class="text-[9px] text-on-surface-variant uppercase tracking-tighter">Latitude</p>
+              <p id="live-lat" class="text-xs font-mono text-primary">—</p>
+            </div>
+            <div>
+              <p class="text-[9px] text-on-surface-variant uppercase tracking-tighter">Longitude</p>
+              <p id="live-lng" class="text-xs font-mono text-primary">—</p>
+            </div>
+            <div>
+              <p class="text-[9px] text-on-surface-variant uppercase tracking-tighter">Storm</p>
+              <p id="storm-flag" class="text-xs font-mono text-primary">—</p>
+            </div>
+          </div>
+          <!-- Progress pill -->
+          <div class="glass-panel px-4 py-2 rounded-lg flex items-center gap-3" style="pointer-events:auto;">
+            <div class="w-24 h-1.5 bg-surface-container-highest rounded-full overflow-hidden">
+              <div id="progress-bar" class="h-full bg-primary rounded-full transition-all duration-700" style="width:0%"></div>
+            </div>
+            <span id="progress-label" class="text-xs font-bold text-primary font-mono">—</span>
+          </div>
+        </div>
       </div>
-      <div class="space-y-1">
-        <p class="font-label text-[10px] text-on-surface-variant uppercase tracking-widest">Type</p>
-        <p id="ship-type" class="font-mono text-sm text-on-surface">—</p>
-      </div>
-      <div class="space-y-1">
-        <p class="font-label text-[10px] text-on-surface-variant uppercase tracking-widest">Route</p>
-        <p id="route-text" class="text-sm font-semibold text-primary">—</p>
-      </div>
-      <div class="space-y-1">
-        <p class="font-label text-[10px] text-on-surface-variant uppercase tracking-widest">Scheduled Arrival</p>
-        <p id="arrival-date" class="text-sm text-on-surface">—</p>
-      </div>
-      <div class="space-y-1">
-        <p class="font-label text-[10px] text-on-surface-variant uppercase tracking-widest">Departure</p>
-        <p id="departure-date" class="text-sm text-on-surface">—</p>
-      </div>
-      <div class="space-y-1">
-        <p class="font-label text-[10px] text-on-surface-variant uppercase tracking-widest">Containers</p>
-        <p id="container-count" class="text-sm text-on-surface">—</p>
+
+      <!-- ROUTE PROGRESS PANEL (injected by JS, stays here) -->
+      <!-- JS will insert #route-progress-panel here -->
+
+      <!-- CHECKPOINT TIMELINE (compact — 5 items max, expandable) -->
+      <div class="glass-panel px-6 py-5 rounded-xl">
+        <div class="flex items-center justify-between mb-4">
+          <h4 class="font-headline text-base font-extrabold">Checkpoint Timeline</h4>
+          <button id="cp-expand-btn" class="hidden text-[10px] font-bold text-primary bg-surface-container px-3 py-1 rounded-full border border-primary/20 hover:bg-surface-container-high transition-colors">
+            Show all <span id="cp-count-extra"></span>
+          </button>
+        </div>
+        <div id="timeline-items" class="space-y-0"></div>
       </div>
     </div>
-    <div class="md:col-span-1 flex flex-col justify-center items-end space-y-2 pl-4">
-      <p class="font-label text-[10px] text-on-surface-variant uppercase tracking-widest">Est. Remaining</p>
-      <p id="days-remaining" class="font-headline text-xl text-primary-fixed">—</p>
-      <p class="text-[10px] text-on-surface-variant">Sender</p>
-      <p id="sender-name" class="text-xs font-bold text-on-surface">—</p>
-      <p id="sender-email" class="text-[10px] text-on-surface-variant">—</p>
-    </div>
-  </section>
 
-  <!-- Map and Analytics Split -->
-  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6" style="height:580px">
+    <!-- ── RIGHT COLUMN: Weather + Intelligence ── -->
+    <div class="lg:col-span-4 flex flex-col gap-4">
 
-    <!-- Live Route Map -->
-    <div class="lg:col-span-8 relative overflow-hidden rounded-xl bg-[#001c2d] border border-outline-variant/10 shadow-xl">
-      <svg id="route-map-svg" class="w-full h-full" viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg">
-        <text x="400" y="250" fill="#44474c" font-family="Inter" font-size="12" text-anchor="middle">Loading route data...</text>
-      </svg>
-      <!-- HUD Overlay -->
-      <div class="absolute bottom-6 left-6 right-6 flex justify-between items-end">
-        <div class="glass-panel p-4 rounded-lg flex gap-8">
+      <!-- Live Weather Cards (compact 2×2) -->
+      <div class="grid grid-cols-2 gap-3">
+        <div class="bg-[#101E29] p-4 rounded-xl flex flex-col justify-between" id="temp-card" style="min-height:88px;">
+          <span class="material-symbols-outlined text-primary-fixed-dim text-lg">thermostat</span>
           <div>
-            <p class="text-[10px] text-on-surface-variant uppercase tracking-tighter">Latitude</p>
-            <p id="live-lat" class="text-sm font-mono text-primary">—</p>
-          </div>
-          <div>
-            <p class="text-[10px] text-on-surface-variant uppercase tracking-tighter">Longitude</p>
-            <p id="live-lng" class="text-sm font-mono text-primary">—</p>
-          </div>
-          <div>
-            <p class="text-[10px] text-on-surface-variant uppercase tracking-tighter">Storm</p>
-            <p id="storm-flag" class="text-sm font-mono text-primary">—</p>
+            <p class="text-[9px] text-on-surface-variant uppercase tracking-widest">Temp</p>
+            <p id="live-temp" class="text-lg font-headline font-extrabold leading-none">—</p>
+            <p id="temp-source" class="text-[8px] text-on-surface-variant mt-0.5">From ship data</p>
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- Right Panel -->
-    <div class="lg:col-span-4 flex flex-col gap-6">
-
-      <!-- Progress -->
-      <div class="bg-[#101E29] p-6 rounded-xl border-l-4 border-[#fb6b00] space-y-6">
-        <h3 class="font-headline text-lg font-extrabold text-primary">Live Progress</h3>
-        <div class="space-y-4">
-          <div class="space-y-2">
-            <div class="flex justify-between text-xs font-medium">
-              <span class="text-on-surface-variant">Actual Progress</span>
-              <span id="progress-label" class="text-primary">—</span>
-            </div>
-            <div class="h-2 w-full bg-surface-container-highest rounded-full overflow-hidden">
-              <div id="progress-bar" class="h-full bg-primary transition-all duration-700" style="width:0%"></div>
-            </div>
+        <div class="bg-[#101E29] p-4 rounded-xl flex flex-col justify-between" id="wind-card" style="min-height:88px;">
+          <span class="material-symbols-outlined text-primary-fixed-dim text-lg">air</span>
+          <div>
+            <p class="text-[9px] text-on-surface-variant uppercase tracking-widest">Wind</p>
+            <p id="live-wind" class="text-lg font-headline font-extrabold leading-none">—</p>
+            <p id="wind-source" class="text-[8px] text-on-surface-variant mt-0.5">From ship data</p>
           </div>
-          <div class="space-y-2">
-            <div class="flex justify-between text-xs font-medium">
-              <span class="text-on-surface-variant">Expected Benchmark</span>
-              <span class="text-on-surface">—</span>
-            </div>
-            <div class="h-2 w-full bg-surface-container-highest rounded-full overflow-hidden">
-              <div id="benchmark-bar" class="h-full bg-surface-variant transition-all duration-700" style="width:0%"></div>
-            </div>
+        </div>
+        <div class="bg-[#101E29] p-4 rounded-xl flex flex-col justify-between" style="min-height:88px;">
+          <span class="material-symbols-outlined text-primary-fixed-dim text-lg">water_drop</span>
+          <div>
+            <p class="text-[9px] text-on-surface-variant uppercase tracking-widest">Humidity</p>
+            <p id="live-humidity" class="text-lg font-headline font-extrabold leading-none">—</p>
+            <p class="text-[8px] text-on-surface-variant mt-0.5">Relative %</p>
+          </div>
+        </div>
+        <div class="bg-[#101E29] p-4 rounded-xl flex flex-col justify-between" style="min-height:88px;">
+          <span class="material-symbols-outlined text-primary-fixed-dim text-lg">waves</span>
+          <div>
+            <p class="text-[9px] text-on-surface-variant uppercase tracking-widest">Visibility</p>
+            <p id="live-visibility" class="text-lg font-headline font-extrabold leading-none">—</p>
+            <p class="text-[8px] text-on-surface-variant mt-0.5">km</p>
           </div>
         </div>
       </div>
 
-      <!-- Live Weather Telemetry -->
-      <div class="grid grid-cols-2 gap-4 flex-1">
-        <div class="bg-[#101E29] p-4 rounded-xl flex flex-col justify-between">
-          <span class="material-symbols-outlined text-primary-fixed-dim">thermostat</span>
-          <div>
-            <p class="text-[10px] text-on-surface-variant uppercase tracking-widest">Ambient Temp</p>
-            <p id="live-temp" class="text-xl font-headline font-extrabold">—</p>
-          </div>
+      <!-- INTELLIGENCE ENGINE — scrollable, takes rest of height -->
+      <div class="bg-[#0a1e2c] border border-outline-variant/15 rounded-xl flex flex-col" style="flex:1;">
+        <div class="px-5 py-3 border-b border-outline-variant/10 flex items-center gap-2">
+          <span style="font-size:14px;">🧠</span>
+          <span class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Intelligence Engine</span>
         </div>
-        <div class="bg-[#101E29] p-4 rounded-xl flex flex-col justify-between">
-          <span class="material-symbols-outlined text-primary-fixed-dim">air</span>
-          <div>
-            <p class="text-[10px] text-on-surface-variant uppercase tracking-widest">Wind Speed</p>
-            <p id="live-wind" class="text-xl font-headline font-extrabold">—</p>
-          </div>
-        </div>
-        <div class="bg-[#101E29] p-4 rounded-xl col-span-2">
-          <p class="text-[10px] text-on-surface-variant uppercase tracking-widest mb-2">Sender Info</p>
-          <p class="text-sm font-bold text-on-surface" id="sender-name-card">—</p>
-          <p class="text-xs text-on-surface-variant" id="sender-email-card">—</p>
+        <div id="intelligence-scroll" class="px-4 py-4 flex-1">
+          <div id="intelligence-panel"></div>
         </div>
       </div>
+
     </div>
   </div>
 
-  <!-- Checkpoint Timeline + Cargo -->
-  <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
-    <div class="md:col-span-2 glass-panel p-8 rounded-xl relative overflow-hidden">
-      <div class="flex justify-between items-center mb-6">
-        <h4 class="font-headline text-xl font-extrabold">Checkpoint Timeline</h4>
-      </div>
-      <div id="timeline-items" class="space-y-0">
-        <!-- rendered by JS -->
-      </div>
-    </div>
-
-    <!-- Cargo Info -->
-    <div class="bg-surface-container p-6 rounded-xl flex flex-col gap-4">
-      <h4 class="font-headline text-lg font-extrabold text-primary">Cargo Details</h4>
-      <div class="space-y-3 mt-2">
-        <div class="flex justify-between items-center py-2 border-b border-outline-variant/10">
-          <span class="text-xs text-on-surface-variant">Origin</span>
-          <span id="cargo-origin" class="text-xs font-bold">—</span>
-        </div>
-        <div class="flex justify-between items-center py-2 border-b border-outline-variant/10">
-          <span class="text-xs text-on-surface-variant">Destination</span>
-          <span id="cargo-dest" class="text-xs font-bold">—</span>
-        </div>
-        <div class="flex justify-between items-center py-2 border-b border-outline-variant/10">
-          <span class="text-xs text-on-surface-variant">Container Count</span>
-          <span id="cargo-containers" class="text-xs font-bold">—</span>
-        </div>
-        <div class="flex justify-between items-center py-2 border-b border-outline-variant/10">
-          <span class="text-xs text-on-surface-variant">Vessel Capacity</span>
-          <span id="cargo-capacity" class="text-xs font-bold">—</span>
-        </div>
-        <div class="flex justify-between items-center py-2">
-          <span class="text-xs text-on-surface-variant">Total Snapshots</span>
-          <span id="cargo-snapshots" class="text-xs font-bold">—</span>
-        </div>
-      </div>
-    </div>
-  </section>
-
-</div>
+  <!-- Hidden fields for JS compatibility -->
+  <div class="hidden">
+    <span id="departure-date"></span>
+    <span id="cargo-origin"></span>
+    <span id="cargo-dest"></span>
+    <span id="cargo-containers"></span>
+    <span id="cargo-capacity"></span>
+    <span id="cargo-snapshots"></span>
+    <span id="live-accuracy"></span>
+    <span id="benchmark-bar" style="width:0%"></span>
+    <span id="sender-name"></span>
+    <span id="sender-email"></span>
+  </div>
 </main>
+
 <script src="DetailShipmentInfo.js"></script>
+<script src="intelligenceEngine.js" defer></script>
+
+<!-- Patch: override renderTimeline to show 5 + expand -->
+<script>
+(function patchTimeline() {
+    const _orig = window.renderTimeline;
+    // Re-patch after scripts load
+    window.addEventListener("load", () => {
+        const origFn = window.renderTimeline;
+        if (!origFn) return;
+        window.renderTimeline = function(s) {
+            origFn(s);
+            applyTimelineLimit();
+        };
+    });
+
+    function applyTimelineLimit() {
+        const container = document.getElementById("timeline-items");
+        if (!container) return;
+        const items = Array.from(container.children);
+        const LIMIT = 5;
+        if (items.length <= LIMIT) return;
+        // Hide items beyond 5
+        items.slice(LIMIT).forEach(el => el.classList.add("cp-extra"));
+        const extra = items.length - LIMIT;
+        const btn = document.getElementById("cp-expand-btn");
+        const countEl = document.getElementById("cp-count-extra");
+        if (btn) {
+            btn.classList.remove("hidden");
+            if (countEl) countEl.textContent = `(+${extra} more)`;
+            let expanded = false;
+            btn.addEventListener("click", () => {
+                expanded = !expanded;
+                items.slice(LIMIT).forEach(el => el.classList.toggle("cp-extra", !expanded));
+                btn.textContent = expanded ? "Show less" : `Show all (+${extra} more)`;
+            });
+        }
+    }
+
+    // Also sync header fields
+    const origRender = window.renderPage;
+    window.addEventListener("load", () => {
+        const rp = window.renderPage;
+        if (!rp) return;
+        window.renderPage = function(s) {
+            rp(s);
+            // Sync compact header
+            const hv = document.getElementById("header-vessel");
+            const hi = document.getElementById("header-id");
+            const hs = document.getElementById("header-status");
+            const hd = document.getElementById("header-dot");
+            const hr = document.getElementById("header-route");
+            if (hv) hv.textContent = s.vessel?.name || "—";
+            if (hi) hi.textContent = "#" + (s._id?.toString().slice(-8).toUpperCase() || "—");
+            if (hr) hr.textContent = `${s.cargo?.origin} → ${s.cargo?.destination}`;
+        };
+    });
+})();
+</script>
 </body></html>

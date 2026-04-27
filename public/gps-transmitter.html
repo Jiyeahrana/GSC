@@ -1,0 +1,614 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+<title>NEO-6M Simulator</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
+
+  :root {
+    --green: #00ff88;
+    --green-dim: #00cc66;
+    --green-glow: rgba(0,255,136,0.15);
+    --red: #ff4444;
+    --amber: #ffaa00;
+    --bg: #030f07;
+    --surface: #071410;
+    --border: rgba(0,255,136,0.18);
+    --text: #a8ffcc;
+    --text-dim: #3d7a55;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    overflow: hidden;
+  }
+
+  /* Scanline overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.08) 2px,
+      rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  /* Vignette */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.7) 100%);
+    pointer-events: none;
+    z-index: 99;
+  }
+
+  .screen {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    gap: 14px;
+    max-width: 420px;
+    margin: 0 auto;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    padding: 12px 0 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .device-id {
+    font-family: 'Orbitron', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .model-name {
+    font-family: 'Orbitron', monospace;
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--green);
+    letter-spacing: 0.12em;
+    text-shadow: 0 0 20px rgba(0,255,136,0.5), 0 0 40px rgba(0,255,136,0.2);
+  }
+
+  /* Status ring */
+  .status-ring-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px 0;
+  }
+  .status-ring {
+    position: relative;
+    width: 140px;
+    height: 140px;
+  }
+  .ring-svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+  }
+  .ring-track {
+    fill: none;
+    stroke: rgba(0,255,136,0.08);
+    stroke-width: 6;
+  }
+  .ring-progress {
+    fill: none;
+    stroke: var(--green);
+    stroke-width: 6;
+    stroke-linecap: round;
+    stroke-dasharray: 345;
+    stroke-dashoffset: 345;
+    transition: stroke-dashoffset 0.6s ease;
+    filter: drop-shadow(0 0 6px rgba(0,255,136,0.6));
+  }
+  .ring-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+  }
+  .ring-icon {
+    font-size: 28px;
+    line-height: 1;
+    transition: all 0.3s;
+  }
+  .ring-label {
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+  .ring-count {
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    color: var(--green);
+    letter-spacing: 0.1em;
+  }
+
+  /* Config fields */
+  .config-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .config-row {
+    display: flex;
+    align-items: center;
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(0,255,136,0.07);
+    gap: 10px;
+  }
+  .config-row:last-child { border-bottom: none; }
+  .config-label {
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    flex-shrink: 0;
+    width: 70px;
+  }
+  .config-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--green);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    outline: none;
+    min-width: 0;
+  }
+  .config-input::placeholder { color: var(--text-dim); }
+  .config-input:focus { color: #fff; }
+
+  /* Coords display */
+  .coords-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 14px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 16px;
+  }
+  .coord-item {}
+  .coord-key {
+    font-size: 8px;
+    letter-spacing: 0.25em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  .coord-val {
+    font-size: 13px;
+    color: var(--green);
+    letter-spacing: 0.05em;
+    transition: color 0.2s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .coord-val.flash { color: #fff; }
+  .coord-val.stale { color: var(--text-dim); }
+
+  /* Log */
+  .log-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 14px;
+    flex: 1;
+    overflow-y: auto;
+    min-height: 80px;
+    max-height: 130px;
+  }
+  .log-panel::-webkit-scrollbar { width: 3px; }
+  .log-panel::-webkit-scrollbar-thumb { background: var(--border); }
+  .log-entry {
+    font-size: 10px;
+    line-height: 1.7;
+    color: var(--text-dim);
+    border-bottom: 1px solid rgba(0,255,136,0.04);
+  }
+  .log-entry.ok  { color: var(--green-dim); }
+  .log-entry.err { color: var(--red); }
+  .log-entry.warn { color: var(--amber); }
+  .log-ts { opacity: 0.5; margin-right: 6px; }
+
+  /* Transmit button */
+  .btn-wrap {
+    padding: 4px 0 8px;
+  }
+  .btn-transmit {
+    width: 100%;
+    padding: 16px;
+    background: transparent;
+    border: 2px solid var(--green);
+    border-radius: 6px;
+    color: var(--green);
+    font-family: 'Orbitron', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 0 20px rgba(0,255,136,0.1);
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  .btn-transmit:active {
+    background: rgba(0,255,136,0.1);
+    box-shadow: 0 0 30px rgba(0,255,136,0.25);
+  }
+  .btn-transmit.active {
+    background: var(--green-glow);
+    box-shadow: 0 0 30px rgba(0,255,136,0.2), inset 0 0 20px rgba(0,255,136,0.05);
+    animation: btnPulse 2s ease-in-out infinite;
+  }
+  .btn-transmit.stopped {
+    border-color: var(--text-dim);
+    color: var(--text-dim);
+    box-shadow: none;
+  }
+  @keyframes btnPulse {
+    0%,100% { box-shadow: 0 0 20px rgba(0,255,136,0.15); }
+    50%      { box-shadow: 0 0 40px rgba(0,255,136,0.3); }
+  }
+
+  /* Accuracy bar */
+  .acc-bar-wrap {
+    height: 3px;
+    background: rgba(0,255,136,0.08);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 6px;
+  }
+  .acc-bar {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.5s ease, background 0.3s;
+    width: 0%;
+  }
+
+  /* Countdown timer text */
+  .next-tx {
+    text-align: center;
+    font-size: 9px;
+    color: var(--text-dim);
+    letter-spacing: 0.15em;
+    margin-top: -6px;
+    height: 14px;
+  }
+</style>
+</head>
+<body>
+
+<div class="screen">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="device-id">GPS MODULE EMULATOR</div>
+    <div class="model-name">NEO-6M SIM</div>
+  </div>
+
+  <!-- Ring status -->
+  <div class="status-ring-wrap">
+    <div class="status-ring">
+      <svg class="ring-svg" viewBox="0 0 120 120">
+        <circle class="ring-track" cx="60" cy="60" r="55"/>
+        <circle class="ring-progress" id="ring" cx="60" cy="60" r="55"/>
+      </svg>
+      <div class="ring-center">
+        <div class="ring-icon" id="ring-icon">📡</div>
+        <div class="ring-label" id="ring-label">STANDBY</div>
+        <div class="ring-count" id="ring-count">TX: 0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Config -->
+  <div class="config-section">
+    <div class="config-row">
+      <div class="config-label">BACKEND</div>
+      <input class="config-input" id="cfg-backend" type="url"
+             placeholder="http://localhost:3000"
+             value="http://localhost:3000"/>
+    </div>
+    <div class="config-row">
+      <div class="config-label">TOKEN</div>
+      <input class="config-input" id="cfg-token" type="text"
+             placeholder="paste JWT token"/>
+    </div>
+    <div class="config-row">
+      <div class="config-label">GPS ID</div>
+      <input class="config-input" id="cfg-gps-id" type="text"
+             placeholder="1234" value="1234"/>
+    </div>
+    <div class="config-row">
+      <div class="config-label">INTERVAL</div>
+      <input class="config-input" id="cfg-interval" type="number"
+             min="5" max="60" value="10" style="width:40px"/>
+      <span style="font-size:10px;color:var(--text-dim)">sec</span>
+    </div>
+  </div>
+
+  <!-- Live coords -->
+  <div class="coords-panel">
+    <div class="coord-item">
+      <div class="coord-key">Latitude</div>
+      <div class="coord-val stale" id="disp-lat">— acquiring</div>
+    </div>
+    <div class="coord-item">
+      <div class="coord-key">Longitude</div>
+      <div class="coord-val stale" id="disp-lng">— acquiring</div>
+    </div>
+    <div class="coord-item">
+      <div class="coord-key">Accuracy</div>
+      <div class="coord-val stale" id="disp-acc">—</div>
+      <div class="acc-bar-wrap"><div class="acc-bar" id="acc-bar"></div></div>
+    </div>
+    <div class="coord-item">
+      <div class="coord-key">Altitude</div>
+      <div class="coord-val stale" id="disp-alt">—</div>
+    </div>
+  </div>
+
+  <!-- Log -->
+  <div class="log-panel" id="log"></div>
+
+  <!-- Button -->
+  <div class="btn-wrap">
+    <button class="btn-transmit" id="btn" onclick="toggleTransmit()">
+      ▶ &nbsp; START TRANSMITTING
+    </button>
+    <div class="next-tx" id="next-tx"></div>
+  </div>
+
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+let transmitting  = false;
+let gpsWatchId    = null;
+let txInterval    = null;
+let countdownTick = null;
+let txCount       = 0;
+let currentPos    = null;   // latest GeolocationPosition
+let countdownSec  = 0;
+
+// ── DOM helpers ────────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+
+function log(msg, type = "info") {
+  const el = document.createElement("div");
+  el.className = "log-entry " + (type === "ok" ? "ok" : type === "err" ? "err" : type === "warn" ? "warn" : "");
+  const ts = new Date().toLocaleTimeString("en-IN", { hour12: false });
+  el.innerHTML = `<span class="log-ts">${ts}</span>${msg}`;
+  $("log").prepend(el);
+  // keep last 80 entries
+  while ($("log").children.length > 80) $("log").lastChild.remove();
+}
+
+// ── Ring animation ─────────────────────────────────────────────────────────
+function setRing(frac, icon, label) {
+  const circ = 345;
+  $("ring").style.strokeDashoffset = circ - frac * circ;
+  $("ring-icon").textContent = icon;
+  $("ring-label").textContent = label;
+  $("ring-count").textContent = `TX: ${txCount}`;
+}
+
+// ── Countdown ──────────────────────────────────────────────────────────────
+function startCountdown(sec) {
+  clearInterval(countdownTick);
+  countdownSec = sec;
+  updateCountdown();
+  countdownTick = setInterval(() => {
+    countdownSec--;
+    if (countdownSec <= 0) { clearInterval(countdownTick); }
+    updateCountdown();
+  }, 1000);
+}
+
+function updateCountdown() {
+  $("next-tx").textContent = transmitting && countdownSec > 0
+    ? `NEXT TX IN ${countdownSec}s`
+    : "";
+}
+
+// ── GPS ────────────────────────────────────────────────────────────────────
+function startGPS() {
+  if (!("geolocation" in navigator)) {
+    log("Geolocation API unavailable", "err");
+    return;
+  }
+  gpsWatchId = navigator.geolocation.watchPosition(
+    pos => {
+      currentPos = pos;
+      const { latitude: lat, longitude: lng, accuracy, altitude } = pos.coords;
+
+      // Flash update
+      const flash = id => {
+        $(id).classList.add("flash"); $(id).classList.remove("stale");
+        setTimeout(() => $(id).classList.remove("flash"), 400);
+      };
+
+      $("disp-lat").textContent = lat.toFixed(6) + "°";
+      $("disp-lng").textContent = lng.toFixed(6) + "°";
+      $("disp-acc").textContent = "±" + Math.round(accuracy) + "m";
+      $("disp-alt").textContent = altitude != null ? Math.round(altitude) + "m" : "N/A";
+      ["disp-lat","disp-lng","disp-acc","disp-alt"].forEach(flash);
+
+      // Accuracy bar (0–200m mapped to 100%–0%)
+      const pct = Math.max(0, Math.min(100, 100 - (accuracy / 200 * 100)));
+      const bar = $("acc-bar");
+      bar.style.width = pct + "%";
+      bar.style.background = accuracy < 20 ? "#00ff88" : accuracy < 100 ? "#ffaa00" : "#ff4444";
+
+    },
+    err => {
+      const msgs = { 1: "Permission denied", 2: "Position unavailable", 3: "Timeout" };
+      log("GPS error: " + (msgs[err.code] || err.message), "err");
+    },
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+  );
+}
+
+function stopGPS() {
+  if (gpsWatchId !== null) {
+    navigator.geolocation.clearWatch(gpsWatchId);
+    gpsWatchId = null;
+  }
+}
+
+// ── POST to backend ────────────────────────────────────────────────────────
+async function transmitOnce() {
+  if (!currentPos) {
+    log("No GPS fix yet — waiting...", "warn");
+    setRing(0, "📡", "NO FIX");
+    return;
+  }
+
+  const backend  = $("cfg-backend").value.trim().replace(/\/$/, "");
+  const token    = $("cfg-token").value.trim();
+  const gpsId    = $("cfg-gps-id").value.trim();
+  const { latitude: lat, longitude: lng, accuracy } = currentPos.coords;
+
+  if (!token) { log("No JWT token set", "err"); return; }
+  if (!gpsId) { log("No GPS device ID set", "err"); return; }
+
+  const payload = {
+    gps_device_id: gpsId,
+    lat,
+    lng,
+    accuracy,
+    timestamp: new Date().toISOString()
+  };
+
+  setRing(0.5, "📤", "SENDING");
+
+  try {
+    const res = await fetch(`${backend}/api/v1/sensors/gps`, {
+      method: "POST",
+      headers: {
+    "Content-Type": "application/json",
+    },
+      body: JSON.stringify(payload)
+    });
+
+    txCount++;
+    $("ring-count").textContent = `TX: ${txCount}`;
+
+    if (res.ok) {
+      setRing(1, "✅", "SENT");
+      log(`OK #${txCount} → ${lat.toFixed(5)}, ${lng.toFixed(5)} (±${Math.round(accuracy)}m)`, "ok");
+      setTimeout(() => { if (transmitting) setRing(0.7, "📡", "LIVE"); }, 800);
+    } else {
+      const body = await res.text();
+      setRing(0.3, "⚠️", "HTTP ERR");
+      log(`HTTP ${res.status}: ${body.slice(0,80)}`, "err");
+    }
+  } catch (err) {
+    setRing(0.2, "❌", "NET FAIL");
+    log("Network error: " + err.message, "err");
+  }
+
+  // restart countdown for next interval
+  const interval = parseInt($("cfg-interval").value) || 10;
+  startCountdown(interval);
+}
+
+// ── Toggle ─────────────────────────────────────────────────────────────────
+function toggleTransmit() {
+  if (transmitting) {
+    // STOP
+    transmitting = false;
+    clearInterval(txInterval);
+    clearInterval(countdownTick);
+    stopGPS();
+
+    const btn = $("btn");
+    btn.classList.remove("active");
+    btn.classList.add("stopped");
+    btn.textContent = "▶  START TRANSMITTING";
+    btn.classList.remove("stopped"); // immediately allow re-click styling reset
+    btn.style.borderColor = "";
+    btn.style.color = "";
+
+    setRing(0, "📡", "STOPPED");
+    $("next-tx").textContent = "";
+    log("Transmission stopped.", "warn");
+
+  } else {
+    // START
+    transmitting = true;
+    txCount = 0;
+
+    $("btn").classList.add("active");
+    $("btn").classList.remove("stopped");
+    $("btn").textContent = "⏹  STOP TRANSMITTING";
+
+    setRing(0.1, "🛰️", "STARTING");
+    log("Starting GPS acquisition...");
+
+    startGPS();
+
+    const interval = parseInt($("cfg-interval").value) || 10;
+
+    // First TX after 3s (give GPS time to get a fix)
+    setTimeout(() => {
+      if (!transmitting) return;
+      transmitOnce();
+      // Then repeat
+      txInterval = setInterval(() => {
+        if (transmitting) transmitOnce();
+      }, interval * 1000);
+      startCountdown(interval);
+    }, 3000);
+
+    log(`Interval: ${interval}s — waiting for first GPS fix...`);
+  }
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────
+
+// Pre-fill token from localStorage (same app)
+const savedToken = localStorage.getItem("token");
+if (savedToken) {
+  $("cfg-token").value = savedToken;
+  log("Token auto-loaded from localStorage ✓", "ok");
+} else {
+  log("No token found — paste your JWT token above", "warn");
+}
+
+setRing(0, "📡", "STANDBY");
+log("NEO-6M Simulator ready. Configure and press START.");
+log("This page POSTs your phone coords to the backend.", "warn");
+</script>
+</body>
+</html>
