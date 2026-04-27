@@ -222,18 +222,7 @@
                     <h3 class="font-headline text-sm font-bold uppercase tracking-wider">Active Alerts</h3>
                 </div>
                 <div id="alerts-container" class="space-y-4 flex-1">
-                    <div class="bg-surface-container-low p-3 rounded-lg border border-[#ffb4ab]/10">
-                        <p class="text-[10px] text-[#ffb4ab] font-bold uppercase mb-1">Berth 12 Delay</p>
-                        <p class="text-xs text-on-surface leading-snug">Hydraulic failure on Crane #04. Maintenance dispatched.</p>
-                    </div>
-                    <div class="bg-surface-container-low p-3 rounded-lg border border-[#b2c8e7]/10">
-                        <p class="text-[10px] text-[#b2c8e7] font-bold uppercase mb-1">Weather Advisory</p>
-                        <p class="text-xs text-on-surface leading-snug">Strong winds expected at 02:00. Secure high-stack containers.</p>
-                    </div>
-                    <div class="bg-surface-container-low p-3 rounded-lg border border-outline-variant/10">
-                        <p class="text-[10px] text-on-surface-variant font-bold uppercase mb-1">Customs Hold</p>
-                        <p class="text-xs text-on-surface leading-snug">Vessel 'Northern Tide' manifest audit required.</p>
-                    </div>
+                <!-- alerts injected by dashboard_alerts_patch.js -->
                 </div>
             </div>
         </div>
@@ -245,4 +234,5 @@
 <script src="config.js"></script>
 <script src="firebaseClient.js"></script>
 <script src="Dashboardport.js"></script>
+<script src="dashboard_alerts_patch.js" defer></script>
 </body></html>
