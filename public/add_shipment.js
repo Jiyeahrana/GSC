@@ -42,7 +42,7 @@ populateZones();
 async function fetchTelemetry() {
     try {
         // Port details for capacity + zones
-        const portRes  = await fetch("http://localhost:3000/api/v1/port/me", {
+        const portRes  = await fetch("https://gsc-app-630083017128.us-central1.run.app/api/v1/port/me", {
             headers: { "Authorization": `Bearer ${token}` }
         });
         const portData = await portRes.json();
@@ -57,7 +57,7 @@ async function fetchTelemetry() {
         }
 
         // Today's shipments for incoming/outgoing count
-        const shipRes  = await fetch("http://localhost:3000/api/v1/shipments/today", {
+        const shipRes  = await fetch("https://gsc-app-630083017128.us-central1.run.app/api/v1/shipments/today", {
             headers: { "Authorization": `Bearer ${token}` }
         });
         const shipData = await shipRes.json();
@@ -88,7 +88,7 @@ if (editId) {
 
 async function loadShipmentForEdit(id) {
     try {
-        const res  = await fetch(`http://localhost:3000/api/v1/shipments/${id}`, {
+        const res  = await fetch(`https://gsc-app-630083017128.us-central1.run.app/api/v1/shipments/${id}`, {
             headers: { "Authorization": `Bearer ${token}` }
         });
         const data = await res.json();
@@ -210,8 +210,8 @@ document.getElementById("shipment-form").addEventListener("submit", async (e) =>
 
         const res = await fetch(
             isEdit
-                ? `http://localhost:3000/api/v1/shipments/${editId}`
-                : `http://localhost:3000/api/v1/shipments`,
+                ? `https://gsc-app-630083017128.us-central1.run.app/api/v1/shipments/${editId}`
+                : `https://gsc-app-630083017128.us-central1.run.app/api/v1/shipments`,
             {
                 method:  isEdit ? "PUT" : "POST",
                 headers: {

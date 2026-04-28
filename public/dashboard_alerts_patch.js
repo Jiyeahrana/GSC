@@ -239,7 +239,7 @@
         let apiAlerts = [];
         try {
             // ALL shipments — not just today
-            const res = await fetch("http://localhost:3000/api/v1/shipments", {
+            const res = await fetch("https://gsc-app-630083017128.us-central1.run.app/api/v1/shipments", {
                 headers: { "Authorization": `Bearer ${token}` }
             });
             if (res.ok) {

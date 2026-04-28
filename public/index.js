@@ -35,7 +35,7 @@ async function loginUser() {
   }
 
   try {
-    const response = await fetch("http://localhost:3000/api/v1/port/login", {
+    const response = await fetch("https://gsc-app-630083017128.us-central1.run.app/api/v1/port/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -216,7 +216,7 @@ document.getElementById("register-form").addEventListener("submit", async (e) =>
   submitBtn.textContent = "Registering...";
 
   try {
-    const response = await fetch("http://localhost:3000/api/v1/port/register", {
+    const response = await fetch("https://gsc-app-630083017128.us-central1.run.app/api/v1/port/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),

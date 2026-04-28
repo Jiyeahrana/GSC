@@ -231,14 +231,14 @@ btn48.addEventListener("click", () => {
 
 async function fetchTodayShipments() {
     try {
-        const res = await fetch("http://localhost:3000/api/v1/shipments/today", {
+        const res = await fetch("https://gsc-app-630083017128.us-central1.run.app/api/v1/shipments/today", {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${token}`
             }
         });
-        await fetch("http://localhost:3000/api/v1/shipments/sync-statuses", {
+        await fetch("https://gsc-app-630083017128.us-central1.run.app/api/v1/shipments/sync-statuses", {
             method: "POST",
             headers: { "Authorization": `Bearer ${token}` }
         });
@@ -346,7 +346,7 @@ function updateStorageUI(zonesData) {
 
 async function fetchPortDetails() {
     try {
-        const res = await fetch("http://localhost:3000/api/v1/port/me", {
+        const res = await fetch("https://gsc-app-630083017128.us-central1.run.app/api/v1/port/me", {
             method: "GET",
             headers: {
                 "Content-Type":  "application/json",

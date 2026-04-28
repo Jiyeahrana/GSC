@@ -3,7 +3,7 @@
  * Full replacement — adds route progress panel to the tracking result.
  */
 
-const BASE_URL = "http://localhost:3000/api/v1/public";
+const BASE_URL = "https://gsc-app-630083017128.us-central1.run.app/api/v1/public";
 
 // ── Load ports into dropdown ──────────────────────────────────────────────────
 async function loadPorts() {

@@ -67,7 +67,7 @@ function isToday(date) {
 async function fetchCalendarData(year, month) {
     try {
         const res  = await fetch(
-            `http://localhost:3000/api/v1/shipments/calendar?year=${year}&month=${month}`,
+            `https://gsc-app-630083017128.us-central1.run.app/api/v1/shipments/calendar?year=${year}&month=${month}`,
             { headers: { "Authorization": `Bearer ${token}` } }
         );
         if (res.status === 401) {

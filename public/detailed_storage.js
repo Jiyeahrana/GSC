@@ -28,7 +28,7 @@ let selectedZone = null;
 
 async function fetchZones() {
     try {
-        const res = await fetch("http://localhost:3000/api/v1/port/zones", {
+        const res = await fetch("https://gsc-app-630083017128.us-central1.run.app/api/v1/port/zones", {
             headers: { "Authorization": `Bearer ${token}` }
         });
 
@@ -265,7 +265,7 @@ async function loadCapacityPrediction() {
             .reduce((sum, zone) => sum + (zone.container_count || 0), 0);
 
         const res = await fetch(
-            `http://localhost:3000/api/v1/port/ports/${portId}/capacity-prediction?current_used=${currentUsed}`,
+            `https://gsc-app-630083017128.us-central1.run.app/api/v1/port/ports/${portId}/capacity-prediction?current_used=${currentUsed}`,
             { headers: { "Authorization": `Bearer ${token}` } }
         );
         const data = await res.json();

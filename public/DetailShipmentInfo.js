@@ -32,7 +32,7 @@ let checkpointLayerGroup = null;
 // ─────────────────────────────────────────────────────────────────────────────
 async function fetchShipmentDetail() {
     try {
-        const res = await fetch(`http://localhost:3000/api/v1/shipments/${shipmentId}/detail?t=${Date.now()}`, {
+        const res = await fetch(`https://gsc-app-630083017128.us-central1.run.app/api/v1/shipments/${shipmentId}/detail?t=${Date.now()}`, {
             headers: { "Authorization": `Bearer ${token}` }
         });
         const data = await res.json();
