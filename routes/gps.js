@@ -15,7 +15,7 @@
 
 const express  = require("express");
 const router   = express.Router();
-const Shipment = require("../models/Shipment");
+const Shipment = require("../models/shipment");
 const { isNearCheckpoint, calculateRouteProgress } = require("../utils/routePlanner");
 
 const CHECKPOINT_THRESHOLD_KM = 50;   // radius to mark a checkpoint as reached
