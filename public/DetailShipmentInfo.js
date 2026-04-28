@@ -445,7 +445,10 @@ async function initLeafletMap(s) {
     leafletMap.whenReady(() => {
     document.getElementById("map-loading")?.classList.add("hidden");
     });
-    L.tileLayer("https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png", { maxZoom: 18 }).addTo(leafletMap);
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+    maxZoom: 19,
+    attribution: '©OpenStreetMap ©CartoDB'
+    }).addTo(leafletMap);
 
     // ── PLANNED ROUTE — blue dashed line ──────────────────────────────────────
     const plannedRoute = s.planned_route || [];
