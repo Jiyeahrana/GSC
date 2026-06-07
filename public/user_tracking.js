@@ -58,7 +58,19 @@ function renderTimeline(shipments) {
         return;
     }
 
-    shipments.slice(0, 10).forEach(shipment => {
+        const now = new Date();
+
+        const upcoming = shipments
+            .filter(s => new Date(s.schedule.arrival) >= now)
+            .sort((a, b) => new Date(a.schedule.arrival) - new Date(b.schedule.arrival));
+
+        const past = shipments
+            .filter(s => new Date(s.schedule.arrival) < now)
+            .sort((a, b) => new Date(b.schedule.arrival) - new Date(a.schedule.arrival));
+
+        const sorted = [...upcoming, ...past].slice(0, 10);
+
+        sorted.forEach(shipment => {
         const arrival  = new Date(shipment.schedule.arrival);
         const now      = new Date();
         const isToday  = arrival.toDateString() === now.toDateString();

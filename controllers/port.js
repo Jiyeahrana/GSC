@@ -333,7 +333,7 @@ const trackShipment = async (req, res) => {
     try {
 const shipment = await Shipment.findById(
     req.params.trackingId,
-    "vessel.name type status schedule actual gps_device_id weather_snapshots"
+    "vessel.name type status schedule actual gps_device_id weather_snapshots latest_weather checkpoints route_progress"
 );
 
         if (!shipment) {
@@ -349,7 +349,11 @@ const shipment = await Shipment.findById(
                 schedule:     shipment.schedule,
                 actual:       shipment.actual,
                 gps_device_id: shipment.gps_device_id,
-                latest_weather: shipment.weather_snapshots?.[-1] || null
+                latest_weather: shipment.latest_weather
+                            || shipment.weather_snapshots?.at(-1)
+                            || null,
+                checkpoints:    shipment.checkpoints,
+                route_progress: shipment.route_progress
             }
         });
 

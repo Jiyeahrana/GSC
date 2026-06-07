@@ -284,6 +284,7 @@ function populateDashboard(shipments) {
     }
 
     renderTimelineRows(shipments);
+    updateExpectedUtilization(shipments);
 }
 
 // ── Live sensor listener ──────────────────────────────────────────────────────
@@ -379,6 +380,26 @@ async function fetchPortDetails() {
         // Start listener anyway so dashboard doesn't stay blank
         startSensorListener();
     }
+}
+function updateExpectedUtilization(shipments) {
+    const totalCapacity = parseInt(localStorage.getItem("total_capacity")) || 0;
+    if (totalCapacity === 0) return;
+
+    // Sum container counts of all shipments arriving in the next 24 hours
+    const now       = new Date();
+    const in24Hours = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+
+    const incomingContainers = shipments
+        .filter(s =>
+            s.type === "incoming" &&
+            new Date(s.schedule.arrival) >= now &&
+            new Date(s.schedule.arrival) <= in24Hours
+        )
+        .reduce((sum, s) => sum + (s.vessel?.container_count || 0), 0);
+
+    const pct = Math.min(Math.round((incomingContainers / totalCapacity) * 100), 100);
+
+    document.getElementById("capacity-expected").textContent = `+${pct}%`;
 }
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
