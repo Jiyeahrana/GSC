@@ -59,10 +59,6 @@ const shipmentSchema = new mongoose.Schema({
       },
     ],
     default:  [],
-    validate: {
-      validator: (arr) => arr.length <= 10,
-      message:   "weather_snapshots cannot exceed 10 entries",
-    },
   },
 
   latest_weather: {

@@ -166,7 +166,7 @@ const generateShipments = () => {
                 schedule:     { arrival, departure },
                 actual:       { arrival: actualArrival, departure: actualDeparture },
                 status,
-                gps_device_id: `device_${randomBetween(100, 999)}`,
+                gps_device_id: 69420,
                 weather_snapshots: generateWeatherSnapshots(route.origin, route.destination, status),
                 sender_name:  sender.name,
                 sender_email: sender.email,

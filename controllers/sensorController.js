@@ -132,9 +132,9 @@ const gpsPush = async (req, res) => {
                 storm_flag:     storm_flag     || false
             });
 
-            if (shipment.weather_snapshots.length > 10) {
-                shipment.weather_snapshots.shift();
-            }
+            // if (shipment.weather_snapshots.length > 10) {
+            //     shipment.weather_snapshots.shift();
+            // }
 
             await shipment.save();
         }
