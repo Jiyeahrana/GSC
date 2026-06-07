@@ -460,8 +460,8 @@ const getShipmentDetail = async (req, res) => {
 
         // 2. Compute checkpoint statuses on every fetch
         const result = computeCheckpointStatuses(shipment);
-        const s      = result.shipment;
-        const changed = result.changed;
+        const s      = result.shipment ?? result;
+        const changed = result.changed ?? false;
 
         if (changed) {
             await Shipment.updateOne(

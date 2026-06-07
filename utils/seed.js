@@ -129,8 +129,8 @@ const getStatusForDate = (arrival) => {
 
 const generateShipments = () => {
     const shipments = [];
-    const startDate = new Date("2026-04-08");
-    const endDate   = new Date("2026-05-08");
+    const startDate = new Date("2026-06-01");
+    const endDate   = new Date("2026-08-01");
 
     // ~2 shipments per day = ~60 total, well within 3600 total capacity
     let currentDate = new Date(startDate);

@@ -41,7 +41,7 @@ const shipmentSchema = new mongoose.Schema({
 
   status: {
     type:    String,
-    enum:    ["registered", "in_transit", "at_port", "departed", "arrived"],
+    enum:    ["registered", "in_transit", "at_port","delayed", "departed", "arrived"],
     default: "registered",
   },
 
