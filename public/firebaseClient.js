@@ -1,2 +1,2 @@
 firebase.initializeApp(firebaseConfig);
-const firebaseDB = firebase.database();
+window.firebaseDB = firebase.database();
