@@ -25,7 +25,7 @@ const PAGE_SIZE   = 10;
 
 async function fetchShipments() {
     try {
-        const res  = await fetch(`http://localhost:3000/api/v1/shipments`, {
+        const res  = await fetch(`https://gsc-app-630083017128.us-central1.run.app/api/v1/shipments`, {
             headers: { "Authorization": `Bearer ${token}` }
         });
         const data = await res.json();
@@ -247,7 +247,7 @@ async function deleteRow(btn) {
     if (!confirm("Delete this shipment?")) return;
 
     try {
-        const res = await fetch(`http://localhost:3000/api/v1/shipments/${id}`, {
+        const res = await fetch(`https://gsc-app-630083017128.us-central1.run.app/api/v1/shipments/${id}`, {
             method: "DELETE",
             headers: { "Authorization": `Bearer ${token}` }
         });
