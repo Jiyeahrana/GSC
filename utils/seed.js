@@ -22,16 +22,16 @@ const vessels = [
 ];
 
 const routes = [
-    { origin: "Shanghai, China",      destination: "Mumbai, India"    },
-    { origin: "Singapore",            destination: "Mumbai, India"    },
-    { origin: "Dubai, UAE",           destination: "Mumbai, India"    },
-    { origin: "Mumbai, India",        destination: "Rotterdam, Netherlands" },
-    { origin: "Mumbai, India",        destination: "Hamburg, Germany" },
-    { origin: "Colombo, Sri Lanka",   destination: "Mumbai, India"    },
-    { origin: "Mumbai, India",        destination: "Singapore"        },
-    { origin: "Busan, South Korea",   destination: "Mumbai, India"    },
-    { origin: "Mumbai, India",        destination: "Jeddah, Saudi Arabia" },
-    { origin: "Antwerp, Belgium",     destination: "Mumbai, India"    },
+    { origin: "Mumbai, India",     destination: "Chennai, India"   },
+    { origin: "Mumbai, India",     destination: "Kochi, India"     },
+    { origin: "Mumbai, India",     destination: "Kolkata, India"   },
+    { origin: "Mumbai, India",     destination: "Vizag, India"     },
+    { origin: "Mumbai, India",     destination: "Kandla, India"    },
+    { origin: "Chennai, India",    destination: "Mumbai, India"    },
+    { origin: "Kochi, India",      destination: "Mumbai, India"    },
+    { origin: "Kolkata, India",    destination: "Mumbai, India"    },
+    { origin: "Vizag, India",      destination: "Mumbai, India"    },
+    { origin: "Mundra, India",     destination: "Mumbai, India"    },
 ];
 
 const senders = [
@@ -51,70 +51,6 @@ const statuses = ["registered", "in_transit", "at_port", "departed", "arrived"];
 
 const randomBetween = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 const randomFrom    = (arr) => arr[Math.floor(Math.random() * arr.length)];
-
-// Real approximate coordinates for each city
-const cityCoords = {
-    "Shanghai, China":         { lat: 31.23,  lng: 121.47 },
-    "Singapore":               { lat: 1.35,   lng: 103.82 },
-    "Dubai, UAE":              { lat: 25.20,  lng: 55.27  },
-    "Mumbai, India":           { lat: 18.95,  lng: 72.85  },
-    "Rotterdam, Netherlands":  { lat: 51.92,  lng: 4.48   },
-    "Hamburg, Germany":        { lat: 53.55,  lng: 9.99   },
-    "Colombo, Sri Lanka":      { lat: 6.93,   lng: 79.85  },
-    "Busan, South Korea":      { lat: 35.10,  lng: 129.04 },
-    "Jeddah, Saudi Arabia":    { lat: 21.49,  lng: 39.19  },
-    "Antwerp, Belgium":        { lat: 51.22,  lng: 4.40   },
-};
-
-const generateWeatherSnapshots = (originCity, destinationCity, status, count = randomBetween(4, 9)) => {
-    const origin = cityCoords[originCity];
-    const dest   = cityCoords[destinationCity];
-
-    if (!origin || !dest) {
-        // Fallback to Mumbai if city not found
-        return Array.from({ length: count }, (_, i) => ({
-            timestamp:      new Date(Date.now() - i * 3600000),
-            lat:            +(18.95 + (Math.random() * 0.4 - 0.2)).toFixed(4),
-            lng:            +(72.85 + (Math.random() * 0.4 - 0.2)).toFixed(4),
-            wind_speed_kmh: randomBetween(10, 60),
-            precipitation:  randomBetween(0, 15),
-            storm_flag:     Math.random() < 0.1
-        }));
-    }
-
-    // How far along the route the vessel is, based on status
-    const progressMap = {
-        "registered": 0.0,
-        "in_transit":  randomBetween(20, 75) / 100,
-        "at_port":     1.0,
-        "departed":    1.0,
-        "arrived":     1.0
-    };
-    const progress = progressMap[status] ?? 0.5;
-
-    // Generate `count` snapshots along the route up to current progress
-    // Each snapshot steps from origin toward (origin + progress * totalDelta)
-    const currentLat = origin.lat + (dest.lat - origin.lat) * progress;
-    const currentLng = origin.lng + (dest.lng - origin.lng) * progress;
-
-    return Array.from({ length: count }, (_, i) => {
-        // i=0 is most recent, i=count-1 is oldest (closest to origin)
-        const stepProgress = progress * ((count - 1 - i) / (count - 1 || 1));
-        const baseLat = origin.lat + (dest.lat - origin.lat) * stepProgress;
-        const baseLng = origin.lng + (dest.lng - origin.lng) * stepProgress;
-
-        // Add small realistic jitter (ocean currents, slight course corrections)
-        const jitter = 0.15;
-        return {
-            timestamp:      new Date(Date.now() - i * 3600000),
-            lat:            +(baseLat + (Math.random() * jitter - jitter / 2)).toFixed(4),
-            lng:            +(baseLng + (Math.random() * jitter - jitter / 2)).toFixed(4),
-            wind_speed_kmh: randomBetween(10, 60),
-            precipitation:  randomBetween(0, 15),
-            storm_flag:     Math.random() < 0.1
-        };
-    });
-};
 
 const getStatusForDate = (arrival) => {
     const now    = new Date();
@@ -149,7 +85,7 @@ const generateShipments = () => {
             const route         = randomFrom(routes);
             const vessel        = randomFrom(vessels);
             const sender        = randomFrom(senders);
-            const type          = route.destination === "Mumbai, India" ? "incoming" : "outgoing";
+            const type = Math.random() > 0.5 ? "incoming" : "outgoing";
 
             const actualArrival   = ["at_port", "departed", "arrived"].includes(status) ? arrival   : null;
             const actualDeparture = ["departed", "arrived"].includes(status)             ? departure : null;
@@ -167,7 +103,7 @@ const generateShipments = () => {
                 actual:       { arrival: actualArrival, departure: actualDeparture },
                 status,
                 gps_device_id: 69420,
-                weather_snapshots: generateWeatherSnapshots(route.origin, route.destination, status),
+                weather_snapshots: [],
                 sender_name:  sender.name,
                 sender_email: sender.email,
             });

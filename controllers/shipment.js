@@ -686,6 +686,29 @@ const syncShipmentStatuses = async (req, res) => {
     }
 };
 
+const reattachAllRoutes = async (req, res) => {
+    try {
+        const shipments = await Shipment.find({ port_id: req.user.port_id });
+        let fixed = 0;
+
+        for (const shipment of shipments) {
+            if (!shipment.checkpoints?.length) {
+                await attachPlannedRoute(shipment);
+                fixed++;
+            }
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: `Route attachment attempted for ${fixed} shipments`
+        });
+
+    } catch (err) {
+        console.error("Reattach routes error:", err);
+        return res.status(500).json({ success: false, message: err.message });
+    }
+};
+
 module.exports = {
     getAllShipments,
     getTodayShipments,
@@ -696,5 +719,6 @@ module.exports = {
     getCalendarShipments,
     getShipmentDetail,
     syncShipmentStatuses,
-    attachPlannedRoute      // exported so the router or other utils can call it
+    attachPlannedRoute,      // exported so the router or other utils can call it
+    reattachAllRoutes
 };

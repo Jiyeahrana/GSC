@@ -12,7 +12,7 @@ const {
     getCalendarShipments,
     getShipmentDetail,
     syncShipmentStatuses,
-    attachPlannedRoute
+    attachPlannedRoute, reattachAllRoutes
 } = require("../controllers/shipment");
 
 // ── Collection routes ─────────────────────────────────────────────────────────
@@ -21,12 +21,14 @@ router.post("/",           auth, createShipment);          // create — also ca
 router.get("/today",       auth, getTodayShipments);
 router.get("/calendar",    auth, getCalendarShipments);
 router.post("/sync-statuses", auth, syncShipmentStatuses);
+router.post("/reattach-routes", auth, reattachAllRoutes);
 
 // ── Individual shipment routes ────────────────────────────────────────────────
 router.get("/:id/detail",  auth, getShipmentDetail);
 router.get("/:id",         auth, getShipment);
 router.put("/:id",         auth, updateShipment);
 router.delete("/:id",      auth, deleteShipment);
+
 
 // ── Manual planned-route (re-)attachment ─────────────────────────────────────
 // POST /api/v1/shipments/:id/attach-route

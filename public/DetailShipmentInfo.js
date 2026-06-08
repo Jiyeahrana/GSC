@@ -422,8 +422,8 @@ async function initLeafletMap(s) {
         if (traveledPathLayer) { leafletMap.removeLayer(traveledPathLayer); traveledPathLayer = null; }
         if (traveledGlowLayer) { leafletMap.removeLayer(traveledGlowLayer); traveledGlowLayer = null; }
         if (routePoints.length > 1) {
-            traveledGlowLayer = L.polyline(routePoints, { color: "#fb6b00", weight: 8,  opacity: 0.15 }).addTo(leafletMap);
-            traveledPathLayer = L.polyline(routePoints, { color: "#fb6b00", weight: 3,  opacity: 0.9  }).addTo(leafletMap);
+            traveledGlowLayer = L.polyline(routePoints, { color: "#fb6b00", weight: 10, opacity: 0.20 }).addTo(leafletMap);
+            traveledPathLayer = L.polyline(routePoints, { color: "#fb6b00", weight: 4,  opacity: 1.0  }).addTo(leafletMap);
         }
         // Refresh checkpoint markers
         updateCheckpointMarkers(s);
@@ -524,8 +524,17 @@ async function initLeafletMap(s) {
     if (livePos) {
         vesselMarker = L.marker(livePos, { icon: vesselIconFn(isArrived ? "#4ADE80" : "#fb6b00") })
             .addTo(leafletMap)
-            .bindPopup(`<b>${s.vessel.name}</b><br>${isArrived ? "✅ Arrived" : "📍 Live Position"}<br>
-                        ${livePos[0].toFixed(4)}°N, ${livePos[1].toFixed(4)}°E`);
+            .bindPopup(`
+                <b>${s.vessel.name}</b><br>
+                <span style="color:#888;font-size:11px;">${isArrived ? "✅ Arrived at destination" : "📍 Live Position"}</span><br>
+                <span style="font-family:monospace;font-size:11px;">
+                    ${livePos[0].toFixed(4)}°N, ${livePos[1].toFixed(4)}°E
+                </span><br>
+                <span style="font-size:10px;color:#fb6b00;">
+                    Wind: ${s.latest_weather?.wind_speed_kmh || "—"} km/h · 
+                    Storm: ${s.latest_weather?.storm_flag ? "⚠ YES" : "Clear"}
+                </span>
+            `);
     }
 
     // ── CHECKPOINT MARKERS ────────────────────────────────────────────────────
@@ -538,6 +547,11 @@ async function initLeafletMap(s) {
     if (destCoords)   allPoints.push([destCoords.lat,   destCoords.lng]);
     if (livePos)      allPoints.push(livePos);
     routePoints.forEach(p => allPoints.push(p));
+
+    // ← ADD THIS: also include planned route points so full path is visible
+    plannedRoute.forEach(p => {
+        if (p.lat && p.lng) allPoints.push([p.lat, p.lng]);
+    });
 
     if (allPoints.length > 1) {
         leafletMap.fitBounds(L.latLngBounds(allPoints), { padding: [60, 60] });

@@ -290,6 +290,29 @@
             <span id="progress-label" class="text-xs font-bold text-primary font-mono">—</span>
           </div>
         </div>
+        <!-- Map Legend -->
+        <div class="absolute top-4 right-4 glass-panel px-3 py-2 rounded-lg space-y-1.5" style="z-index:1000;">
+            <div class="flex items-center gap-2">
+                <div style="width:20px;height:2px;border-top:2px dashed #60a5fa;"></div>
+                <span class="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider">Planned route</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <div style="width:20px;height:3px;background:#fb6b00;border-radius:2px;"></div>
+                <span class="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider">Traveled path</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <div style="width:20px;height:2px;border-top:2px dashed #bac8dc;opacity:0.5;"></div>
+                <span class="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider">Remaining path</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <div style="width:10px;height:10px;background:#4ADE80;border-radius:50%;"></div>
+                <span class="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider">Origin</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <div style="width:10px;height:10px;background:#bac8dc;border-radius:50%;"></div>
+                <span class="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider">Destination</span>
+            </div>
+        </div>
       </div>
 
       <!-- ROUTE PROGRESS PANEL (injected by JS, stays here) -->
