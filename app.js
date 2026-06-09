@@ -11,6 +11,7 @@ const shipmentRoute = require("./routes/shipment");
 const sensorRoutes = require("./routes/sensorRoutes");
 const publicRoutes = require("./routes/publicRoutes");
 const gpsRoute = require("./routes/gps");
+const chatbotRouter = require("./routes/chatbot");
 
 // ================== APP INIT ==================
 const app = express();
@@ -35,6 +36,7 @@ app.use("/api/v1/shipments", shipmentRoute);
 app.use("/api/v1/sensors", sensorRoutes);
 app.use("/api/v1/public", publicRoutes);
 app.use("/api/v1/gps", gpsRoute);
+app.use("/api/v1/chat", chatbotRouter);
 
 // ================== SERVER START ==================
 const startServer = async () => {
