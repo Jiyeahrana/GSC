@@ -6,4 +6,4 @@ const firebaseConfig = {
   storageBucket: "port-management-gsc.firebasestorage.app",
   messagingSenderId: "559633899238",
   appId: "1:559633899238:web:38a6218201621136812527"
-};
+}

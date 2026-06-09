@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>POMS | Port Operations Management System</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@700;800&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary-fixed": "#cfe5f9",
+                    "primary-fixed-dim": "#bac8dc",
+                    "inverse-surface": "#d0e5f9",
+                    "error": "#ffb4ab",
+                    "tertiary": "#ffdbcc",
+                    "secondary-fixed-dim": "#b4c9dd",
+                    "surface-container-low": "#071d2c",
+                    "outline-variant": "#44474c",
+                    "on-tertiary-fixed-variant": "#7a3000",
+                    "on-tertiary-container": "#8d3900",
+                    "tertiary-container": "#ffb693",
+                    "surface-variant": "#233746",
+                    "surface-tint": "#bac8dc",
+                    "surface-container-highest": "#233746",
+                    "hull-green": "#4ade80",
+                    "outline": "#8e9196",
+                    "background": "#001523",
+                    "on-secondary-container": "#a6bbce",
+                    "inverse-on-surface": "#1e3342",
+                    "on-surface-variant": "#c4c6cc",
+                    "on-primary": "#243141",
+                    "tertiary-fixed-dim": "#ffb692",
+                    "on-tertiary-fixed": "#341000",
+                    "map-void": "#001c2d",
+                    "glass-surface": "rgba(23, 44, 59, 0.7)",
+                    "inverse-primary": "#525f71",
+                    "on-tertiary": "#562000",
+                    "on-primary-container": "#465465",
+                    "secondary-container": "#374b5b",
+                    "primary-container": "#bac8dc",
+                    "secondary": "#b4c9dd",
+                    "on-secondary-fixed-variant": "#354959",
+                    "on-background": "#d0e5f9",
+                    "surface-container-high": "#172c3b",
+                    "error-container": "#93000a",
+                    "surface": "#001523",
+                    "on-error": "#690005",
+                    "on-primary-fixed": "#0f1c2b",
+                    "surface-container": "#0c2230",
+                    "on-primary-fixed-variant": "#3a4859",
+                    "on-secondary-fixed": "#071d2c",
+                    "on-secondary": "#1e3342",
+                    "tertiary-fixed": "#ffdbcb",
+                    "on-surface": "#d0e5f9",
+                    "on-error-container": "#ffdad6",
+                    "primary-fixed": "#d6e4f9",
+                    "ocean-deep": "#001523",
+                    "alert-orange": "#fb6b00",
+                    "primary": "#d6e4f9",
+                    "surface-bright": "#273b4b",
+                    "surface-container-lowest": "#00101c",
+                    "surface-dim": "#001523"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "section-gap": "1.5rem",
+                    "gutter": "1rem",
+                    "container-padding": "1.5rem",
+                    "inner-padding": "1rem"
+            },
+            "fontFamily": {
+                    "display-lg": ["Manrope"],
+                    "headline-md": ["Manrope"],
+                    "body-md": ["Inter"],
+                    "label-caps": ["Inter"],
+                    "mono-data": ["JetBrains Mono"]
+            },
+            "fontSize": {
+                    "display-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                    "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "800"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "label-caps": ["10px", {"lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600"}],
+                    "mono-data": ["14px", {"lineHeight": "20px", "fontWeight": "500"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #001523;
+            color: #d0e5f9;
+            overflow-x: hidden;
+        }
+        .glass-card {
+            background: rgba(23, 44, 59, 0.7);
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(214, 228, 249, 0.1);
+        }
+        .text-glow {
+            text-shadow: 0 0 20px rgba(214, 228, 249, 0.3);
+        }
+        .shimmer {
+            background: linear-gradient(90deg, transparent, rgba(251, 107, 0, 0.1), transparent);
+            background-size: 200% 100%;
+            animation: shimmer 3s infinite;
+        }
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        .feature-slider {
+            scroll-behavior: smooth;
+            scrollbar-width: thin;
+            scrollbar-color: #00c853 transparent;
+        }
+
+        .feature-slider::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .feature-slider::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .feature-slider::-webkit-scrollbar-thumb {
+            background: #00c853;
+            border-radius: 999px;
+        }
+    </style>
+</head>
+<body class="font-body-md antialiased">
+<!-- TopNavBar -->
+<header class="bg-[#0a151a] flex justify-between items-center w-full px-6 py-4 fixed top-0 z-50">
+<div class="flex items-center gap-4">
+<span class="text-xl font-black tracking-tighter text-[#bac8dc] uppercase font-['Manrope']">POMS</span>
+</div>
+<div class="hidden md:flex items-center space-x-8">
+<nav class="flex space-x-12 font-['Manrope'] font-bold tracking-tight me-10">
+<a class="text-[#c6c5d4] border-b-2 border-[#bac8dc] pb-1 hover:text-[#caf0f8] transition-colors" href="landingPage.html">About</a>
+<a class="text-[#c6c5d4] hover:text-[#caf0f8] transition-colors" href="index.html">Port</a>
+<a class="text-[#c6c5d4] hover:text-[#caf0f8] transition-colors" href="user_tracking.html">Shipment Tracking</a>
+</nav>
+</div>
+<div class="flex items-center gap-4 text-[#bac8dc]">
+</div>
+</header>
+<!-- Hero Section -->
+<section class="relative pt-32 pb-20 px-container-padding max-w-[1400px] mx-auto min-h-screen flex flex-col justify-center overflow-hidden">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+<div class="z-10">
+<h1 class="font-display-lg text-[44px] md:text-[60px] leading-tight text-primary-fixed mb-6 font-extrabold tracking-tighter">
+                    Port Operations Management System for <span class="text-alert-orange">Real-Time Port Intelligence</span>
+</h1>
+<p class="text-lg text-on-secondary-container mb-10 max-w-xl">
+                    Monitor shipments, predict delays, optimize storage capacity, and streamline port operations through AI-powered insights.
+                </p>
+<div class="flex flex-wrap gap-4">
+<button 
+onclick="window.location.href='index.html'"
+class="px-8 py-4 bg-alert-orange text-surface font-bold rounded-lg hover:brightness-110 transition-all flex items-center gap-2" href="index.html">
+                        Get Started <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+<button
+onclick="window.location.href='user_tracking.html'"
+class="px-8 py-4 bg-surface-variant text-primary-fixed font-bold rounded-lg border border-outline-variant hover:bg-surface-bright transition-all">
+                        Track Shipment
+                    </button>
+</div>
+</div>
+<div class="relative group">
+<div class="absolute inset-0 bg-gradient-to-tr from-alert-orange/20 to-transparent blur-[100px] -z-10 opacity-50"></div>
+<div class="glass-card rounded-2xl overflow-hidden shadow-2xl transform group-hover:-translate-y-2 transition-all duration-500">
+    <img class="w-full h-auto object-cover opacity-90" data-alt="A high-tech digital dashboard for maritime port logistics, featuring glowing sea-foam green charts and deep navy interface elements. The screen displays complex vessel tracking paths over a world map, storage container utilization metrics, and real-time shipment status indicators. The environment is dark and professional, reflecting a naval command center aesthetic with high contrast safety orange accents." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCK0f8c9RPqAGH9ur2mBFpNnBPCtqXPMDjbPIb_yqLFS5O6hHGLiUSyIsPyqHpulNOiQN8yEm8mxCzY2XvAB817WYitwniqQ6074EYTs9Z--_ZCRFrPmHKgBrAZym8CoXu8QCIsoK7APMhO-3lwVPi8KA2EPa8MooT3c2b4K22lQMnDJec9NM_VOEMkaFFz1UeT3s8pucD0i7M1YYJJYb33D7f6AYnZtazZtX7RoB-vDRRQLOfFNnzBmPeamXi5QZWxji8yRjpzbb5e"/>
+
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- About POMS -->
+<section class="py-24 bg-surface-container-lowest">
+<div class="max-w-[1400px] mx-auto px-container-padding">
+<div class="text-center mb-16">
+<h2 class="font-display-lg text-headline-md text-primary-fixed mb-4">Precision Intelligence for Modern Ports</h2>
+<p class="text-on-secondary-container max-w-2xl mx-auto">POMS is an intelligent port management platform engineered to resolve the friction points of global logistics through real-time observability and predictive modeling.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter">
+<div class="glass-card p-inner-padding rounded-xl hover:border-alert-orange/50 transition-colors group">
+<div class="w-12 h-12 bg-alert-orange/10 flex items-center justify-center rounded-lg mb-4 text-alert-orange group-hover:bg-alert-orange group-hover:text-surface transition-all">
+<span class="material-symbols-outlined">grid_view</span>
+</div>
+<h3 class="font-headline-md text-primary-fixed mb-2 text-base">Congestion Management</h3>
+<p class="text-sm text-on-surface-variant">Forecast storage occupancy and prevent bottlenecks before they occur.</p>
+</div>
+<div class="glass-card p-inner-padding rounded-xl hover:border-hull-green/50 transition-colors group">
+<div class="w-12 h-12 bg-hull-green/10 flex items-center justify-center rounded-lg mb-4 text-hull-green group-hover:bg-hull-green group-hover:text-surface transition-all">
+<span class="material-symbols-outlined">visibility</span>
+</div>
+<h3 class="font-headline-md text-primary-fixed mb-2 text-base">Real-Time Visibility</h3>
+<p class="text-sm text-on-surface-variant">Monitor vessels, weather, and port operations through a unified live dashboard.</p>
+</div>
+<div class="glass-card p-inner-padding rounded-xl hover:border-tertiary/50 transition-colors group">
+<div class="w-12 h-12 bg-tertiary/10 flex items-center justify-center rounded-lg mb-4 text-tertiary group-hover:bg-tertiary group-hover:text-surface transition-all">
+<span class="material-symbols-outlined">schedule</span>
+</div>
+<h3 class="font-headline-md text-primary-fixed mb-2 text-base">Shipment Delay Prevention</h3>
+<p class="text-sm text-on-surface-variant">Predict potential delays early and receive alerts before they impact cargo movement.</p>
+</div>
+<div class="glass-card p-inner-padding rounded-xl hover:border-primary/50 transition-colors group">
+<div class="w-12 h-12 bg-primary/10 flex items-center justify-center rounded-lg mb-4 text-primary group-hover:bg-primary group-hover:text-surface transition-all">
+<span class="material-symbols-outlined">precision_manufacturing</span>
+</div>
+<h3 class="font-headline-md text-primary-fixed mb-2 text-base">Faster Decision-Making</h3>
+<p class="text-sm text-on-surface-variant">Replace manual workflows with real-time insights and automated operations.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Key Features Grid -->
+<section class="py-24 max-w-[1400px] mx-auto px-container-padding" id="features">
+<div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+<div>
+<h2 class="font-display-lg text-display-lg text-primary-fixed">
+    One Platform. Complete Port Visibility.
+</h2>
+
+<p class="text-on-secondary-container mt-2">
+    Track shipments, monitor vessels, predict delays, forecast capacity, and optimize port operations with AI-powered insights.
+</p>
+</div>
+</div>
+<div class="flex gap-6 overflow-x-auto pb-4 feature-slider">
+<!-- AI Port Assistant -->
+<div class="glass-card feature-card w-[85vw] md:w-[320px] lg:w-[280px] flex-shrink-0 p-5 rounded-xl border-l-4 border-l-hull-green">    <span class="material-symbols-outlined text-hull-green text-3xl mb-4">smart_toy</span>
+    <h4 class="font-headline-md text-white mb-2">AI Port Assistant</h4>
+    <p class="text-on-surface-variant">
+        Gemini-powered assistant for administrators and businesses.
+    </p>
+</div>
+
+<!-- Intelligent Rerouting -->
+<div class="glass-card feature-card w-[85vw] md:w-[320px] lg:w-[280px] flex-shrink-0 p-5 rounded-xl border-l-4 border-l-hull-green">    <span class="material-symbols-outlined text-hull-green text-3xl mb-4">alt_route</span>
+    <h4 class="font-headline-md text-white mb-2">Intelligent Rerouting</h4>
+    <p class="text-on-surface-variant">
+        Suggest alternate ports and routes when delays or congestion occur.
+    </p>
+</div>
+
+<!-- Capacity Transparency -->
+<div class="glass-card feature-card w-[85vw] md:w-[320px] lg:w-[280px] flex-shrink-0 p-5 rounded-xl border-l-4 border-l-hull-green">    <span class="material-symbols-outlined text-hull-green text-3xl mb-4">visibility</span>
+    <h4 class="font-headline-md text-white mb-2">Capacity Transparency</h4>
+    <p class="text-on-surface-variant">
+        View real-time storage availability across all port zones.
+    </p>
+</div>
+
+<!-- Shipment Timeline -->
+<div class="glass-card feature-card w-[85vw] md:w-[320px] lg:w-[280px] flex-shrink-0 p-5 rounded-xl border-l-4 border-l-hull-green">    <span class="material-symbols-outlined text-hull-green text-3xl mb-4">timeline</span>
+    <h4 class="font-headline-md text-white mb-2">Shipment Timeline</h4>
+    <p class="text-on-surface-variant">
+        Track the next 10 scheduled arrivals and departures.
+    </p>
+</div>
+
+<!-- Detailed Shipment Info -->
+<div class="glass-card feature-card w-[85vw] md:w-[320px] lg:w-[280px] flex-shrink-0 p-5 rounded-xl border-l-4 border-l-hull-green">    <span class="material-symbols-outlined text-hull-green text-3xl mb-4">description</span>
+    <h4 class="font-headline-md text-white mb-2">Detailed Shipment Data</h4>
+    <p class="text-on-surface-variant">
+        Access route information, tracking IDs, ETA, and cargo details.
+    </p>
+</div>
+<!-- Live Location Map -->
+<div class="glass-card feature-card w-[85vw] md:w-[320px] lg:w-[280px] flex-shrink-0 p-5 rounded-xl border-l-4 border-l-hull-green">    <span class="material-symbols-outlined text-hull-green text-3xl mb-4">map</span>
+    <h4 class="font-headline-md text-white mb-2">Live Location Map</h4>
+    <p class="text-on-surface-variant">
+        Interactive map displaying vessel routes and current positions.
+    </p>
+</div>
+</div>
+</section>
+<!-- AI Features Showcase -->
+<section class="py-24 bg-surface-container-low overflow-hidden" id="ai">
+<div class="max-w-[1400px] mx-auto px-container-padding">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+<div class="space-y-8">
+<h2 class="font-display-lg text-display-lg text-primary-fixed">Intelligence That Thinks <span class="text-alert-orange">Ahead</span></h2>
+<div class="space-y-6">
+<div class="flex gap-4 p-4 glass-card rounded-xl hover:bg-white/5 transition-colors">
+<div class="shrink-0 w-10 h-10 bg-alert-orange/20 text-alert-orange flex items-center justify-center rounded-lg">
+<span class="material-symbols-outlined">auto_graph</span>
+</div>
+<div>
+<h4 class="font-bold text-white mb-1">Delay Prediction Engine</h4>
+<p class="text-sm text-on-surface-variant">Analyzing 50+ variables including sea state, port wait times, and global carrier performance.</p>
+</div>
+</div>
+<div class="flex gap-4 p-4 glass-card rounded-xl hover:bg-white/5 transition-colors">
+<div class="shrink-0 w-10 h-10 bg-alert-orange/20 text-alert-orange flex items-center justify-center rounded-lg">
+<span class="material-symbols-outlined">monitoring</span>
+</div>
+<div>
+<h4 class="font-bold text-white mb-1">Smart Capacity Forecasting</h4>
+<p class="text-sm text-on-surface-variant">Move from reactive to proactive yard management with 30-day capacity heatmaps.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="relative">
+<div class="absolute -top-10 -left-10 w-40 h-40 bg-alert-orange/20 blur-[80px] rounded-full"></div>
+<div class="glass-card rounded-2xl overflow-hidden border border-white/20 shadow-2xl">
+<div class="bg-surface-container-high px-6 py-4 flex items-center justify-between border-b border-white/10">
+<div class="flex gap-2">
+<div class="w-3 h-3 rounded-full bg-error"></div>
+<div class="w-3 h-3 rounded-full bg-alert-orange"></div>
+<div class="w-3 h-3 rounded-full bg-hull-green"></div>
+</div>
+<span class="font-label-caps text-label-caps text-on-surface-variant">POMS AI Assistant</span>
+</div>
+<div class="p-6 space-y-6 font-mono-data text-sm">
+<div class="flex justify-end">
+<div class="bg-primary/10 text-primary-fixed-dim p-4 rounded-2xl rounded-tr-none max-w-[80%]">
+                                    Why is shipment SH123 delayed?
+                                </div>
+</div>
+<div class="flex justify-start">
+<div class="bg-surface-variant p-4 rounded-2xl rounded-tl-none max-w-[90%] flex gap-3">
+<span class="material-symbols-outlined text-alert-orange text-sm mt-1">robot_2</span>
+<div>
+<p class="text-on-surface mb-2">Analyzing SH123 (Vessel: Ocean Titan)...</p>
+<p class="text-on-surface-variant">Delay is due to <span class="text-alert-orange">Congestion at Port of Singapore</span>. Expected berthing delayed by 14 hours. Predicted recovery: Terminal 4, Berth 09 at 04:00 UTC tomorrow.</p>
+<div class="mt-4 pt-4 border-t border-white/5 flex gap-2">
+<button class="text-[10px] bg-white/10 px-2 py-1 rounded">Reroute Proposal</button>
+<button class="text-[10px] bg-white/10 px-2 py-1 rounded">Update Consignee</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- FAQ Section -->
+<section class="py-24 max-w-3xl mx-auto px-container-padding">
+<h2 class="font-display-lg text-display-lg text-primary-fixed mb-12 text-center">Frequently Asked Questions</h2>
+<div class="space-y-4">
+<details class="glass-card rounded-xl group transition-all duration-300">
+<summary class="flex justify-between items-center p-6 cursor-pointer list-none">
+<span class="font-bold text-white">How does the Delay Prediction Engine work?</span>
+<span class="material-symbols-outlined group-open:rotate-180 transition-transform">expand_more</span>
+</summary>
+<div class="px-6 pb-6 text-on-surface-variant">
+                    Our engine ingests live AIS vessel data, historical transit times for specific carriers, real-time weather alerts, and port performance KPIs. Using a custom Transformer-based model, it calculates the ETA probability for every terminal on a shipment's route.
+                </div>
+</details>
+<details class="glass-card rounded-xl group transition-all duration-300">
+<summary class="flex justify-between items-center p-6 cursor-pointer list-none">
+<span class="font-bold text-white">Can POMS integrate with our existing TOS?</span>
+<span class="material-symbols-outlined group-open:rotate-180 transition-transform">expand_more</span>
+</summary>
+<div class="px-6 pb-6 text-on-surface-variant">
+                    Yes. POMS is built with a "Connect-First" philosophy. We offer robust API endpoints and webhooks that integrate seamlessly with major Terminal Operating Systems like Navis, Cosmos, and Tideworks.
+                </div>
+</details>
+<details class="glass-card rounded-xl group transition-all duration-300">
+<summary class="flex justify-between items-center p-6 cursor-pointer list-none">
+<span class="font-bold text-white">What is the onboarding timeline for new ports?</span>
+<span class="material-symbols-outlined group-open:rotate-180 transition-transform">expand_more</span>
+</summary>
+<div class="px-6 pb-6 text-on-surface-variant">
+                    A typical deployment takes 4–6 weeks, covering data mapping, API integration, and staff training. Our cloud-native architecture allows for rapid scaling without on-site hardware installation.
+                </div>
+</details>
+</div>
+</section>
+<!-- Footer -->
+<footer class="bg-surface-container-lowest border-t border-outline-variant w-full py-section-gap">
+  <div class="max-w-[1400px] mx-auto px-container-padding">
+
+    <div class="text-center max-w-2xl mx-auto">
+      <div class="flex items-center justify-center gap-2 mb-4">
+        <span class="material-symbols-outlined text-alert-orange"
+          style="font-variation-settings: 'FILL' 1;">
+          anchor
+        </span>
+        <span class="font-headline-md text-primary-fixed">
+          POMS
+        </span>
+      </div>
+
+      <p class="text-on-secondary-container mb-6">
+        Port Operations Management System that helps ports reduce delays,
+        prevent congestion, optimize storage capacity, and improve operational
+        efficiency through AI-powered insights and real-time monitoring.
+      </p>
+
+      <div class="flex flex-wrap justify-center gap-3 text-sm">
+        <span class="px-3 py-1 rounded-full bg-surface-variant">
+          AI Delay Prediction
+        </span>
+        <span class="px-3 py-1 rounded-full bg-surface-variant">
+          Live Vessel Tracking
+        </span>
+        <span class="px-3 py-1 rounded-full bg-surface-variant">
+          Capacity Forecasting
+        </span>
+        <span class="px-3 py-1 rounded-full bg-surface-variant">
+          Intelligent Rerouting
+        </span>
+      </div>
+
+      <p class="text-sm text-on-secondary-container mt-8">
+        © 2026 POMS — Built for smarter maritime logistics.
+      </p>
+    </div>
+
+  </div>
+</footer>
+<script>
+        // Simple counter animation
+        function animateValue(obj, start, end, duration, suffix = "") {
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                const value = Math.floor(progress * (end - start) + start);
+                obj.innerHTML = value.toLocaleString() + suffix;
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        const observerOptions = {
+            threshold: 0.5
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    if (entry.target.id === 'stat1') animateValue(entry.target, 0, 1200000, 2000);
+                    if (entry.target.id === 'stat2') animateValue(entry.target, 0, 840, 2000);
+                    if (entry.target.id === 'stat3') animateValue(entry.target, 0, 28, 2000, "%");
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('[id^="stat"]').forEach(el => observer.observe(el));
+    </script>
+</body></html>
