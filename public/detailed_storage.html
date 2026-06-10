@@ -332,5 +332,319 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <script src="firebaseClient.js"></script>
 <script src="detailed_storage.js"></script>
+<!-- GEMINI CHAT BOT UI-->
+ <style>
+  #poms-chat-widget * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
+  #poms-fab {
+    position: fixed; bottom: 28px; right: 28px; z-index: 9999;
+    width: 60px; height: 60px; border-radius: 50%;
+    background: #fb6b00; border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 16px rgba(251,107,0,0.4);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  #poms-fab:hover { transform: scale(1.08); box-shadow: 0 6px 20px rgba(251,107,0,0.5); }
+  #poms-fab svg { width: 26px; height: 26px; fill: white; }
+  #poms-fab .poms-close-icon { display: none; }
+  #poms-fab.open .poms-open-icon { display: none; }
+  #poms-fab.open .poms-close-icon { display: block; }
+  #poms-panel {
+    position: fixed; bottom: 100px; right: 28px; z-index: 9998;
+    width: 360px; height: 520px;
+    background: #001523; border: 1px solid rgba(186,200,220,0.15);
+    border-radius: 16px; display: flex; flex-direction: column;
+    overflow: hidden; transform: scale(0.92) translateY(16px);
+    opacity: 0; pointer-events: none;
+    transition: transform 0.25s cubic-bezier(.34,1.56,.64,1), opacity 0.2s;
+    transform-origin: bottom right;
+  }
+  #poms-panel.open { transform: scale(1) translateY(0); opacity: 1; pointer-events: all; }
+  #poms-header {
+    background: #0c2230; padding: 14px 16px;
+    border-bottom: 1px solid rgba(186,200,220,0.1);
+    display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+  }
+  .poms-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: #fb6b00; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .poms-avatar svg { width: 18px; height: 18px; fill: white; }
+  .poms-header-info { flex: 1; }
+  .poms-header-name { color: #d0e5f9; font-size: 14px; font-weight: 600; margin: 0; }
+  .poms-header-sub { color: #8e9196; font-size: 11px; margin: 0; }
+  .poms-status-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #4ADE80; flex-shrink: 0;
+  }
+  #poms-messages {
+    flex: 1; overflow-y: auto; padding: 14px 14px 8px;
+    display: flex; flex-direction: column; gap: 10px;
+    scrollbar-width: thin; scrollbar-color: #172c3b transparent;
+  }
+  #poms-messages::-webkit-scrollbar { width: 4px; }
+  #poms-messages::-webkit-scrollbar-thumb { background: #172c3b; border-radius: 4px; }
+  .poms-msg { display: flex; gap: 8px; align-items: flex-end; }
+  .poms-msg.user { flex-direction: row-reverse; }
+  .poms-bubble {
+    max-width: 78%; padding: 9px 13px; border-radius: 14px;
+    font-size: 13px; line-height: 1.5; color: #d0e5f9;
+  }
+  .poms-msg.bot .poms-bubble {
+    background: #0c2230; border: 1px solid rgba(186,200,220,0.1);
+    border-bottom-left-radius: 4px;
+  }
+  .poms-msg.user .poms-bubble {
+    background: #fb6b00; color: white;
+    border-bottom-right-radius: 4px;
+  }
+  .poms-bot-icon {
+    width: 26px; height: 26px; border-radius: 50%;
+    background: #172c3b; display: flex; align-items: center;
+    justify-content: center; flex-shrink: 0;
+  }
+  .poms-bot-icon svg { width: 14px; height: 14px; fill: #fb6b00; }
+  .poms-typing {
+    display: flex; gap: 4px; padding: 10px 13px;
+    background: #0c2230; border: 1px solid rgba(186,200,220,0.1);
+    border-radius: 14px; border-bottom-left-radius: 4px;
+    width: fit-content;
+  }
+  .poms-typing span {
+    width: 6px; height: 6px; border-radius: 50%; background: #8e9196;
+    animation: pomsBounce 1.2s infinite;
+  }
+  .poms-typing span:nth-child(2) { animation-delay: 0.2s; }
+  .poms-typing span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes pomsBounce {
+    0%,60%,100% { transform: translateY(0); }
+    30% { transform: translateY(-5px); background: #fb6b00; }
+  }
+  #poms-suggestions {
+    padding: 0 14px 10px; display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;
+  }
+  .poms-suggestion {
+    background: #0c2230; border: 1px solid rgba(186,200,220,0.15);
+    border-radius: 8px; padding: 8px 12px; font-size: 12px;
+    color: #a4cce8; cursor: pointer; text-align: left;
+    transition: background 0.15s, border-color 0.15s;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .poms-suggestion:hover { background: #172c3b; border-color: rgba(251,107,0,0.4); color: #d0e5f9; }
+  #poms-input-row {
+    padding: 10px 14px 14px; flex-shrink: 0;
+    border-top: 1px solid rgba(186,200,220,0.08);
+    display: flex; gap: 8px; align-items: center;
+  }
+  #poms-input {
+    flex: 1; background: #0c2230; border: 1px solid rgba(186,200,220,0.15);
+    border-radius: 10px; padding: 9px 12px; font-size: 13px;
+    color: #d0e5f9; outline: none; resize: none;
+    font-family: inherit; line-height: 1.4; max-height: 80px;
+    transition: border-color 0.15s;
+  }
+  #poms-input::placeholder { color: #44474c; }
+  #poms-input:focus { border-color: rgba(251,107,0,0.5); }
+  #poms-send {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: #fb6b00; border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: opacity 0.15s, transform 0.15s;
+  }
+  #poms-send:hover { opacity: 0.9; transform: scale(1.05); }
+  #poms-send:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  #poms-send svg { width: 16px; height: 16px; fill: white; }
+</style>
+
+<div id="poms-chat-widget">
+  <button id="poms-fab" aria-label="Open chat assistant">
+    <svg class="poms-open-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12c0 1.85.5 3.58 1.37 5.07L2 22l4.93-1.37A9.96 9.96 0 0012 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+    <svg class="poms-close-icon" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+  </button>
+
+  <div id="poms-panel" role="dialog" aria-label="POMS AI Assistant">
+    <div id="poms-header">
+      <div class="poms-avatar">
+        <svg viewBox="0 0 24 24"><path d="M12 2a2 2 0 012 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 017 7H3a7 7 0 017-7h1V5.73A2 2 0 0110 4a2 2 0 012-2zM5 18v1a2 2 0 002 2h10a2 2 0 002-2v-1H5zm7-9a1 1 0 100 2 1 1 0 000-2z"/></svg>
+      </div>
+      <div class="poms-header-info">
+        <p class="poms-header-name" id="poms-bot-name">POMS Assistant</p>
+        <p class="poms-header-sub" id="poms-bot-sub">Powered by Gemini</p>
+      </div>
+      <div class="poms-status-dot"></div>
+    </div>
+
+    <div id="poms-messages"></div>
+
+    <div id="poms-suggestions"></div>
+
+    <div id="poms-input-row">
+      <textarea id="poms-input" placeholder="Ask me anything..." rows="1"></textarea>
+      <button id="poms-send" aria-label="Send message">
+        <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+
+  // ── CONFIG — change these two lines per page ────────────────────────────────
+  const CHAT_MODE = "admin";   // "public" or "admin"
+  const API_BASE  = "http://localhost:3000/api/v1/chat";
+  // ───────────────────────────────────────────────────────────────────────────
+
+  const PUBLIC_SUGGESTIONS = [
+    "How do I track my shipment?",
+    "Show me upcoming shipments for Mumbai port",
+    "How do I register a new port?"
+  ];
+
+  const ADMIN_SUGGESTIONS = [
+    "How many shipments do we have today?",
+    "Show me all delayed shipments",
+    "What is our current zone capacity?"
+  ];
+
+  const isAdmin     = CHAT_MODE === "admin";
+  const endpoint    = `${API_BASE}/${CHAT_MODE}`;
+  const token       = localStorage.getItem("token");
+  const suggestions = isAdmin ? ADMIN_SUGGESTIONS : PUBLIC_SUGGESTIONS;
+
+  let history  = [];
+  let isTyping = false;
+
+  const fab        = document.getElementById("poms-fab");
+  const panel      = document.getElementById("poms-panel");
+  const messages   = document.getElementById("poms-messages");
+  const suggestBox = document.getElementById("poms-suggestions");
+  const input      = document.getElementById("poms-input");
+  const sendBtn    = document.getElementById("poms-send");
+
+  document.getElementById("poms-bot-name").textContent =
+    isAdmin ? "Port Admin AI" : "POMS Assistant";
+  document.getElementById("poms-bot-sub").textContent =
+    isAdmin ? "Full data access" : "Public assistant";
+
+  fab.addEventListener("click", () => {
+    const isOpen = panel.classList.toggle("open");
+    fab.classList.toggle("open");
+    if (isOpen && messages.children.length === 0) showWelcome();
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!document.getElementById("poms-chat-widget").contains(e.target)) {
+      panel.classList.remove("open");
+      fab.classList.remove("open");
+    }
+  });
+
+  function showWelcome() {
+    const msg = isAdmin
+      ? "Hello! I have full access to your port data. Ask me about shipments, delays, zone capacity, or anything operational."
+      : "Hi! I can help you track shipments, find port schedules, or answer questions about using this platform.";
+    appendMessage("bot", msg);
+    renderSuggestions();
+  }
+
+  function renderSuggestions() {
+    suggestBox.innerHTML = "";
+    suggestions.forEach(s => {
+      const btn = document.createElement("button");
+      btn.className   = "poms-suggestion";
+      btn.textContent = s;
+      btn.addEventListener("click", () => {
+        suggestBox.innerHTML = "";
+        sendMessage(s);
+      });
+      suggestBox.appendChild(btn);
+    });
+  }
+
+  function appendMessage(role, text) {
+    const wrap = document.createElement("div");
+    wrap.className = `poms-msg ${role}`;
+    if (role === "bot") {
+      const icon = document.createElement("div");
+      icon.className = "poms-bot-icon";
+      icon.innerHTML = `<svg viewBox="0 0 24 24"><path d="M12 2a2 2 0 012 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 017 7H3a7 7 0 017-7h1V5.73A2 2 0 0110 4a2 2 0 012-2z"/></svg>`;
+      wrap.appendChild(icon);
+    }
+    const bubble = document.createElement("div");
+    bubble.className = "poms-bubble";
+    bubble.textContent = text;
+    wrap.appendChild(bubble);
+    messages.appendChild(wrap);
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  function showTyping() {
+    const wrap = document.createElement("div");
+    wrap.className = "poms-msg bot";
+    wrap.id = "poms-typing-wrap";
+    const icon = document.createElement("div");
+    icon.className = "poms-bot-icon";
+    icon.innerHTML = `<svg viewBox="0 0 24 24"><path d="M12 2a2 2 0 012 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 017 7H3a7 7 0 017-7h1V5.73A2 2 0 0110 4a2 2 0 012-2z"/></svg>`;
+    wrap.appendChild(icon);
+    const dots = document.createElement("div");
+    dots.className = "poms-typing";
+    dots.innerHTML = "<span></span><span></span><span></span>";
+    wrap.appendChild(dots);
+    messages.appendChild(wrap);
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  function removeTyping() {
+    const el = document.getElementById("poms-typing-wrap");
+    if (el) el.remove();
+  }
+
+  async function sendMessage(text) {
+    if (!text.trim() || isTyping) return;
+    suggestBox.innerHTML = "";
+    appendMessage("user", text);
+    input.value = "";
+    input.style.height = "auto";
+    history.push({ role: "user", parts: [{ text }] });
+    isTyping = true;
+    sendBtn.disabled = true;
+    showTyping();
+    try {
+      const headers = { "Content-Type": "application/json" };
+      if (isAdmin && token) headers["Authorization"] = `Bearer ${token}`;
+      const res  = await fetch(endpoint, {
+        method: "POST", headers,
+        body: JSON.stringify({ messages: history })
+      });
+      const data = await res.json();
+      removeTyping();
+      if (data.success) {
+        appendMessage("bot", data.reply);
+        history.push({ role: "model", parts: [{ text: data.reply }] });
+      } else {
+        appendMessage("bot", "Sorry, I ran into an issue. Please try again.");
+      }
+    } catch (err) {
+      removeTyping();
+      appendMessage("bot", "Connection error. Please check your network and try again.");
+    } finally {
+      isTyping = false;
+      sendBtn.disabled = false;
+      input.focus();
+    }
+  }
+
+  sendBtn.addEventListener("click", () => sendMessage(input.value));
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(input.value); }
+  });
+  input.addEventListener("input", () => {
+    input.style.height = "auto";
+    input.style.height = Math.min(input.scrollHeight, 80) + "px";
+  });
+
+})();
+</script>
 </body>
 </html>
