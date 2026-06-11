@@ -475,7 +475,7 @@ const publicChat = async (req, res) => {
         }
 
         const model = genAI.getGenerativeModel({
-            model:          "gemini-2.5-flash",
+            model:          "gemini-2.5-flash-lite",
             systemInstruction: PUBLIC_SYSTEM_PROMPT,
             tools:          PUBLIC_TOOLS
         });
@@ -525,7 +525,7 @@ const adminChat = async (req, res) => {
         }
 
         const model = genAI.getGenerativeModel({
-            model:             "gemini-2.5-flash",
+            model:             "gemini-2.5-flash-lite",
             systemInstruction: ADMIN_SYSTEM_PROMPT,
             tools:             ADMIN_TOOLS
         });

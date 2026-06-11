@@ -613,9 +613,15 @@
     try {
       const headers = { "Content-Type": "application/json" };
       if (isAdmin && token) headers["Authorization"] = `Bearer ${token}`;
-      const res  = await fetch(endpoint, {
-        method: "POST", headers,
-        body: JSON.stringify({ messages: history })
+
+      // Pass live Firebase sensor data if available on this page
+      const sensorPayload = (isAdmin && typeof sensorData !== "undefined")
+          ? sensorData
+          : null;
+
+      const res = await fetch(endpoint, {
+          method: "POST", headers,
+          body: JSON.stringify({ messages: history, sensor_data: sensorPayload })
       });
       const data = await res.json();
       removeTyping();
