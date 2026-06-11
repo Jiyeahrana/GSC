@@ -96,10 +96,58 @@ const ADMIN_TOOLS = [{
                 },
                 required: ["status"]
             }
+        },
+        {
+            name:        "getLabourDemand",
+            description: "Get workforce/labour demand forecast for upcoming days, including any staffing shortages by role (crane operators, truck operators, customs officers, ground crew, docking staff)",
+            parameters: {
+                type: "OBJECT",
+                properties: {
+                    daysAhead: {
+                        type: "NUMBER",
+                        description: "How many days ahead to forecast, default 7, max 7"
+                    }
+                }
+            }
         }
     ]
 }];
 
+// ── Labour demand ratios (same as labour_prediction controller) ──────────────
+
+const LABOUR_RATIOS = {
+    crane_operators:  { per_containers: 30, per_vessel: 1 },
+    truck_operators:  { per_containers: 20, per_vessel: 0 },
+    customs_officers: { per_containers: 50, per_vessel: 1 },
+    ground_crew:      { per_containers: 15, per_vessel: 2 },
+    docking_staff:    { per_containers: 0,  per_vessel: 2 },
+};
+
+function calcDemandForShipment(containerCount) {
+    const demand = {};
+    for (const [role, ratio] of Object.entries(LABOUR_RATIOS)) {
+        const fromContainers = ratio.per_containers > 0
+            ? Math.ceil(containerCount / ratio.per_containers)
+            : 0;
+        demand[role] = fromContainers + (ratio.per_vessel || 0);
+    }
+    return demand;
+}
+
+function addDemands(a, b) {
+    const result = { ...a };
+    for (const key of Object.keys(b)) {
+        result[key] = (result[key] || 0) + (b[key] || 0);
+    }
+    return result;
+}
+
+function emptyDemand() {
+    return {
+        crane_operators: 0, truck_operators: 0,
+        customs_officers: 0, ground_crew: 0, docking_staff: 0
+    };
+}
 // ── Tool executors ────────────────────────────────────────────────────────────
 
 async function executePublicTool(name, args) {
@@ -303,6 +351,67 @@ async function executeAdminTool(name, args, portId, sensorData = {}) {
             return { count: ships.length, shipments: ships };
         }
 
+        case "getLabourDemand": {
+            const port = await Port.findById(portId, "workforce");
+            if (!port) return { error: "Port not found" };
+
+            const workforce  = port.workforce;
+            const roles      = workforce?.roles  || emptyDemand();
+            const shifts     = workforce?.shifts || [];
+            const daysAhead  = Math.min(args.daysAhead || 7, 7);
+
+            const today = new Date(); today.setHours(0, 0, 0, 0);
+            const endDate = new Date(today);
+            endDate.setDate(today.getDate() + daysAhead);
+
+            const shipments = await Shipment.find({
+                port_id: portId,
+                "schedule.arrival": { $gte: today, $lte: endDate }
+            }, "vessel.container_count schedule.arrival type");
+
+            const days = [];
+            for (let i = 0; i < daysAhead; i++) {
+                const day = new Date(today);
+                day.setDate(today.getDate() + i);
+                const dayEnd = new Date(day); dayEnd.setHours(23, 59, 59, 999);
+
+                const dayShipments = shipments.filter(s => {
+                    const arr = new Date(s.schedule.arrival);
+                    return arr >= day && arr <= dayEnd;
+                });
+
+                const totalDemand = dayShipments.reduce((acc, s) => {
+                    return addDemands(acc, calcDemandForShipment(s.vessel?.container_count || 0));
+                }, emptyDemand());
+
+                const shortages = {};
+                let hasShortage = false;
+                for (const role of Object.keys(totalDemand)) {
+                    const needed = totalDemand[role];
+                    const avail  = roles[role] || 0;
+                    const deficit = Math.max(needed - avail, 0);
+                    shortages[role] = { needed, available: avail, deficit };
+                    if (deficit > 0) hasShortage = true;
+                }
+
+                days.push({
+                    date: day.toISOString().split("T")[0],
+                    shipment_count: dayShipments.length,
+                    demand: totalDemand,
+                    available: roles,
+                    shortages,
+                    has_shortage: hasShortage
+                });
+            }
+
+            return {
+                total_workers: workforce?.total_workers || 0,
+                roles_available: roles,
+                shift_count: shifts.length,
+                days
+            };
+        }
+
         default:
             return { error: "Unknown tool" };
     }
@@ -421,6 +530,13 @@ STATUS MEANINGS:
 - departed: vessel has left the port after unloading/loading
 - arrived: journey fully complete
 
+WORKFORCE ROLES:
+- crane_operators: handle container loading/unloading
+- truck_operators: move containers between zones
+- customs_officers: process documentation per vessel
+- ground_crew: general port operations support
+- docking_staff: assist vessel docking/undocking
+
 ────────────────────────────────────────
 TOOLS & WHEN TO USE THEM
 ────────────────────────────────────────
@@ -452,6 +568,10 @@ getShipmentsByStatus(status)
 → Use when: asked to list all ships with a specific status
 → Valid values: registered | in_transit | at_port | delayed | departed | arrived
 
+getLabourDemand(daysAhead)
+→ Use when: asked about workforce, labour, staffing, workers needed, crew shortages, "do we have enough workers"
+→ daysAhead defaults to 7 if not specified
+→ Returns: per-day demand vs available workers by role (crane operators, truck operators, customs officers, ground crew, docking staff), and which days have shortages
 ────────────────────────────────────────
 RESPONSE STYLE
 ────────────────────────────────────────

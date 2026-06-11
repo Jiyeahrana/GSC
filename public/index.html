@@ -230,6 +230,84 @@
     </button>
   </div>
 
+<!-- Workforce Roles -->
+<div class="mt-4 p-4 bg-surface-container-highest rounded-lg border border-primary/10">
+    <p class="font-headline text-[10px] font-bold text-primary uppercase tracking-widest mb-1">
+        Workforce Configuration
+    </p>
+    <p class="text-[10px] text-on-surface-variant mb-4">Total workers available at this port by role</p>
+
+    <div class="grid grid-cols-1 gap-3">
+
+        <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-sm text-outline">precision_manufacturing</span>
+            <label class="text-xs text-on-surface-variant w-36 shrink-0">Crane Operators</label>
+            <input id="wf-crane" type="number" min="0" value="0"
+                class="flex-1 bg-surface-container-lowest border-none text-sm py-2 px-2 rounded focus:ring-1 focus:ring-secondary"
+                oninput="updateShiftMaxes()"/>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-sm text-outline">local_shipping</span>
+            <label class="text-xs text-on-surface-variant w-36 shrink-0">Truck Operators</label>
+            <input id="wf-truck" type="number" min="0" value="0"
+                class="flex-1 bg-surface-container-lowest border-none text-sm py-2 px-2 rounded focus:ring-1 focus:ring-secondary"
+                oninput="updateShiftMaxes()"/>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-sm text-outline">policy</span>
+            <label class="text-xs text-on-surface-variant w-36 shrink-0">Customs Officers</label>
+            <input id="wf-customs" type="number" min="0" value="0"
+                class="flex-1 bg-surface-container-lowest border-none text-sm py-2 px-2 rounded focus:ring-1 focus:ring-secondary"
+                oninput="updateShiftMaxes()"/>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-sm text-outline">groups</span>
+            <label class="text-xs text-on-surface-variant w-36 shrink-0">Ground Crew</label>
+            <input id="wf-ground" type="number" min="0" value="0"
+                class="flex-1 bg-surface-container-lowest border-none text-sm py-2 px-2 rounded focus:ring-1 focus:ring-secondary"
+                oninput="updateShiftMaxes()"/>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-sm text-outline">anchor</span>
+            <label class="text-xs text-on-surface-variant w-36 shrink-0">Docking Staff</label>
+            <input id="wf-docking" type="number" min="0" value="0"
+                class="flex-1 bg-surface-container-lowest border-none text-sm py-2 px-2 rounded focus:ring-1 focus:ring-secondary"
+                oninput="updateShiftMaxes()"/>
+        </div>
+
+        <!-- Total workers display -->
+        <div class="flex justify-between items-center pt-2 border-t border-primary/10 mt-1">
+            <span class="text-[10px] text-on-surface-variant uppercase tracking-widest">Total Workers</span>
+            <span id="wf-total" class="text-sm font-bold text-primary">0</span>
+        </div>
+
+    </div>
+</div>
+
+  <!-- Shift Configuration -->
+  <div class="mt-4 p-4 bg-surface-container-highest rounded-lg border border-primary/10">
+      <p class="font-headline text-[10px] font-bold text-primary uppercase tracking-widest mb-1">
+          Shift Configuration
+      </p>
+      <p class="text-[10px] text-on-surface-variant mb-4">
+          Shifts divide 00:00–24:00 equally. Assign workers per role per shift.
+      </p>
+
+      <div id="shifts-container" class="space-y-4"></div>
+
+      <button type="button" onclick="addShift()"
+          class="mt-3 px-3 py-1.5 bg-primary text-on-primary text-xs rounded font-bold font-headline uppercase tracking-wider">
+          + Add Shift
+      </button>
+
+      <!-- Shift validation summary -->
+      <div id="shift-validation" class="mt-3 space-y-1 hidden"></div>
+  </div>
+
   <!-- Error div -->
   <div id="register-error" class="hidden px-4 py-3 rounded bg-error-container text-on-error-container text-xs font-semibold font-label tracking-wide">
     <span class="material-symbols-outlined text-sm align-middle mr-1">error</span>
@@ -258,7 +336,7 @@
 <style>
         [x-cloak] { display: none !important; }
     </style>
-    <script>
+    <!-- <script>
 let zoneCount =0;
 
 const container = document.getElementById("zones-container");
@@ -291,7 +369,7 @@ container.addEventListener("click", (e) => {
     e.target.parentElement.remove();
   }
 });
-</script>
+</script> -->
 <script src="index.js"></script>
 <!-- GEMINI CHAT BOT UI-->
  <style>
