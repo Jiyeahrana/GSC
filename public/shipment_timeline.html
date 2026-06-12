@@ -55,39 +55,61 @@
     ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-track { background: #001523; }
     ::-webkit-scrollbar-thumb { background: #172c3b; border-radius: 10px; }
+ 
+    @keyframes spin { to { transform: rotate(360deg); } }
+@keyframes shimmer { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+.poms-spinner {
+    display: inline-block;
+    width: 18px; height: 18px;
+    border: 2px solid rgba(186,200,220,0.15);
+    border-top-color: #bac8dc;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    vertical-align: middle;
+}
+.poms-skel {
+    display: inline-block;
+    background: rgba(186,200,220,0.10);
+    border-radius: 4px;
+    animation: shimmer 1.5s ease-in-out infinite;
+}
+    
 </style>
 </head>
 <body class="bg-[#00111C] text-on-surface font-body">
 
 <!-- Sidebar -->
-<aside class="flex flex-col h-screen fixed left-0 top-0 py-8 bg-[#011c2e] w-64 z-50">
+<aside class="flex flex-col h-screen fixed left-0 top-0 py-8 bg-[#00111C] dark:bg-[#011c2e] text-[#011c2e] font-inter font-medium text-sm shadow-[48px_0_48px_rgba(5,16,21,0.06)] w-64 z-50">
     <div class="px-6 mb-10">
-        <h1 id="sidebar-port-name" class="text-[#d8e4ec] font-headline font-extrabold text-xl tracking-tight">Port name</h1>
+        <h1 id="sidebar-port-name" class="text-[#d8e4ec] font-manrope font-extrabold text-xl tracking-tight">Port name</h1>
         <p class="text-on-surface-variant text-xs mt-1">Real-Time Port Operations & Monitoring</p>
     </div>
     <nav class="flex-1 flex flex-col gap-2">
-        <a class="flex items-center gap-3 px-6 py-3 text-[#c6c5d4] opacity-80 hover:bg-[#202b32] hover:text-[#d8e4ec] transition-all" href="Dashboardport.html">
+        <a class="flex items-center gap-3 px-6 py-3 text-[#c6c5d4] opacity-80 hover:bg-[#202b32] hover:text-[#d8e4ec] transition-all hover:translate-x-1 duration-200" href="Dashboardport.html">
             <span class="material-symbols-outlined">dashboard</span>Dashboard
         </a>
-        <a class="flex items-center gap-3 px-6 py-3 text-[#c6c5d4] opacity-80 hover:bg-[#202b32] hover:text-[#d8e4ec] transition-all" href="detailed_storage.html">
+        <a class="flex items-center gap-3 px-6 py-3 text-[#c6c5d4] opacity-80 hover:bg-[#202b32] hover:text-[#d8e4ec] transition-all hover:translate-x-1 duration-200" href="detailed_storage.html">
             <span class="material-symbols-outlined">inventory</span>Storage
         </a>
-        <a class="flex items-center gap-3 px-6 py-3 text-[#c6c5d4] opacity-80 hover:bg-[#202b32] hover:text-[#d8e4ec] transition-all" href="detailed_shipment.html">
+        <a class="flex items-center gap-3 px-6 py-3 text-[#c6c5d4] opacity-80 hover:bg-[#202b32] hover:text-[#d8e4ec] transition-all hover:translate-x-1 duration-200" href="detailed_shipment.html">
             <span class="material-symbols-outlined">directions_boat</span>Shipments
         </a>
-        <a class="bg-[#202b32] text-[#fb6b00] border-l-4 border-[#fb6b00] flex items-center gap-3 px-4 py-3 mx-2 rounded-sm transition-all">
+        <a class="bg-[#202b32] text-[#fb6b00] border-l-4 border-[#fb6b00] flex items-center gap-3 px-4 py-3 mx-2 rounded-sm transition-all hover:translate-x-1 duration-200">
             <span class="material-symbols-outlined">timeline</span>Shipment Timeline
         </a>
         <a class="flex items-center gap-3 px-6 py-3 text-[#c6c5d4] opacity-80 hover:bg-[#202b32] hover:text-[#d8e4ec] transition-all hover:translate-x-1 duration-200" href="labour_prediction.html">
             <span class="material-symbols-outlined">groups</span>Labour Forecast
         </a>
+       
     </nav>
-    <div class="mt-auto border-t border-outline-variant/10 pt-6">
-        <a id="logout-btn" class="flex items-center gap-3 px-6 py-3 text-[#c6c5d4] opacity-80 hover:bg-[#202b32] hover:text-[#d8e4ec] transition-all cursor-pointer">
+    <div class="mt-auto flex flex-col gap-2 border-t border-outline-variant/10 pt-6">
+        <a id="logout-btn" class="flex items-center gap-3 px-6 py-3 text-[#c6c5d4] opacity-80 hover:bg-[#202b32] hover:text-[#d8e4ec] transition-all cursor-pointer" href="#">
             <span class="material-symbols-outlined">logout</span>Logout
         </a>
     </div>
 </aside>
+
 
 <!-- Main -->
 <main class="ml-64 min-h-screen flex flex-col">
@@ -98,7 +120,9 @@
             <!-- Prev -->
             <button id="btn-prev" class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors p-1">chevron_left</button>
             <!-- Label -->
-            <span id="calendar-label" class="text-primary font-bold font-headline tracking-tight text-sm min-w-[160px] text-center">—</span>
+<span id="calendar-label" class="text-primary font-bold font-headline tracking-tight text-sm min-w-[160px] text-center flex items-center justify-center gap-2">
+    <span class="poms-spinner"></span>
+</span>
             <!-- Next -->
             <button id="btn-next" class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors p-1">chevron_right</button>
             <!-- Today -->

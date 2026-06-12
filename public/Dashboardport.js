@@ -266,6 +266,7 @@ function populateDashboard(shipments) {
     const incoming = shipments.filter(s => s.type === "incoming");
     const outgoing = shipments.filter(s => s.type === "outgoing");
 
+    // ── Replace spinners with real counts ─────────────────────────────────────
     document.getElementById("incoming-count").textContent = incoming.length;
     document.getElementById("outgoing-count").textContent = outgoing.length;
 
@@ -309,33 +310,44 @@ function updateStorageUI(zonesData) {
     let totalContainers = 0;
     let totalCapacity   = 0;
 
-    // First try to get capacity from Firebase zone data (most accurate)
     Object.values(zonesData).forEach(zone => {
         totalContainers += zone.container_count || 0;
         totalCapacity   += zone.max_capacity    || 0;
     });
 
-    // Fallback to MongoDB value stored in localStorage
     if (totalCapacity === 0) {
         totalCapacity = parseInt(localStorage.getItem("total_capacity")) || 0;
     }
 
-    console.log("Containers:", totalContainers, "/ Capacity:", totalCapacity);
+    // ── Hide loaders ──────────────────────────────────────────────────────────
+    document.getElementById("capacity-loader").style.display          = "none";
+    document.getElementById("capacity-remaining-loader").style.display = "none";
 
     if (totalCapacity === 0) {
-        document.getElementById("capacity-percent").textContent = "?";
-        document.getElementById("capacity-remaining-label").textContent = "Capacity data unavailable";
+        document.getElementById("capacity-percent").textContent    = "?";
+        document.getElementById("capacity-percent").style.display  = "inline";
+        document.getElementById("capacity-pct-sign").style.display = "inline";
+        document.getElementById("capacity-remaining-label").textContent   = "Capacity data unavailable";
+        document.getElementById("capacity-remaining-label").style.display = "inline";
         return;
     }
 
     const pct       = Math.min(Math.round((totalContainers / totalCapacity) * 100), 100);
     const remaining = totalCapacity - totalContainers;
 
-    document.getElementById("capacity-percent").textContent             = pct;
-    document.getElementById("capacity-remaining-label").textContent     = `${remaining} UNITS REMAINING`;
-    document.getElementById("capacity-bar").style.width                 = `${pct}%`;
+    // ── Show real values ──────────────────────────────────────────────────────
+    const pctEl = document.getElementById("capacity-percent");
+    pctEl.textContent   = pct;
+    pctEl.style.display = "inline";
+    document.getElementById("capacity-pct-sign").style.display = "inline";
+
+    const lblEl = document.getElementById("capacity-remaining-label");
+    lblEl.textContent   = `${remaining} UNITS REMAINING`;
+    lblEl.style.display = "inline";
+
+    document.getElementById("capacity-bar").style.width = `${pct}%`;
     document.getElementById("capacity-cube-fill").style.setProperty("--fill", `${pct}%`);
-    document.getElementById("capacity-available").textContent           = `${remaining} UNITS`;
+    document.getElementById("capacity-available").textContent = `${remaining} UNITS`;
 
     const bar = document.getElementById("capacity-bar");
     if (pct >= 90)      bar.style.background = "#E24B4A";
@@ -385,7 +397,6 @@ function updateExpectedUtilization(shipments) {
     const totalCapacity = parseInt(localStorage.getItem("total_capacity")) || 0;
     if (totalCapacity === 0) return;
 
-    // Sum container counts of all shipments arriving in the next 24 hours
     const now       = new Date();
     const in24Hours = new Date(now.getTime() + 24 * 60 * 60 * 1000);
 
@@ -399,6 +410,7 @@ function updateExpectedUtilization(shipments) {
 
     const pct = Math.min(Math.round((incomingContainers / totalCapacity) * 100), 100);
 
+    // ── Replace skeleton with real value ──────────────────────────────────────
     document.getElementById("capacity-expected").textContent = `+${pct}%`;
 }
 

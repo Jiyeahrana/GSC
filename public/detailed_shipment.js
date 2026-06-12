@@ -32,6 +32,10 @@ async function fetchShipments() {
         if (!data.success) return;
 
         allShipments = data.data;
+        //re-enable buttons now that data is ready
+        ["btn-latest","btn-oldest","btn-all","btn-incoming","btn-outgoing","btn-prev","btn-next"].forEach(id => {
+            document.getElementById(id).disabled = false;
+        });
         applyFilters();
         updateStatCards();
 
@@ -182,6 +186,39 @@ function renderTable() {
     });
 }
 
+// renderSkeletonTable
+function renderSkeletonTable(count = 8) {
+    // disable filter/sort buttons while loading
+    ["btn-latest","btn-oldest","btn-all","btn-incoming","btn-outgoing","btn-prev","btn-next"].forEach(id => {
+        document.getElementById(id).disabled = true;
+    });
+    const tbody = document.getElementById("shipments-tbody");
+    tbody.innerHTML = "";
+    for (let i = 0; i < count; i++) {
+        const row = document.createElement("div");
+        row.className = "skeleton-row";
+        row.innerHTML = `
+            <div style="display:flex;align-items:center;gap:10px">
+                <div class="sk" style="width:6px;height:28px;border-radius:3px"></div>
+                <div class="sk" style="height:12px;width:60px"></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+                <div class="sk" style="height:12px;width:120px"></div>
+                <div class="sk" style="height:9px;width:70px"></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+                <div class="sk" style="height:12px;width:80px"></div>
+                <div class="sk" style="height:9px;width:55px"></div>
+            </div>
+            <div class="sk" style="height:12px;width:50px"></div>
+            <div class="sk" style="height:20px;width:80px;border-radius:999px"></div>
+            <div class="sk" style="height:20px;width:20px;border-radius:4px;margin-left:auto"></div>
+        `;
+        tbody.appendChild(row);
+    }
+    document.getElementById("pagination-label").textContent = "Loading...";
+}
+
 // ── Pagination ────────────────────────────────────────────────────────────────
 
 function updatePagination() {
@@ -280,5 +317,5 @@ document.addEventListener("click", function (e) {
 });
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
-
+renderSkeletonTable();
 fetchShipments();

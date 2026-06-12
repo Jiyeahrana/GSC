@@ -130,6 +130,25 @@
         transition: all 0.3s ease;
     }
     ::-webkit-scrollbar-thumb:hover { background: rgba(251, 107, 0, 0.7); }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+@keyframes shimmer { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+.poms-spinner {
+    display: inline-block;
+    width: 20px; height: 20px;
+    border: 2px solid rgba(186,200,220,0.15);
+    border-top-color: #bac8dc;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    vertical-align: middle;
+}
+.poms-skel {
+    display: inline-block;
+    background: rgba(186,200,220,0.12);
+    border-radius: 4px;
+    animation: shimmer 1.5s ease-in-out infinite;
+}
 </style>
 </head>
 <body class="bg-surface text-on-surface font-body selection:bg-tertiary selection:text-on-tertiary">
@@ -183,11 +202,15 @@
         <div class="flex gap-8">
             <div class="text-right">
                 <p class="text-xs font-label uppercase tracking-widest text-on-surface-variant">Total Capacity</p>
-                <p id="hud-total-capacity" class="text-xl font-bold font-headline text-primary">— UNITS</p>
+<p id="hud-total-capacity" class="text-xl font-bold font-headline text-primary">
+    <span class="poms-skel" style="width:110px; height:22px;"></span>
+</p>
             </div>
             <div class="text-right border-l border-outline-variant/30 pl-8">
                 <p class="text-xs font-label uppercase tracking-widest text-on-surface-variant">Global Occupancy</p>
-                <p id="hud-global-occupancy" class="text-xl font-bold font-headline text-tertiary-container">—%</p>
+<p id="hud-global-occupancy" class="text-xl font-bold font-headline text-tertiary-container">
+    <span class="poms-spinner" style="border-top-color:#fb6b00; border-color:rgba(251,107,0,0.15); border-top-color:#fb6b00;"></span>
+</p>
             </div>
         </div>
     </div>
@@ -265,8 +288,26 @@
 
             <!-- ✅ FIX: Dynamic zone cards render here -->
             <div id="zones-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Cards injected by detailed_storage.js -->
-            </div>
+    <!-- Skeleton cards shown while Firebase loads -->
+    <div class="bg-surface-container-high rounded-xl p-6 animate-pulse space-y-4">
+        <div class="poms-skel w-24 h-5 rounded"></div>
+        <div class="poms-skel w-full h-32 rounded-lg"></div>
+        <div class="poms-skel w-full h-3 rounded"></div>
+        <div class="poms-skel w-3/4 h-3 rounded"></div>
+    </div>
+    <div class="bg-surface-container-high rounded-xl p-6 animate-pulse space-y-4">
+        <div class="poms-skel w-24 h-5 rounded"></div>
+        <div class="poms-skel w-full h-32 rounded-lg"></div>
+        <div class="poms-skel w-full h-3 rounded"></div>
+        <div class="poms-skel w-3/4 h-3 rounded"></div>
+    </div>
+    <div class="bg-surface-container-high rounded-xl p-6 animate-pulse space-y-4">
+        <div class="poms-skel w-24 h-5 rounded"></div>
+        <div class="poms-skel w-full h-32 rounded-lg"></div>
+        <div class="poms-skel w-full h-3 rounded"></div>
+        <div class="poms-skel w-3/4 h-3 rounded"></div>
+    </div>
+</div>
 
             <!-- Prediction Section -->
             <div class="bg-surface-container rounded-2xl overflow-hidden border-t border-primary/5">
@@ -289,8 +330,15 @@
                 <div class="p-8">
                     <!-- Chart -->
                     <div class="relative h-64 w-full flex items-end justify-between gap-1 chart-bars-container">
-                        <p class="text-lg font-headline font-extrabold peak-date-label">—</p>
-                        <p class="text-lg font-headline font-extrabold overflow-risk-label">—</p>
+                        <!-- Peak Load Expected -->
+<p class="text-lg font-headline font-extrabold" id="peak-date-label">
+    <span class="poms-skel" style="width:90px; height:20px;"></span>
+</p>
+
+<!-- Overflow Risk -->
+<p class="text-lg font-headline font-extrabold" id="overflow-risk-label">
+    <span class="poms-skel" style="width:60px; height:20px;"></span>
+</p>
                     </div>
 
                     <!-- Prediction Meta -->

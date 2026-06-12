@@ -329,10 +329,132 @@ function renderDay() {
     }).join("");
 }
 
+// mute button till fetch data
+function disableViewControls() {
+    ["day", "week", "month"].forEach(v => {
+        const btn = document.getElementById(`view-${v}`);
+        btn.disabled = true;
+        btn.classList.add("opacity-40", "cursor-not-allowed");
+        btn.classList.remove("hover:text-primary");
+    });
+    document.getElementById("btn-prev").disabled  = true;
+    document.getElementById("btn-next").disabled  = true;
+    document.getElementById("btn-today").disabled = true;
+    document.getElementById("btn-prev").classList.add("opacity-40", "cursor-not-allowed");
+    document.getElementById("btn-next").classList.add("opacity-40", "cursor-not-allowed");
+    document.getElementById("btn-today").classList.add("opacity-40", "cursor-not-allowed");
+}
+
+function enableViewControls() {
+    ["day", "week", "month"].forEach(v => {
+        const btn = document.getElementById(`view-${v}`);
+        btn.disabled = false;
+        btn.classList.remove("opacity-40", "cursor-not-allowed");
+        btn.classList.add("hover:text-primary");
+    });
+    document.getElementById("btn-prev").disabled  = false;
+    document.getElementById("btn-next").disabled  = false;
+    document.getElementById("btn-today").disabled = false;
+    document.getElementById("btn-prev").classList.remove("opacity-40", "cursor-not-allowed");
+    document.getElementById("btn-next").classList.remove("opacity-40", "cursor-not-allowed");
+    document.getElementById("btn-today").classList.remove("opacity-40", "cursor-not-allowed");
+}
+
+// ── Render Skeleton ───────────────────────────────────────────────────────────
+
+function showCalendarSkeleton() {
+    const container = document.getElementById("calendar-container");
+    document.getElementById("calendar-label").innerHTML =
+    `<span class="poms-skel" style="width:160px; height:14px; border-radius:4px; display:inline-block;"></span>`;
+
+    if (currentView === "month") {
+        document.getElementById("day-headers").classList.remove("hidden");
+        container.className = "calendar-grid bg-surface-container-lowest rounded-xl overflow-hidden border border-white/5 shadow-inner";
+        container.innerHTML = "";
+
+        for (let i = 0; i < 35; i++) {
+            const cell = document.createElement("div");
+            // Every ~3rd cell gets a "busier" look for visual variety
+            const hasDots = i % 3 === 0;
+            const dotCount = hasDots ? (i % 2 === 0 ? 3 : 2) : 0;
+
+            cell.className = "border-r border-b border-white/5 p-3";
+            cell.innerHTML = `
+                <!-- Date number skeleton -->
+                <span class="poms-skel block rounded" style="width:18px; height:12px;"></span>
+
+                <!-- Dot row skeleton — only on some cells -->
+                ${hasDots ? `
+                <div class="flex gap-1 mt-2">
+                    ${Array(dotCount).fill(0).map(() =>
+                        `<span class="poms-skel rounded-full" style="width:8px; height:8px;"></span>`
+                    ).join("")}
+                </div>` : ""}
+            `;
+            container.appendChild(cell);
+        }
+
+    } else if (currentView === "week") {
+        document.getElementById("day-headers").classList.remove("hidden");
+        container.className = "week-grid bg-surface-container-lowest rounded-xl overflow-hidden border border-white/5 shadow-inner";
+        container.innerHTML = "";
+
+        for (let i = 0; i < 7; i++) {
+            const eventCount = [2, 1, 3, 0, 2, 1, 0][i]; // realistic variation
+            const cell = document.createElement("div");
+            cell.className = `border-r border-white/5 p-3 ${i === 6 ? "border-r-0" : ""}`;
+            cell.innerHTML = `
+                <!-- Date number + count -->
+                <div class="flex items-center justify-between mb-2">
+                    <span class="poms-skel block rounded" style="width:20px; height:12px;"></span>
+                    ${eventCount > 0 ? `<span class="poms-skel block rounded" style="width:10px; height:10px;"></span>` : ""}
+                </div>
+                <!-- Event pill skeletons -->
+                ${Array(eventCount).fill(0).map((_, j) => `
+                    <div class="mt-1 px-1.5 py-1 rounded" style="background:rgba(186,200,220,0.06); border-left: 2px solid rgba(186,200,220,0.15);">
+                        <span class="poms-skel block rounded" style="width:${60 + j * 15}%; height:10px;"></span>
+                    </div>
+                `).join("")}
+            `;
+            container.appendChild(cell);
+        }
+
+    } else {
+        // Day view
+        document.getElementById("day-headers").classList.add("hidden");
+        container.className = "bg-surface-container-lowest rounded-xl overflow-hidden border border-white/5 shadow-inner";
+        container.innerHTML = "";
+
+        for (let i = 0; i < 5; i++) {
+            const row = document.createElement("div");
+            row.className = "flex items-center gap-6 p-5 border-b border-white/5";
+            row.innerHTML = `
+                <!-- Color bar -->
+                <span class="poms-skel rounded-full flex-shrink-0" style="width:4px; height:40px;"></span>
+                <!-- Time block -->
+                <div class="space-y-1 flex-shrink-0" style="width:64px;">
+                    <span class="poms-skel block rounded" style="width:52px; height:11px;"></span>
+                    <span class="poms-skel block rounded" style="width:36px; height:9px;"></span>
+                </div>
+                <!-- Vessel name + meta -->
+                <div class="flex-1 space-y-1">
+                    <span class="poms-skel block rounded" style="width:55%; height:13px;"></span>
+                    <span class="poms-skel block rounded" style="width:75%; height:9px;"></span>
+                </div>
+                <!-- Status badge -->
+                <span class="poms-skel rounded-full flex-shrink-0" style="width:60px; height:20px;"></span>
+            `;
+            container.appendChild(row);
+        }
+    }
+}
 // ── Render dispatcher ─────────────────────────────────────────────────────────
 
 async function render() {
     closePopup();
+
+    disableViewControls();
+    showCalendarSkeleton();
     // Fetch data for the relevant month
     const year  = currentDate.getFullYear();
     const month = currentDate.getMonth() + 1;
@@ -343,6 +465,7 @@ async function render() {
     else                              renderDay();
 
     updateViewButtons();
+    enableViewControls();
 }
 
 // ── View toggle buttons ───────────────────────────────────────────────────────

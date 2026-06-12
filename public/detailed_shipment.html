@@ -93,6 +93,35 @@
             background-color: rgba(39, 59, 75, 0.4);
         }
         .no-scrollbar::-webkit-scrollbar { display: none; }
+
+        .skeleton-stat {
+    display: inline-block;
+    width: 48px; height: 28px;
+    background: #172c3b;
+    border-radius: 4px;
+    animation: sk-pulse 1.4s ease-in-out infinite;
+}
+.skeleton-row {
+    display: grid;
+    grid-template-columns: 2fr 3fr 2fr 2fr 2fr 1fr;
+    gap: 1rem;
+    padding: 18px 24px;
+    border-bottom: 1px solid rgba(39,59,75,0.4);
+    align-items: center;
+}
+.sk {
+    background: #172c3b;
+    border-radius: 4px;
+    animation: sk-pulse 1.4s ease-in-out infinite;
+}
+@keyframes sk-pulse {
+    0%, 100% { opacity: 0.45; }
+    50%       { opacity: 1; }
+}
+button:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
     </style>
 </head>
 <body class="bg-surface text-on-surface min-h-screen flex">
@@ -161,7 +190,7 @@ Monitor vessel activity, arrivals, and departures in real time.    </p>
           </h3>
           
           <p id="total-count" class="text-3xl font-headline font-extrabold mt-1">
-            —
+  <span class="skeleton-stat"></span>
           </p>
         </div>
         <span class="material-symbols-outlined text-[#3b82f6] text-3xl">
@@ -178,8 +207,8 @@ Monitor vessel activity, arrivals, and departures in real time.    </p>
             Incoming
           </h3>
           <p id="incoming-count" class="text-3xl font-headline font-extrabold mt-1">
-            —
-          </p>
+  <span class="skeleton-stat"></span>
+</p>
         </div>
         <span class="material-symbols-outlined text-[#b2c8e7] text-3xl">
           anchor
@@ -200,8 +229,8 @@ Monitor vessel activity, arrivals, and departures in real time.    </p>
             Outgoing
           </h3>
           <p id="outgoing-count" class="text-3xl font-headline font-extrabold mt-1">
-            —
-          </p>
+  <span class="skeleton-stat"></span>
+</p>
         </div>
         <span class="material-symbols-outlined text-[#fb6b00] text-3xl">
           sailing
@@ -215,11 +244,11 @@ Monitor vessel activity, arrivals, and departures in real time.    </p>
 <div class="flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
 <div class="flex items-center gap-2 bg-surface-container-low p-1 rounded-lg">
     <button id="btn-latest" data-group="sort" class="bg-accent-orange text-on-tertiary px-4 py-2 rounded-md text-[10px] font-bold uppercase tracking-wider">Latest First</button>
-    <button id="btn-oldest" data-group="sort" class="text-slate-500 hover:text-slate-300 px-4 py-2 text-[10px] font-bold uppercase tracking-wider">Oldest First</button>
+    <button id="btn-oldest" data-group="sort" class="text-slate-500 hover:text-slate-300 px-4 py-2 rounded-md text-[10px] font-bold uppercase tracking-wider">Oldest First</button>
     <div class="w-px h-4 bg-surface-container-high mx-1"></div>
     <button id="btn-all"      data-group="filter" class="bg-accent-orange text-on-tertiary px-4 py-2 rounded-md text-[10px] font-bold uppercase tracking-wider">All</button>
-    <button id="btn-incoming" data-group="filter" class="text-slate-500 hover:text-slate-300 px-4 py-2 text-[10px] font-bold uppercase tracking-wider">Incoming</button>
-    <button id="btn-outgoing" data-group="filter" class="text-slate-500 hover:text-slate-300 px-4 py-2 text-[10px] font-bold uppercase tracking-wider">Outgoing</button>
+    <button id="btn-incoming" data-group="filter" class="text-slate-500 hover:text-slate-300 rounded-md px-4 py-2 text-[10px] font-bold uppercase tracking-wider">Incoming</button>
+    <button id="btn-outgoing" data-group="filter" class="text-slate-500 hover:text-slate-300 rounded-md px-4 py-2 text-[10px] font-bold uppercase tracking-wider">Outgoing</button>
 </div>
 <div class="flex items-center gap-3">
     <span id="pagination-label" class="text-[10px] text-slate-500 font-bold uppercase">Loading...</span>

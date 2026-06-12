@@ -46,6 +46,30 @@
     .fill-back { display: none; }
     .fill-top { position: absolute; width: 80px; height: 80px; bottom: 100%; transform: rotateX(90deg) translateY(40px); transform-origin: bottom; background: linear-gradient(to bottom, #d6e4f9, #bac8dc); }
     .cube-fill::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.25), rgba(0,0,0,0.05)); pointer-events: none; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+@keyframes shimmer { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+.poms-spinner {
+    display: inline-block;
+    width: 36px; height: 36px;
+    border: 3px solid rgba(186,200,220,0.15);
+    border-top-color: #bac8dc;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    vertical-align: middle;
+}
+.poms-spinner-sm {
+    width: 14px; height: 14px;
+    border-width: 2px;
+    border-top-color: #ffb692;
+}
+.poms-skel {
+    display: inline-block;
+    background: rgba(186,200,220,0.12);
+    border-radius: 4px;
+    animation: shimmer 1.5s ease-in-out infinite;
+}
 </style>
 </head>
 <body class="bg-surface text-on-surface font-body selection:bg-tertiary/30">
@@ -56,7 +80,7 @@
         <p class="text-on-surface-variant text-xs mt-1">Real-Time Port Operations & Monitoring</p>
     </div>
     <nav class="flex-1 flex flex-col gap-2">
-        <a class="bg-[#202b32] text-[#fb6b00] border-l-4 border-[#fb6b00] flex items-center px-4 py-3 mx-2 rounded-sm transition-all hover:translate-x-1 duration-200">
+        <a class="bg-[#202b32] text-[#fb6b00] border-l-4 border-[#fb6b00] flex items-center gap-3 px-4 py-3 mx-2 rounded-sm transition-all hover:translate-x-1 duration-200">
             <span class="material-symbols-outlined">dashboard</span>Dashboard
         </a>
         <a class="flex items-center gap-3 px-6 py-3 text-[#c6c5d4] opacity-80 hover:bg-[#202b32] hover:text-[#d8e4ec] transition-all  hover:translate-x-1 duration-200" href="detailed_storage.html">
@@ -123,29 +147,37 @@
                             </div>
                         </div>
                         <div class="flex-1 space-y-4">
-                            <div class="flex flex-col">
-                                <span class="font-headline text-5xl font-extrabold text-on-surface tracking-tighter">
-                                    <span id="capacity-percent">—</span>% <span class="text-xl font-medium text-on-surface-variant">Full</span>
-                                </span>
-                                <span id="capacity-remaining-label" class="text-tertiary font-bold tracking-widest text-xs mt-1 uppercase">— REMAINING</span>
-                            </div>
-                            <div class="space-y-2">
-                                <div class="h-2 w-full rounded-full overflow-hidden flex border border-outline-variant/10">
-                                    <div id="capacity-bar" class="h-full bg-primary shadow-[0_0_8px_rgba(186,200,220,0.4)] transition-all duration-1000" style="width: 0%"></div>
-                                </div>
-                                <p class="text-[10px] text-on-surface-variant uppercase tracking-widest font-semibold">Bay Utilization Index</p>
-                            </div>
-                        </div>
+    <div class="flex flex-col">
+        <span class="font-headline text-5xl font-extrabold text-on-surface tracking-tighter flex items-baseline gap-2">
+            <span id="capacity-loader" class="poms-spinner"></span>
+            <span id="capacity-percent" style="display:none;"></span>
+            <span id="capacity-pct-sign" style="display:none;">%</span>
+            <span class="text-xl font-medium text-on-surface-variant">Full</span>
+        </span>
+        <span id="capacity-remaining-loader" class="poms-spinner poms-spinner-sm mt-2" style="display:inline-block;"></span>
+        <span id="capacity-remaining-label" class="text-tertiary font-bold tracking-widest text-xs mt-1 uppercase" style="display:none;"></span>
+    </div>
+    <div class="space-y-2">
+        <div class="h-2 w-full rounded-full overflow-hidden flex border border-outline-variant/10" style="background:rgba(186,200,220,0.08);">
+            <div id="capacity-bar" class="h-full bg-primary shadow-[0_0_8px_rgba(186,200,220,0.4)] transition-all duration-1000" style="width:0%"></div>
+        </div>
+        <p class="text-[10px] text-on-surface-variant uppercase tracking-widest font-semibold">Bay Utilization Index</p>
+    </div>
+</div>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4 mt-4 pt-8 border-t border-outline-variant/10">
                     <div>
                         <p class="text-xs text-on-surface-variant uppercase tracking-widest font-medium">Available Slots</p>
-                        <p id="capacity-available" class="text-xl font-bold font-headline">— UNITS</p>
+<p id="capacity-available" class="text-xl font-bold font-headline">
+    <span class="poms-skel" style="width:90px;height:22px;display:inline-block;"></span>
+</p>
                     </div>
                     <div>
                         <p class="text-xs text-on-surface-variant uppercase tracking-widest font-medium">Expected Utilization (24h)</p>
-                        <p id="capacity-expected" class="text-xl font-bold font-headline text-tertiary">+—%</p>
+<p id="capacity-expected" class="text-xl font-bold font-headline text-tertiary">
+    <span class="poms-skel" style="width:50px;height:22px;display:inline-block;"></span>
+</p>
                     </div>
                 </div>
             </section>
@@ -157,13 +189,18 @@
                     <div class="flex justify-between items-start">
                         <div>
                             <h3 class="text-on-surface-variant text-xs uppercase tracking-widest font-bold">Incoming Today</h3>
-                            <p id="incoming-count" class="text-5xl font-headline font-extrabold mt-2">—</p>
+<p id="incoming-count" class="text-5xl font-headline font-extrabold mt-2">
+    <span class="poms-spinner" style="width:32px;height:32px;border-width:3px;"></span>
+</p>
+
                         </div>
                         <span class="material-symbols-outlined text-[#b2c8e7] text-4xl">anchor</span>
                     </div>
                     <div class="mt-4 flex items-center gap-2 text-sm text-[#b2c8e7]">
                         <span class="material-symbols-outlined text-sm">schedule</span>
-                        <span id="next-vessel-label">Loading...</span>
+<span id="next-vessel-label">
+    <span class="poms-skel" style="width:140px;height:13px;display:inline-block;border-radius:3px;"></span>
+</span>
                     </div>
                 </div>
                 <!-- Outgoing Today -->
@@ -171,7 +208,9 @@
                     <div class="flex justify-between items-start">
                         <div>
                             <h3 class="text-on-surface-variant text-xs uppercase tracking-widest font-bold">Outgoing Today</h3>
-                            <p id="outgoing-count" class="text-5xl font-headline font-extrabold mt-2">—</p>
+<p id="outgoing-count" class="text-5xl font-headline font-extrabold mt-2">
+    <span class="poms-spinner" style="width:32px;height:32px;border-width:3px;border-top-color:#fb6b00;border-color:rgba(251,107,0,0.15);border-top-color:#fb6b00;"></span>
+</p>
                         </div>
                         <span class="material-symbols-outlined text-[#fb6b00] text-4xl">sailing</span>
                     </div>
