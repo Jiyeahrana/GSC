@@ -414,6 +414,84 @@ function updateExpectedUtilization(shipments) {
     document.getElementById("capacity-expected").textContent = `+${pct}%`;
 }
 
+// ── Port Efficiency Score ──────────────────────────────────────────────────────
+
+async function fetchEfficiencyScore() {
+    try {
+        const res = await fetch("http://localhost:3000/api/v1/port/efficiency-score", {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (res.status === 401) {
+            localStorage.clear();
+            window.location.href = "/index.html";
+            return;
+        }
+
+        const data = await res.json();
+        if (!data.success) return;
+
+        renderEfficiencyScore(data);
+
+    } catch (err) {
+        console.error("Efficiency score error:", err);
+    }
+}
+
+function renderEfficiencyScore(data) {
+    const { score, label, breakdown } = data;
+
+    // ── Hide loader, show score ────────────────────────────────────────────────
+    document.getElementById("efficiency-loader").style.display = "none";
+
+    const scoreEl = document.getElementById("efficiency-score");
+    scoreEl.textContent   = score;
+    scoreEl.style.display = "inline";
+
+    // Label badge
+    const labelEl = document.getElementById("efficiency-label");
+    labelEl.innerHTML   = label;
+    labelEl.style.display = "inline";
+
+    const labelColors = {
+        "Excellent":       { bg: "rgba(99,153,34,0.15)",  text: "#639922" },
+        "Good":            { bg: "rgba(164,204,232,0.15)", text: "#a4cce8" },
+        "Needs Attention": { bg: "rgba(255,182,146,0.15)", text: "#ffb692" },
+        "Critical":        { bg: "rgba(226,75,74,0.15)",  text: "#E24B4A" }
+    };
+    const lc = labelColors[label] || labelColors["Good"];
+    labelEl.style.background = lc.bg;
+    labelEl.style.color      = lc.text;
+
+    // Gauge ring — circumference = 2 * π * r = 2 * π * 42 ≈ 264
+    const circumference = 264;
+    const offset = circumference - (score / 100) * circumference;
+    const ring   = document.getElementById("efficiency-ring");
+    ring.style.display        = "block";
+    ring.style.strokeDashoffset = offset;
+
+    // Ring color based on score
+    let ringColor = "#E24B4A"; // critical
+    if (score >= 85)      ringColor = "#639922"; // excellent
+    else if (score >= 70) ringColor = "#a4cce8"; // good
+    else if (score >= 50) ringColor = "#ffb692"; // needs attention
+    ring.style.stroke = ringColor;
+
+    // Breakdown bars
+    setBreakdown("ontime",     breakdown.on_time_arrival_rate.score);
+    setBreakdown("zone",       breakdown.zone_utilization.score);
+    setBreakdown("turnaround", breakdown.turnaround_efficiency.score);
+    setBreakdown("checkpoint", breakdown.checkpoint_adherence.score);
+    setBreakdown("disruption", breakdown.disruption_resilience.score);
+}
+
+function setBreakdown(key, value) {
+    document.getElementById(`bar-${key}`).style.width = `${value}%`;
+
+    const valEl = document.getElementById(`val-${key}`);
+    valEl.innerHTML = value; // replaces the skeleton span with the number
+}
+
 // ── Boot ──────────────────────────────────────────────────────────────────────
 
 renderTimeMarkers();
@@ -422,3 +500,4 @@ setInterval(updateLiveTimeLine, 30000);
 activateToggle(btn24, btn48);
 fetchTodayShipments();
 fetchPortDetails(); 
+fetchEfficiencyScore();

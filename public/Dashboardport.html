@@ -73,8 +73,8 @@
 </style>
 </head>
 <body class="bg-surface text-on-surface font-body selection:bg-tertiary/30">
+  <aside class="flex flex-col h-screen fixed left-0 top-0 py-8 bg-[#00111C] dark:bg-[#011c2e] text-[#011c2e] font-inter font-medium text-sm shadow-[48px_0_48px_rgba(5,16,21,0.06)] w-64 z-50">
 
-<aside class="flex flex-col h-screen fixed left-0 top-0 py-8 bg-[#00111C] dark:bg-[#011c2e] text-[#011c2e] font-inter font-medium text-sm shadow-[48px_0_48px_rgba(5,16,21,0.06)] w-64 z-50">
     <div class="px-6 mb-10">
         <h1 id="sidebar-port-name" class="text-[#d8e4ec] font-manrope font-extrabold text-xl tracking-tight">Port name</h1>
         <p class="text-on-surface-variant text-xs mt-1">Real-Time Port Operations & Monitoring</p>
@@ -118,7 +118,89 @@
 </header>
 
 <main class="pl-64 pt-16 min-h-screen bg-surface">
-    <div class="p-8 max-w-[1600px] mx-auto space-y-8">
+  <div class="p-8 max-w-[1600px] mx-auto space-y-8">
+      <!-- Port Efficiency Score Card -->
+      <div class="bg-surface-container-low rounded-xl p-6 border border-outline-variant/10">
+          <div class="flex items-center justify-between mb-4">
+              <h3 class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">
+                  Port Efficiency Score
+              </h3>
+              <span id="efficiency-label" class="text-[10px] font-bold px-2 py-1 rounded-full bg-surface-container-high text-on-surface-variant">
+                  <span class="poms-skel" style="width:50px;height:12px;display:inline-block;"></span>
+              </span>
+          </div>
+      
+          <div class="flex items-center gap-6">
+              <!-- Gauge -->
+              <div class="relative w-28 h-28 shrink-0 flex items-center justify-center">
+                  <svg viewBox="0 0 100 100" class="w-full h-full -rotate-90">
+                      <circle cx="50" cy="50" r="42" fill="none" stroke="#172c3b" stroke-width="10"/>
+                      <circle id="efficiency-ring" cx="50" cy="50" r="42" fill="none"
+                              stroke="#fb6b00" stroke-width="10"
+                              stroke-dasharray="264" stroke-dashoffset="264"
+                              stroke-linecap="round"
+                              style="transition: stroke-dashoffset 1s ease, stroke 0.3s; display:none;"/>
+                  </svg>
+                  <div class="absolute inset-0 flex items-center justify-center">
+                      <span id="efficiency-loader" class="poms-spinner"></span>
+                      <span id="efficiency-score" class="text-3xl font-extrabold font-headline text-primary" style="display:none;"></span>
+                  </div>
+              </div>
+      
+              <!-- Breakdown -->
+              <div class="flex-1 space-y-2.5">
+                  <div class="flex items-center justify-between gap-3">
+                      <span class="text-[10px] text-on-surface-variant uppercase tracking-wider w-32 shrink-0">On-Time Arrivals</span>
+                      <div class="flex-1 h-1.5 bg-surface-container-high rounded-full overflow-hidden">
+                          <div id="bar-ontime" class="h-full bg-[#639922] rounded-full transition-all duration-700" style="width:0%"></div>
+                      </div>
+                      <span id="val-ontime" class="text-xs font-bold w-8 text-right">
+                          <span class="poms-skel" style="width:24px;height:12px;display:inline-block;"></span>
+                      </span>
+                  </div>
+      
+                  <div class="flex items-center justify-between gap-3">
+                      <span class="text-[10px] text-on-surface-variant uppercase tracking-wider w-32 shrink-0">Zone Utilization</span>
+                      <div class="flex-1 h-1.5 bg-surface-container-high rounded-full overflow-hidden">
+                          <div id="bar-zone" class="h-full bg-[#a4cce8] rounded-full transition-all duration-700" style="width:0%"></div>
+                      </div>
+                      <span id="val-zone" class="text-xs font-bold w-8 text-right">
+                          <span class="poms-skel" style="width:24px;height:12px;display:inline-block;"></span>
+                      </span>
+                  </div>
+      
+                  <div class="flex items-center justify-between gap-3">
+                      <span class="text-[10px] text-on-surface-variant uppercase tracking-wider w-32 shrink-0">Turnaround Efficiency</span>
+                      <div class="flex-1 h-1.5 bg-surface-container-high rounded-full overflow-hidden">
+                          <div id="bar-turnaround" class="h-full bg-[#ffb692] rounded-full transition-all duration-700" style="width:0%"></div>
+                      </div>
+                      <span id="val-turnaround" class="text-xs font-bold w-8 text-right">
+                          <span class="poms-skel" style="width:24px;height:12px;display:inline-block;"></span>
+                      </span>
+                  </div>
+      
+                  <div class="flex items-center justify-between gap-3">
+                      <span class="text-[10px] text-on-surface-variant uppercase tracking-wider w-32 shrink-0">Checkpoint Adherence</span>
+                      <div class="flex-1 h-1.5 bg-surface-container-high rounded-full overflow-hidden">
+                          <div id="bar-checkpoint" class="h-full bg-[#5DCAA5] rounded-full transition-all duration-700" style="width:0%"></div>
+                      </div>
+                      <span id="val-checkpoint" class="text-xs font-bold w-8 text-right">
+                          <span class="poms-skel" style="width:24px;height:12px;display:inline-block;"></span>
+                      </span>
+                  </div>
+      
+                  <div class="flex items-center justify-between gap-3">
+                      <span class="text-[10px] text-on-surface-variant uppercase tracking-wider w-32 shrink-0">Disruption Resilience</span>
+                      <div class="flex-1 h-1.5 bg-surface-container-high rounded-full overflow-hidden">
+                          <div id="bar-disruption" class="h-full bg-[#bac8dc] rounded-full transition-all duration-700" style="width:0%"></div>
+                      </div>
+                      <span id="val-disruption" class="text-xs font-bold w-8 text-right">
+                          <span class="poms-skel" style="width:24px;height:12px;display:inline-block;"></span>
+                      </span>
+                  </div>
+              </div>
+          </div>
+      </div>
         <div class="grid grid-cols-12 gap-6">
 
             <!-- Storage Capacity Widget -->

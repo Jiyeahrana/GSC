@@ -713,4 +713,155 @@ const getLabourPrediction = async (req, res) => {
     }
 };
 
-module.exports = { register, login, getPortDetails, getPortZones, getPublicPorts, getPublicPortTimeline,trackShipment, getCapacityPrediction,getLabourPrediction,getWorkforce };
+// ── Constants for efficiency calculation ──────────────────────────────────────
+
+const ON_TIME_TOLERANCE_HOURS   = 2;   // ±2 hours counts as "on time"
+const TURNAROUND_BENCHMARK_HOURS = 24; // target turnaround time
+
+// GET /api/v1/port/efficiency-score
+const getEfficiencyScore = async (req, res) => {
+    try {
+        const portId = req.user.port_id;
+
+        const port = await Port.findById(portId, "zones total_capacity");
+        if (!port) {
+            return res.status(404).json({ success: false, message: "Port not found" });
+        }
+
+        const shipments = await Shipment.find(
+            { port_id: portId },
+            "type status schedule actual checkpoints weather_snapshots"
+        );
+
+        // ── 1. On-Time Arrival Rate (35%) ────────────────────────────────────
+        const arrivedShipments = shipments.filter(s => s.actual?.arrival);
+        let onTimeCount = 0;
+
+        arrivedShipments.forEach(s => {
+            const scheduled = new Date(s.schedule.arrival).getTime();
+            const actual    = new Date(s.actual.arrival).getTime();
+            const diffHours = Math.abs(actual - scheduled) / 3600000;
+            if (diffHours <= ON_TIME_TOLERANCE_HOURS) onTimeCount++;
+        });
+
+        const onTimeRate = arrivedShipments.length > 0
+            ? Math.round((onTimeCount / arrivedShipments.length) * 100)
+            : 100; // no data yet — neutral score
+
+        // ── 2. Zone Utilization Efficiency (25%) ─────────────────────────────
+        let zoneUtilization = 100;
+        let globalOccupancyPct = 0;
+
+        try {
+            const snapshot   = await db.ref(`sensor_readings/${portId}`).once("value");
+            const sensorData = snapshot.val() || {};
+
+            let totalOccupied = 0;
+            let totalCapacity = port.total_capacity || 0;
+
+            Object.values(sensorData).forEach(zone => {
+                totalOccupied += zone?.container_count || 0;
+            });
+
+            if (totalCapacity > 0) {
+                globalOccupancyPct = (totalOccupied / totalCapacity) * 100;
+
+                if (globalOccupancyPct >= 60 && globalOccupancyPct <= 85) {
+                    zoneUtilization = 100;
+                } else if (globalOccupancyPct < 60) {
+                    zoneUtilization = 100 - (60 - globalOccupancyPct) * (100 / 60);
+                } else {
+                    zoneUtilization = 100 - (globalOccupancyPct - 85) * (100 / 15);
+                }
+
+                zoneUtilization = Math.max(0, Math.min(100, Math.round(zoneUtilization)));
+            }
+        } catch (err) {
+            console.error("Zone utilization fetch error:", err.message);
+        }
+
+        // ── 3. Turnaround Efficiency (20%) ───────────────────────────────────
+        const completedShipments = shipments.filter(s => s.actual?.arrival && s.actual?.departure);
+        let turnaroundEfficiency = 100;
+
+        if (completedShipments.length > 0) {
+            const totalTurnaroundHours = completedShipments.reduce((sum, s) => {
+                const arr = new Date(s.actual.arrival).getTime();
+                const dep = new Date(s.actual.departure).getTime();
+                return sum + Math.max((dep - arr) / 3600000, 0);
+            }, 0);
+
+            const avgTurnaround = totalTurnaroundHours / completedShipments.length;
+            turnaroundEfficiency = Math.round(
+                Math.min(100, (TURNAROUND_BENCHMARK_HOURS / avgTurnaround) * 100)
+            );
+        }
+
+        // ── 4. Checkpoint Adherence Rate (10%) ───────────────────────────────
+        let reachedTotal = 0;
+        let missedTotal  = 0;
+
+        shipments.forEach(s => {
+            (s.checkpoints || []).forEach(cp => {
+                if (cp.status === "reached") reachedTotal++;
+                if (cp.status === "missed")  missedTotal++;
+            });
+        });
+
+        const checkpointAdherence = (reachedTotal + missedTotal) > 0
+            ? Math.round((reachedTotal / (reachedTotal + missedTotal)) * 100)
+            : 100;
+
+        // ── 5. Disruption Resilience Score (10%) ─────────────────────────────
+        const stormShipments = arrivedShipments.filter(s =>
+            s.weather_snapshots?.some(w => w.storm_flag)
+        );
+
+        let stormOnTimeCount = 0;
+        stormShipments.forEach(s => {
+            const scheduled = new Date(s.schedule.arrival).getTime();
+            const actual    = new Date(s.actual.arrival).getTime();
+            const diffHours = Math.abs(actual - scheduled) / 3600000;
+            if (diffHours <= ON_TIME_TOLERANCE_HOURS) stormOnTimeCount++;
+        });
+
+        const disruptionResilience = stormShipments.length > 0
+            ? Math.round((stormOnTimeCount / stormShipments.length) * 100)
+            : 100; // no storms encountered — neutral score
+
+        // ── Weighted Total ────────────────────────────────────────────────────
+        const totalScore = Math.round(
+            onTimeRate            * 0.35 +
+            zoneUtilization       * 0.25 +
+            turnaroundEfficiency  * 0.20 +
+            checkpointAdherence   * 0.10 +
+            disruptionResilience  * 0.10
+        );
+
+        const getLabel = (score) => {
+            if (score >= 85) return "Excellent";
+            if (score >= 70) return "Good";
+            if (score >= 50) return "Needs Attention";
+            return "Critical";
+        };
+
+        return res.status(200).json({
+            success: true,
+            score:   totalScore,
+            label:   getLabel(totalScore),
+            breakdown: {
+                on_time_arrival_rate:   { score: onTimeRate,           weight: 0.35, sample_size: arrivedShipments.length },
+                zone_utilization:       { score: zoneUtilization,      weight: 0.25, current_occupancy_pct: Math.round(globalOccupancyPct) },
+                turnaround_efficiency:  { score: turnaroundEfficiency, weight: 0.20, sample_size: completedShipments.length },
+                checkpoint_adherence:   { score: checkpointAdherence,  weight: 0.10, reached: reachedTotal, missed: missedTotal },
+                disruption_resilience:  { score: disruptionResilience, weight: 0.10, sample_size: stormShipments.length }
+            }
+        });
+
+    } catch (err) {
+        console.error("Efficiency score error:", err);
+        return res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
+module.exports = { register, login, getPortDetails, getPortZones, getPublicPorts, getPublicPortTimeline,trackShipment, getCapacityPrediction,getLabourPrediction,getWorkforce,getEfficiencyScore  };
