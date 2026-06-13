@@ -5,13 +5,6 @@ const portId = localStorage.getItem("port_id");
 
 if (!token) window.location.href = "/index.html";
 
-// ── Logout ────────────────────────────────────────────────────────────────────
-
-document.getElementById("logout-btn").addEventListener("click", (e) => {
-    e.preventDefault();
-    localStorage.clear();
-    window.location.href = "/index.html";
-});
 
 // ── Sidebar port name ─────────────────────────────────────────────────────────
 

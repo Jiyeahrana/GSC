@@ -168,12 +168,14 @@
     }
     #intelligence-scroll::-webkit-scrollbar { width: 4px; }
     #intelligence-scroll::-webkit-scrollbar-thumb { background: rgba(186,200,220,0.15); border-radius: 4px; }
+    @keyframes sk-pulse { 0%,100%{opacity:0.35} 50%{opacity:0.9} }
+.sk { background:#172c3b; border-radius:4px; animation:sk-pulse 1.4s ease-in-out infinite; display:inline-block; }
 </style>
 </head>
 <body class="bg-background text-on-surface font-body min-h-screen">
 
 <!-- TopNavBar -->
-<header class="bg-[#000d16]/80 backdrop-blur-xl top-0 sticky z-50 border-b border-white/5 shadow-2xl shadow-black/50 flex justify-between items-center w-full px-6 h-14">
+<header class="bg-[#000d16]/80 backdrop-blur-xl top-0 sticky z-50 border-b border-white/5 shadow-2xl shadow-black/50 flex justify-between items-center w-full px-3 md:px-6 h-14">
     <div class="flex items-center gap-3">
         <a href="detailed_shipment.html" class="text-on-surface-variant hover:text-on-surface transition-colors">
             <span class="material-symbols-outlined text-lg">arrow_back</span>
@@ -197,14 +199,14 @@
 <!-- ═══════════════════════════════════════════════════════════════════
      COMPACT SHIP INFO BAR (replaces the big top panel)
 ════════════════════════════════════════════════════════════════════ -->
-<div class="px-6 pt-4 pb-0">
+<div class="px-3 md:px-6 pt-4 pb-0">
   <div class="flex flex-wrap items-center gap-3 px-5 py-3 rounded-xl border border-outline-variant/10 bg-surface-container-low">
     <!-- Vessel name -->
     <div class="flex items-center gap-2 mr-4">
       <span class="material-symbols-outlined text-[#fb6b00] text-base">directions_boat</span>
       <div>
-        <p id="vessel-name" class="font-headline text-base font-extrabold text-primary leading-none">—</p>
-        <p id="ship-id" class="font-mono text-[10px] text-on-surface-variant mt-0.5">—</p>
+      <p id="vessel-name" class="font-headline text-base font-extrabold text-primary leading-none"><span class="sk" style="width:120px;height:16px"></span></p>
+        <p id="ship-id" class="font-mono text-[10px] text-on-surface-variant mt-0.5"><span class="sk" style="width:80px;height:10px"></span></p>
       </div>
     </div>
 
@@ -214,36 +216,30 @@
     <!-- Route -->
     <div class="flex items-center gap-1.5">
       <span class="material-symbols-outlined text-xs text-on-surface-variant">route</span>
-      <p id="route-text" class="text-xs font-semibold text-on-surface">—</p>
+<p id="route-text" class="text-xs font-semibold text-on-surface"><span class="sk" style="width:140px;height:12px"></span></p>
     </div>
 
     <!-- Chips row -->
     <div class="flex flex-wrap items-center gap-2 ml-auto">
       <span class="meta-chip">
         <span class="material-symbols-outlined text-[11px]">gps_fixed</span>
-        <span id="gps-device">—</span>
-      </span>
+<span id="gps-device"><span class="sk" style="width:60px;height:10px"></span></span>      </span>
       <span class="meta-chip">
         <span class="material-symbols-outlined text-[11px]">swap_vert</span>
-        <span id="ship-type">—</span>
-      </span>
+<span id="ship-type"><span class="sk" style="width:60px;height:10px"></span></span>      </span>
       <span class="meta-chip">
         <span class="material-symbols-outlined text-[11px]">inventory_2</span>
-        <span id="container-count">—</span>
-      </span>
+<span id="container-count"><span class="sk" style="width:50px;height:10px"></span></span>      </span>
       <span class="meta-chip">
         <span class="material-symbols-outlined text-[11px]">flight_land</span>
-        <span id="arrival-date">—</span>
-      </span>
+<span id="arrival-date"><span class="sk" style="width:70px;height:10px"></span></span>      </span>
       <span class="meta-chip">
         <span class="material-symbols-outlined text-[11px]">schedule</span>
-        <span id="days-remaining">—</span> left
-      </span>
+<span id="days-remaining"><span class="sk" style="width:50px;height:10px"></span></span> left      </span>
       <!-- Status badge -->
       <div class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-surface-container-high border border-outline-variant/20">
         <span id="status-dot" class="w-1.5 h-1.5 rounded-full mr-2 bg-outline animate-pulse"></span>
-        <span id="ship-status">—</span>
-      </div>
+<span id="ship-status"><span class="sk" style="width:60px;height:10px"></span></span>      </div>
     </div>
   </div>
 </div>
@@ -251,14 +247,14 @@
 <!-- ═══════════════════════════════════════════════════════════════════
      MAIN CONTENT — Map dominant + Intelligence side
 ════════════════════════════════════════════════════════════════════ -->
-<main class="px-6 pt-4 pb-10">
+<main class="px-3 md:px-6 pt-4 pb-10">
   <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
 
     <!-- ── LEFT COLUMN: Map + Route Progress + Timeline ── -->
     <div class="lg:col-span-8 flex flex-col gap-5">
 
       <!-- MAP (tall, dominant) -->
-      <div id="map-container" class="bg-[#001c2d] border border-outline-variant/10 shadow-xl" style="height: 540px; border-radius: 0.75rem; position: relative;">
+<div id="map-container" class="bg-[#001c2d] border border-outline-variant/10 shadow-xl" style="height: clamp(280px, 50vw, 540px); border-radius: 0.75rem; position: relative;">
         <div id="leaflet-map"></div>
         <div id="map-loading">
           <div class="text-center space-y-2">
@@ -271,24 +267,20 @@
           <div class="glass-panel p-3 rounded-lg flex gap-5 flex-wrap" style="pointer-events:auto;">
             <div>
               <p class="text-[9px] text-on-surface-variant uppercase tracking-tighter">Latitude</p>
-              <p id="live-lat" class="text-xs font-mono text-primary">—</p>
-            </div>
+<p id="live-lat" class="text-xs font-mono text-primary"><span class="sk" style="width:70px;height:12px"></span></p>            </div>
             <div>
               <p class="text-[9px] text-on-surface-variant uppercase tracking-tighter">Longitude</p>
-              <p id="live-lng" class="text-xs font-mono text-primary">—</p>
-            </div>
+<p id="live-lng" class="text-xs font-mono text-primary"><span class="sk" style="width:70px;height:12px"></span></p>            </div>
             <div>
               <p class="text-[9px] text-on-surface-variant uppercase tracking-tighter">Storm</p>
-              <p id="storm-flag" class="text-xs font-mono text-primary">—</p>
-            </div>
+<p id="storm-flag" class="text-xs font-mono text-primary"><span class="sk" style="width:50px;height:12px"></span></p>            </div>
           </div>
           <!-- Progress pill -->
           <div class="glass-panel px-4 py-2 rounded-lg flex items-center gap-3" style="pointer-events:auto;">
             <div class="w-24 h-1.5 bg-surface-container-highest rounded-full overflow-hidden">
               <div id="progress-bar" class="h-full bg-primary rounded-full transition-all duration-700" style="width:0%"></div>
             </div>
-            <span id="progress-label" class="text-xs font-bold text-primary font-mono">—</span>
-          </div>
+<span id="progress-label" class="text-xs font-bold text-primary font-mono"><span class="sk" style="width:60px;height:12px"></span></span>          </div>
         </div>
         <!-- Map Legend -->
         <div class="absolute top-4 right-4 glass-panel px-3 py-2 rounded-lg space-y-1.5" style="z-index:1000;">
@@ -339,32 +331,28 @@
           <span class="material-symbols-outlined text-primary-fixed-dim text-lg">thermostat</span>
           <div>
             <p class="text-[9px] text-on-surface-variant uppercase tracking-widest">Temp</p>
-            <p id="live-temp" class="text-lg font-headline font-extrabold leading-none">—</p>
-            <p id="temp-source" class="text-[8px] text-on-surface-variant mt-0.5">From ship data</p>
+<p id="live-temp" class="text-lg font-headline font-extrabold leading-none"><span class="sk" style="width:48px;height:20px"></span></p>            <p id="temp-source" class="text-[8px] text-on-surface-variant mt-0.5">From ship data</p>
           </div>
         </div>
         <div class="bg-[#101E29] p-4 rounded-xl flex flex-col justify-between" id="wind-card" style="min-height:88px;">
           <span class="material-symbols-outlined text-primary-fixed-dim text-lg">air</span>
           <div>
             <p class="text-[9px] text-on-surface-variant uppercase tracking-widest">Wind</p>
-            <p id="live-wind" class="text-lg font-headline font-extrabold leading-none">—</p>
-            <p id="wind-source" class="text-[8px] text-on-surface-variant mt-0.5">From ship data</p>
+<p id="live-wind" class="text-lg font-headline font-extrabold leading-none"><span class="sk" style="width:48px;height:20px"></span></p>            <p id="wind-source" class="text-[8px] text-on-surface-variant mt-0.5">From ship data</p>
           </div>
         </div>
         <div class="bg-[#101E29] p-4 rounded-xl flex flex-col justify-between" style="min-height:88px;">
           <span class="material-symbols-outlined text-primary-fixed-dim text-lg">water_drop</span>
           <div>
             <p class="text-[9px] text-on-surface-variant uppercase tracking-widest">Humidity</p>
-            <p id="live-humidity" class="text-lg font-headline font-extrabold leading-none">—</p>
-            <p class="text-[8px] text-on-surface-variant mt-0.5">Relative %</p>
+<p id="live-humidity" class="text-lg font-headline font-extrabold leading-none"><span class="sk" style="width:48px;height:20px"></span></p>            <p class="text-[8px] text-on-surface-variant mt-0.5">Relative %</p>
           </div>
         </div>
         <div class="bg-[#101E29] p-4 rounded-xl flex flex-col justify-between" style="min-height:88px;">
           <span class="material-symbols-outlined text-primary-fixed-dim text-lg">waves</span>
           <div>
             <p class="text-[9px] text-on-surface-variant uppercase tracking-widest">Visibility</p>
-            <p id="live-visibility" class="text-lg font-headline font-extrabold leading-none">—</p>
-            <p class="text-[8px] text-on-surface-variant mt-0.5">km</p>
+<p id="live-visibility" class="text-lg font-headline font-extrabold leading-none"><span class="sk" style="width:48px;height:20px"></span></p>            <p class="text-[8px] text-on-surface-variant mt-0.5">km</p>
           </div>
         </div>
       </div>
@@ -376,8 +364,15 @@
           <span class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Intelligence Engine</span>
         </div>
         <div id="intelligence-scroll" class="px-4 py-4 flex-1">
-          <div id="intelligence-panel"></div>
+<div id="intelligence-panel">
+          <div class="space-y-3 p-1">
+            <div class="sk" style="width:100%;height:14px"></div>
+            <div class="sk" style="width:85%;height:14px"></div>
+            <div class="sk" style="width:90%;height:14px"></div>
+            <div class="sk" style="width:70%;height:14px"></div>
+          </div>
         </div>
+              </div>
       </div>
 
     </div>
@@ -397,6 +392,7 @@
     <span id="sender-email"></span>
   </div>
 </main>
+
 
 <script src="DetailShipmentInfo.js"></script>
 <script src="intelligenceEngine.js" defer></script>

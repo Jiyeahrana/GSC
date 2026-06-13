@@ -114,19 +114,66 @@
     0%, 100% { opacity: 0.45; }
     50%       { opacity: 1; }
 }
+.chart-available-line {
+    position: absolute;
+    left: 0; right: 0;
+    border-top: 2px dashed rgba(164, 204, 232, 0.5);
+    pointer-events: none;
+}
+.chart-available-line::before {
+    content: 'Available';
+    position: absolute;
+    right: 0;
+    top: -18px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #a4cce8;
+}
+@keyframes modalIn {
+    from { opacity:0; transform:scale(0.94) translateY(8px); }
+    to   { opacity:1; transform:scale(1) translateY(0); }
+}
 </style>
 </head>
 <body class="bg-surface text-on-surface font-body selection:bg-tertiary selection:text-on-tertiary">
-
+<div id="logout-modal" role="dialog" aria-modal="true"
+     style="display:none;position:fixed;inset:0;z-index:9000;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);padding:16px;">
+    <div style="background:#00111c;border:1px solid rgba(186,200,220,0.1);border-radius:12px;width:100%;max-width:360px;padding:24px;display:flex;flex-direction:column;gap:20px;animation:modalIn 0.2s ease forwards;">
+        <div style="display:flex;align-items:flex-start;gap:16px;">
+            <div style="width:40px;height:40px;border-radius:8px;background:rgba(251,107,0,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <span class="material-symbols-outlined" style="color:#fb6b00;">logout</span>
+            </div>
+            <div>
+                <h2 style="font-family:Manrope,sans-serif;font-weight:800;color:#d8e4ec;font-size:15px;margin:0;">Confirm Logout</h2>
+                <p style="font-size:13px;color:#c6c5d4;margin:6px 0 0;">You'll be signed out of the port dashboard. Any unsaved changes will be lost.</p>
+            </div>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;">
+            <button id="logout-cancel" style="padding:8px 16px;font-size:13px;font-weight:700;color:#c6c5d4;background:transparent;border:1px solid rgba(186,200,220,0.15);border-radius:8px;cursor:pointer;">
+                Stay Logged In
+            </button>
+            <button id="logout-confirm" style="padding:8px 16px;font-size:13px;font-weight:700;color:#031d34;background:#fb6b00;border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:6px;">
+                <span class="material-symbols-outlined" style="font-size:16px;">logout</span>
+                Yes, Logout
+            </button>
+        </div>
+    </div>
+</div>
 <!-- TopNavBar -->
-<header class="flex justify-between items-center px-6 h-16 w-full fixed top-0 z-40 bg-[#001523] dark:bg-[#001523] pl-72">
+<header class="flex justify-between items-center px-4 md:px-6 h-16 w-full fixed top-0 z-40 bg-[#001523] dark:bg-[#001523] md:pl-72 pl-4">
+    <button id="sidebar-toggle" class="md:hidden mr-3 text-[#bac8dc] hover:text-white p-1" aria-label="Toggle sidebar">
+    <span class="material-symbols-outlined">menu</span>
+</button>
     <div class="flex items-left gap-4">
         <span class="text-2xl font-black text-[#bac8dc] tracking-tighter font-headline">POMS</span>
     </div>
 </header>
 
 <!-- SideNavBar -->
-<aside class="flex flex-col h-screen fixed left-0 top-0 py-8 bg-[#00111C] dark:bg-[#011c2e] text-[#011c2e] font-inter font-medium text-sm shadow-[48px_0_48px_rgba(5,16,21,0.06)] w-64 z-50">
+ <div id="sidebar-backdrop" class="fixed inset-0 bg-black/50 z-40 hidden md:hidden"></div>
+<aside id="sidebar" class="flex flex-col h-screen fixed left-0 top-0 py-8 bg-[#00111C] dark:bg-[#011c2e] text-[#011c2e] font-inter font-medium text-sm shadow-[48px_0_48px_rgba(5,16,21,0.06)] w-64 z-50 transition-transform duration-300 md:translate-x-0 -translate-x-full">
     <div class="px-6 mb-10">
         <h1 id="sidebar-port-name" class="text-[#d8e4ec] font-manrope font-extrabold text-xl tracking-tight">Port name</h1>
         <p class="text-on-surface-variant text-xs mt-1">Real-Time Port Operations & Monitoring</p>
@@ -149,32 +196,31 @@
         </a>
     </nav>
     <div class="mt-auto flex flex-col gap-2 border-t border-outline-variant/10 pt-6">
-        <a id="logout-btn" class="flex items-center gap-3 px-6 py-3 text-[#c6c5d4] opacity-80 hover:bg-[#202b32] hover:text-[#d8e4ec] transition-all cursor-pointer" href="#">
-            <span class="material-symbols-outlined">logout</span>Logout
-        </a>
+        <button id="logout-btn" class="flex items-center gap-3 px-6 py-3 text-[#c6c5d4] opacity-80 hover:bg-[#202b32] hover:text-[#d8e4ec] transition-all w-full text-left cursor-pointer">
+    <span class="material-symbols-outlined">logout</span>Logout
+</button>
     </div>
 </aside>
 
 <!-- Main Content -->
-<main class="ml-64 mt-16 p-8 min-h-screen">
-
+<main class="md:ml-64 ml-0 mt-16 p-4 md:p-8 min-h-screen">
     <!-- Header HUD -->
-    <div class="industrial-glass rounded-xl p-6 mb-8 flex flex-col md:flex-row justify-between items-center gap-6">
+<div class="industrial-glass rounded-xl p-4 md:p-6 mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div class="space-y-1">
             <h1 class="text-3xl font-extrabold font-headline tracking-tighter text-primary">LABOUR DEMAND FORECAST</h1>
             <p class="text-xs text-on-surface-variant uppercase tracking-widest">7-day workforce prediction based on shipment manifest</p>
         </div>
-        <div class="flex gap-8">
-            <div class="text-right">
-                <p class="text-xs font-label uppercase tracking-widest text-on-surface-variant">Total Workforce</p>
+<div class="flex flex-row gap-4 md:gap-6 flex-shrink-0 w-full md:w-auto overflow-x-auto pb-1">
+<div class="text-right flex-shrink-0">
+                    <p class="text-xs font-label uppercase tracking-widest text-on-surface-variant">Total Workforce</p>
 <p id="hud-total-workers" class="text-xl font-bold font-headline text-primary"><span class="sk" style="display:inline-block;width:120px;height:20px;border-radius:4px"></span></p>
 
             </div>
-            <div class="text-right border-l border-outline-variant/30 pl-8">
+<div class="text-right border-l border-outline-variant/30 pl-4 flex-shrink-0">
                 <p class="text-xs font-label uppercase tracking-widest text-on-surface-variant">Shortage Days</p>
 <p id="hud-shortage-days" class="text-xl font-bold font-headline text-tertiary-container"><span class="sk" style="display:inline-block;width:50px;height:20px;border-radius:4px"></span></p>
             </div>
-            <div class="text-right border-l border-outline-variant/30 pl-8">
+<div class="text-right border-l border-outline-variant/30 pl-4 flex-shrink-0">
                 <p class="text-xs font-label uppercase tracking-widest text-on-surface-variant">Shipments (7d)</p>
 <p id="hud-total-shipments" class="text-xl font-bold font-headline text-secondary"><span class="sk" style="display:inline-block;width:40px;height:20px;border-radius:4px"></span></p>
 
@@ -214,8 +260,8 @@
                 </div>
             </div>
         </div>
-        <div class="p-8">
-            <div id="forecast-chart" class="relative h-64 w-full flex items-end justify-between gap-2">
+        <div class="p-4 md:p-8">
+    <div id="forecast-chart" class="relative h-64 w-full flex items-end justify-between gap-2" style="padding-top: 28px;">
                 <!-- injected by JS -->
             </div>
         </div>
@@ -361,6 +407,53 @@
   sendBtn.addEventListener("click", () => sendMessage(input.value));
   input.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(input.value); } });
   input.addEventListener("input", () => { input.style.height = "auto"; input.style.height = Math.min(input.scrollHeight, 80) + "px"; });
+})();
+
+
+(function(){
+    const sidebar  = document.getElementById('sidebar');
+    const toggle   = document.getElementById('sidebar-toggle');
+    const backdrop = document.getElementById('sidebar-backdrop');
+    if (!sidebar || !toggle || !backdrop) return;
+    function open(){ sidebar.classList.remove('-translate-x-full'); backdrop.classList.remove('hidden'); }
+    function close(){ sidebar.classList.add('-translate-x-full'); backdrop.classList.add('hidden'); }
+    toggle.addEventListener('click', function(){ sidebar.classList.contains('-translate-x-full') ? open() : close(); });
+    backdrop.addEventListener('click', close);
+    sidebar.querySelectorAll('a').forEach(function(a){
+        a.addEventListener('click', function(){ if(window.innerWidth < 768) close(); });
+    });
+})();
+(function () {
+    const modal      = document.getElementById("logout-modal");
+    const logoutBtn  = document.getElementById("logout-btn");
+    const cancelBtn  = document.getElementById("logout-cancel");
+    const confirmBtn = document.getElementById("logout-confirm");
+
+    logoutBtn.addEventListener("click", () => {
+        modal.style.display = "flex";
+        setTimeout(() => confirmBtn.focus(), 50);
+    });
+
+    cancelBtn.addEventListener("click", () => {
+        modal.style.display = "none";
+    });
+
+    modal.addEventListener("click", (e) => {
+        if (e.target === modal) modal.style.display = "none";
+    });
+
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") modal.style.display = "none";
+    });
+
+    confirmBtn.addEventListener("click", () => {
+        confirmBtn.textContent = "Logging out…";
+        confirmBtn.disabled = true;
+        localStorage.removeItem("token");
+        localStorage.removeItem("port_id");
+        localStorage.removeItem("user_name");
+        setTimeout(() => { window.location.href = "/index.html"; }, 600);
+    });
 })();
 </script>
 </body>

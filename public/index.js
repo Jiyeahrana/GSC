@@ -34,6 +34,15 @@ async function loginUser() {
     return;
   }
 
+  // Show loading state
+  const btn = document.getElementById("login-btn");
+  const content = document.getElementById("login-btn-content");
+  const loading = document.getElementById("login-btn-loading");
+  btn.disabled = true;
+  btn.classList.add("opacity-80", "cursor-not-allowed");
+  content.classList.add("hidden");
+  loading.classList.remove("hidden");
+
   try {
     const response = await fetch("http://localhost:3000/api/v1/port/login", {
       method: "POST",
@@ -55,9 +64,16 @@ if (data.success) {
     else {
       showLoginError(data.message || "Login failed, please try again");
     }
+    
   } catch (error) {
     console.error("Login error:", error);
     showLoginError("Could not connect to server, please try again later");
+  } finally {
+    // Reset button state on failure (success redirects so this only runs on error)
+    btn.disabled = false;
+    btn.classList.remove("opacity-80", "cursor-not-allowed");
+    content.classList.remove("hidden");
+    loading.classList.add("hidden");
   }
 }
 

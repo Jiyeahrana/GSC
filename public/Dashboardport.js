@@ -3,13 +3,6 @@
 const token = localStorage.getItem("token");
 if (!token) window.location.href = "/index.html";
 
-// ── Logout ────────────────────────────────────────────────────────────────────
-
-document.getElementById("logout-btn").addEventListener("click", (e) => {
-    e.preventDefault();
-    localStorage.clear();
-    window.location.href = "/index.html";
-});
 
 // ── User info from localStorage ───────────────────────────────────────────────
 
@@ -501,3 +494,56 @@ activateToggle(btn24, btn48);
 fetchTodayShipments();
 fetchPortDetails(); 
 fetchEfficiencyScore();
+
+// ── Alert collapse logic ───────────────────────────────────────────────────
+
+const ALERTS_VISIBLE = 3;
+
+function applyAlertCollapse() {
+    const container = document.getElementById("alerts-container");
+    const btn       = document.getElementById("alerts-show-more");
+    const countEl   = document.getElementById("alerts-hidden-count");
+    if (!container || !btn) return;
+
+    const alerts = Array.from(container.children);
+    if (alerts.length <= ALERTS_VISIBLE) {
+        btn.classList.add("hidden");
+        return;
+    }
+
+    let visibleCount = ALERTS_VISIBLE;
+
+    function refresh() {
+        alerts.forEach((el, i) => {
+            el.style.display = i < visibleCount ? "" : "none";
+        });
+        const remaining = alerts.length - visibleCount;
+        if (remaining <= 0) {
+            btn.classList.add("hidden");
+        } else {
+            btn.classList.remove("hidden");
+            const showNext = Math.min(5, remaining);
+            countEl.textContent = `(${remaining} more)`;
+            btn.querySelector("span") 
+                ? btn.querySelector("span").textContent = `Show ${showNext} more `
+                : btn.firstChild.textContent = `Show ${showNext} more alerts `;
+        }
+    }
+
+    refresh();
+
+    btn.onclick = () => {
+        visibleCount += 5;
+        refresh();
+    };
+}
+
+// Watch for alerts being injected by dashboard_alerts_patch.js
+// Since it loads deferred, we use a MutationObserver to catch when it renders
+const _alertsObserver = new MutationObserver(() => {
+    applyAlertCollapse();
+});
+const _alertsTarget = document.getElementById("alerts-container");
+if (_alertsTarget) {
+    _alertsObserver.observe(_alertsTarget, { childList: true });
+}

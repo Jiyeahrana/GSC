@@ -6,11 +6,7 @@ if (!token) window.location.href = "/index.html";
 document.getElementById("sidebar-port-name").textContent =
     localStorage.getItem("port_name") || "Port";
 
-document.getElementById("logout-btn").addEventListener("click", (e) => {
-    e.preventDefault();
-    localStorage.clear();
-    window.location.href = "/index.html";
-});
+
 
 // ── State ─────────────────────────────────────────────────────────────────────
 

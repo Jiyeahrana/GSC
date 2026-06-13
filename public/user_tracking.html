@@ -94,20 +94,64 @@
 </head>
 <body class="font-body selection:bg-brand-action selection:text-white">
 <!-- TopNavBar (Shared Component) -->
-<header class="bg-[#0a151a] flex justify-between items-center w-full px-6 py-4 fixed top-0 z-50">
-<div class="flex items-center gap-4">
-<span class="text-xl font-black tracking-tighter text-[#bac8dc] uppercase font-['Manrope']">POMS</span>
-</div>
-<div class="hidden md:flex items-center space-x-8">
-<nav class="flex space-x-12 font-['Manrope'] font-bold tracking-tight me-10">
-<a class="text-[#bac8dc] hover:text-[#caf0f8] transition-colors" href="landingPage.html">About</a>
-<a class="text-[#bac8dc] hover:text-[#caf0f8] transition-colors" href="index.html">Port</a>
+<header class="bg-[#0a151a] flex items-center w-full px-6 py-4 fixed top-0 z-50 border-b border-[rgba(186,200,220,0.08)]">
+
+  <div class="absolute left-6">
+    <a href="landingPage.html" class="text-xl font-black tracking-tighter text-[#bac8dc] uppercase font-['Manrope'] hover:text-white transition-colors">POMS</a>
+  </div>
+
+  <nav class="hidden md:flex mx-auto space-x-10 font-['Manrope'] font-bold tracking-tight">
+    <a class="text-[#c6c5d4] hover:text-[#caf0f8] transition-colors" href="landingPage.html">About</a>
+<a class="text-[#c6c5d4] hover:text-[#caf0f8] transition-colors" href="index.html">Port Portal</a>
 <a class="text-[#c6c5d4] border-b-2 border-[#bac8dc] pb-1 hover:text-[#caf0f8] transition-colors" href="user_tracking.html">Shipment Tracking</a>
-</nav>
-</div>
-<div class="flex items-center gap-4 text-[#bac8dc]">
-</div>
+  </nav>
+
+  <button id="menuBtn"
+    class="ml-auto md:hidden flex flex-col justify-center items-center w-9 h-9 gap-[5px] rounded-lg hover:bg-[rgba(186,200,220,0.08)] transition-colors"
+    aria-label="Open menu" aria-expanded="false">
+    <span id="bar1" class="block w-5 h-[1.5px] bg-[#bac8dc] transition-all duration-300"></span>
+    <span id="bar2" class="block w-5 h-[1.5px] bg-[#bac8dc] transition-all duration-300"></span>
+    <span id="bar3" class="block w-4 h-[1.5px] bg-[#bac8dc] transition-all duration-300"></span>
+  </button>
 </header>
+<div id="menuBackdrop"
+  class="fixed inset-0 z-[90] bg-black/50 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300 md:hidden"></div>
+
+<div id="mobileMenu"
+  class="fixed top-0 right-[-100%] h-full w-72 z-[100] transition-all duration-300 ease-in-out md:hidden flex flex-col"
+  style="background: #071d2c; border-left: 1px solid rgba(186,200,220,0.1);">
+
+  <div class="flex items-center justify-between px-6 py-5 border-b border-[rgba(186,200,220,0.08)]">
+    <span class="text-lg font-black tracking-tighter text-[#bac8dc] uppercase font-['Manrope']">POMS</span>
+    <button id="closeBtn"
+      class="w-8 h-8 flex items-center justify-center rounded-lg text-[#8e9196] hover:text-[#bac8dc] hover:bg-[rgba(186,200,220,0.08)] transition-colors"
+      aria-label="Close menu">
+      <span class="material-symbols-outlined" style="font-size:20px">close</span>
+    </button>
+  </div>
+
+  <nav class="flex flex-col px-4 pt-4 gap-1 font-['Manrope'] font-bold flex-1">
+    <a href="landingPage.html"
+      class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#8e9196] hover:text-[#bac8dc] hover:bg-[rgba(186,200,220,0.06)] transition-all text-sm">
+      <span class="material-symbols-outlined text-[#fb6b00]" style="font-size:18px">info</span>
+      About
+    </a>
+    <a href="index.html"
+      class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#8e9196] hover:text-[#bac8dc] hover:bg-[rgba(186,200,220,0.06)] transition-all text-sm">
+      <span class="material-symbols-outlined text-[#fb6b00]" style="font-size:18px">anchor</span>
+      Port Portal
+    </a>
+    <a href="user_tracking.html"
+      class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#bac8dc] bg-[rgba(186,200,220,0.08)] border border-[rgba(186,200,220,0.1)] text-sm">
+      <span class="material-symbols-outlined text-[#fb6b00]" style="font-size:18px">directions_boat</span>
+      Shipment Tracking
+    </a>
+  </nav>
+
+  <div class="px-6 py-5 border-t border-[rgba(186,200,220,0.08)]">
+    <p class="text-[10px] text-[#44474c] uppercase tracking-widest font-['Inter']">Port Operations Management</p>
+  </div>
+</div>
 <main class="min-h-screen">
 <!-- Hero/Search Section -->
 <section class="relative min-h-[650px] flex items-center overflow-hidden">
@@ -580,6 +624,42 @@
     input.style.height = Math.min(input.scrollHeight, 80) + "px";
   });
 
+})();
+
+(function () {
+  const menuBtn    = document.getElementById("menuBtn");
+  const closeBtn   = document.getElementById("closeBtn");
+  const mobileMenu = document.getElementById("mobileMenu");
+  const backdrop   = document.getElementById("menuBackdrop");
+  const bar1 = document.getElementById("bar1");
+  const bar2 = document.getElementById("bar2");
+  const bar3 = document.getElementById("bar3");
+
+  function openMenu() {
+    mobileMenu.style.right = "0";
+    backdrop.style.opacity = "1";
+    backdrop.style.pointerEvents = "auto";
+    bar1.style.transform = "translateY(6.5px) rotate(45deg)";
+    bar2.style.opacity = "0";
+    bar3.style.transform = "translateY(-6.5px) rotate(-45deg)";
+    bar3.style.width = "20px";
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeMenu() {
+    mobileMenu.style.right = "-100%";
+    backdrop.style.opacity = "0";
+    backdrop.style.pointerEvents = "none";
+    bar1.style.transform = "";
+    bar2.style.opacity = "1";
+    bar3.style.transform = "";
+    bar3.style.width = "16px";
+    document.body.style.overflow = "";
+  }
+
+  menuBtn.addEventListener("click", openMenu);
+  closeBtn.addEventListener("click", closeMenu);
+  backdrop.addEventListener("click", closeMenu);
 })();
 </script>
 </body></html>

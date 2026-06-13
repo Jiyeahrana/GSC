@@ -6,11 +6,7 @@ if (!token) window.location.href = "/index.html";
 document.getElementById("sidebar-port-name").textContent =
     localStorage.getItem("port_name") || "Port";
 
-document.getElementById("logout-btn").addEventListener("click", (e) => {
-    e.preventDefault();
-    localStorage.clear();
-    window.location.href = "/index.html";
-});
+
 
 // ── Role display config ───────────────────────────────────────────────────────
 
@@ -202,11 +198,6 @@ function renderForecastChart(days, workforce) {
                         background:${hasShortage ? '#ef4444' : '#fb6b00'};
                         opacity:0.9">
 
-                <!-- Available line marker -->
-                <div class="absolute w-full border-t-2 border-dashed border-secondary/60"
-                     style="bottom:${Math.max(availablePct - demandPct + (availablePct < demandPct ? 0 : availablePct - demandPct), 0)}px">
-                </div>
-
                 <!-- Tooltip -->
                 <div class="absolute -top-16 left-1/2 -translate-x-1/2 bg-surface-container-highest
                             px-3 py-2 rounded-lg text-[10px] font-bold whitespace-nowrap
@@ -226,12 +217,36 @@ function renderForecastChart(days, workforce) {
         container.appendChild(col);
     });
 
-    // Available capacity line label
-    const lineLabel = document.createElement("div");
-    lineLabel.className = "absolute right-0 text-[10px] text-secondary font-bold";
-    lineLabel.style.bottom = `${Math.round((totalAvailable / maxDemand) * 220) + 30}px`;
-    lineLabel.textContent  = `Available: ${totalAvailable}`;
+    // Fixed available capacity line across full chart width
     container.style.position = "relative";
+
+    const availableBottomPx = Math.round((totalAvailable / maxDemand) * 220);
+
+    const line = document.createElement("div");
+    line.style.cssText = `
+        position: absolute;
+        left: 0; right: 0;
+        bottom: ${availableBottomPx + 30}px;
+        border-top: 2px dashed rgba(164,204,232,0.55);
+        pointer-events: none;
+        z-index: 10;
+    `;
+    container.appendChild(line);
+
+    const lineLabel = document.createElement("div");
+    lineLabel.style.cssText = `
+        position: absolute;
+        right: 4px;
+        bottom: ${availableBottomPx + 34}px;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: #a4cce8;
+        z-index: 10;
+        white-space: nowrap;
+    `;
+    lineLabel.textContent = `Available: ${totalAvailable}`;
     container.appendChild(lineLabel);
 }
 

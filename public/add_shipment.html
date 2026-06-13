@@ -54,14 +54,23 @@
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: #001523; }
   ::-webkit-scrollbar-thumb { background: #172c3b; border-radius: 10px; }
+  @keyframes sk-pulse { 0%,100%{opacity:0.45} 50%{opacity:1} }
+.sk { background:#172c3b; border-radius:4px; animation:sk-pulse 1.4s ease-in-out infinite; display:inline-block; }
+
+@keyframes submit-spin { to { transform: rotate(360deg); } }
+.submit-spin { animation: submit-spin 0.7s linear infinite; }
 </style>
 </head>
 <body class="overflow-x-hidden">
 
 <!-- Top Navigation -->
-<header class="flex justify-between items-center px-6 h-16 w-full fixed top-0 z-50 bg-[#00111C]">
-  <div class="flex items-center gap-4">
+<header class="flex justify-between items-center px-4 md:px-6 h-16 w-full fixed top-0 z-50 bg-[#00111C]">
+  <div class="flex items-center gap-3">
+    <a href="Dashboardport.html" class="md:hidden flex items-center justify-center w-8 h-8 rounded-md bg-surface-container-high border border-outline-variant/20 text-[#bac8dc] hover:text-white transition-colors" aria-label="Back to dashboard">
+      <span class="material-symbols-outlined" style="font-size:18px">arrow_back</span>
+    </a>
     <span class="text-2xl font-black text-[#bac8dc] tracking-tighter font-headline">POMS</span>
+    <span id="header-port-name" class="md:hidden text-xs text-on-surface-variant font-body truncate max-w-[120px]"></span>
   </div>
   <div class="flex items-center gap-6">
     <div class="flex items-center gap-4 text-[#bac8dc]">
@@ -73,7 +82,7 @@
 </header>
 
 <!-- Sidebar -->
-<aside class="bg-[#00111C] fixed left-0 top-16 h-[calc(100%-4rem)] flex flex-col border-r border-[#172c3b]/30 w-64 z-40 hidden md:flex">
+<aside class="bg-[#00111C] fixed left-0 top-16 h-[calc(100%-4rem)] flex flex-col border-r border-[#172c3b]/30 w-64 z-40 hidden md:flex" id="form-sidebar">
   <div class="px-6 mb-6 pt-6">
     <p id="sidebar-port-name" class="text-[#d8e4ec] font-extrabold text-lg tracking-tight font-headline">Port Name</p>
     <p id="sidebar-user-name" class="text-on-surface-variant text-xs mt-1">Loading...</p>
@@ -88,7 +97,7 @@
 </aside>
 
 <!-- Main Content -->
-<main class="md:ml-64 pt-24 min-h-screen">
+<main class="md:ml-64 ml-0 pt-20 md:pt-24 min-h-screen">
   <div class="max-w-7xl mx-auto px-6 py-8">
 
     <!-- Header -->
@@ -294,9 +303,18 @@
                 <span class="material-symbols-outlined text-xs">shield</span>
                 <span>ENCRYPTED SECURE ENTRY</span>
               </div>
-              <button id="submit-btn" class="bg-gradient-to-br from-[#fb6b00] to-[#7a3000] text-on-tertiary-fixed px-10 py-4 rounded-md font-black font-headline uppercase tracking-widest text-sm flex items-center group" type="submit">
-                Log Shipment
-                <span class="material-symbols-outlined ml-2 group-hover:translate-x-1 transition-transform">send</span>
+              <button id="submit-btn" class="bg-gradient-to-br from-[#fb6b00] to-[#7a3000] text-on-tertiary-fixed px-10 py-4 rounded-md font-black font-headline uppercase tracking-widest text-sm flex items-center gap-2 group min-w-[180px] justify-center" type="submit">
+                <span id="submit-btn-content" class="flex items-center gap-2">
+                  Log Shipment
+                  <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">send</span>
+                </span>
+                <span id="submit-btn-loading" class="hidden items-center gap-2">
+                  <svg class="submit-spin" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-dasharray="31.4" stroke-dashoffset="10" opacity="0.3"/>
+                    <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+                  </svg>
+                  Logging...
+                </span>
               </button>
             </div>
 
@@ -316,19 +334,19 @@
           <div class="grid grid-cols-2 gap-4">
             <div class="bg-surface-dim p-4 rounded-lg border border-outline-variant/10">
               <p class="text-[10px] text-[#44474c] uppercase mb-1">Total Capacity</p>
-              <p id="telemetry-capacity" class="text-2xl font-black font-headline text-[#d0e5f9]">—</p>
+<p id="telemetry-capacity" class="text-2xl font-black font-headline text-[#d0e5f9]"><span class="sk" style="width:48px;height:24px"></span></p>
             </div>
             <div class="bg-surface-dim p-4 rounded-lg border border-outline-variant/10">
               <p class="text-[10px] text-[#44474c] uppercase mb-1">Incoming Today</p>
-              <p id="telemetry-incoming" class="text-2xl font-black font-headline text-[#ffb693]">—</p>
+<p id="telemetry-incoming" class="text-2xl font-black font-headline text-[#ffb693]"><span class="sk" style="width:32px;height:24px"></span></p>
             </div>
             <div class="bg-surface-dim p-4 rounded-lg border border-outline-variant/10">
               <p class="text-[10px] text-[#44474c] uppercase mb-1">Outgoing Today</p>
-              <p id="telemetry-outgoing" class="text-2xl font-black font-headline text-[#a4cce8]">—</p>
+<p id="telemetry-outgoing" class="text-2xl font-black font-headline text-[#a4cce8]"><span class="sk" style="width:32px;height:24px"></span></p>
             </div>
             <div class="bg-surface-dim p-4 rounded-lg border border-outline-variant/10">
               <p class="text-[10px] text-[#44474c] uppercase mb-1">Total Zones</p>
-              <p id="telemetry-zones" class="text-2xl font-black font-headline text-[#d0e5f9]">—</p>
+<p id="telemetry-zones" class="text-2xl font-black font-headline text-[#d0e5f9]"><span class="sk" style="width:32px;height:24px"></span></p>
             </div>
           </div>
         </div>

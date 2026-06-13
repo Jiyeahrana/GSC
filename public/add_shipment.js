@@ -10,7 +10,8 @@ const portName = localStorage.getItem("port_name") || "Port";
 
 document.getElementById("user-avatar").textContent      = userName.substring(0, 2).toUpperCase() || "--";
 document.getElementById("sidebar-port-name").textContent = portName;
-document.getElementById("sidebar-user-name").textContent = userName;
+const headerPortName = document.getElementById("header-port-name");
+if (headerPortName) headerPortName.textContent = portName;document.getElementById("sidebar-user-name").textContent = userName;
 
 // ── Populate zone dropdown from localStorage ──────────────────────────────────
 
@@ -47,10 +48,9 @@ async function fetchTelemetry() {
         });
         const portData = await portRes.json();
 
-        if (portData.success) {
-            document.getElementById("telemetry-capacity").textContent = portData.data.total_capacity;
-            document.getElementById("telemetry-zones").textContent    = portData.data.zones.length;
-
+if (portData.success) {
+            document.getElementById("telemetry-capacity").innerHTML = portData.data.total_capacity;
+            document.getElementById("telemetry-zones").innerHTML    = portData.data.zones.length;
             // Also refresh zones dropdown with latest data
             localStorage.setItem("zones", JSON.stringify(portData.data.zones));
             populateZones();
@@ -65,8 +65,8 @@ async function fetchTelemetry() {
         if (shipData.success) {
             const incoming = shipData.data.filter(s => s.type === "incoming").length;
             const outgoing = shipData.data.filter(s => s.type === "outgoing").length;
-            document.getElementById("telemetry-incoming").textContent = incoming;
-            document.getElementById("telemetry-outgoing").textContent = outgoing;
+            document.getElementById("telemetry-incoming").innerHTML = incoming;
+            document.getElementById("telemetry-outgoing").innerHTML = outgoing;
         }
 
     } catch (err) {
@@ -201,10 +201,13 @@ document.getElementById("shipment-form").addEventListener("submit", async (e) =>
 
     // ── Submit ────────────────────────────────────────────────────────────────
 
-    const btn = document.getElementById("submit-btn");
-    btn.disabled    = true;
-    btn.textContent = "Logging...";
-
+const btn        = document.getElementById("submit-btn");
+    const btnContent = document.getElementById("submit-btn-content");
+    const btnLoading = document.getElementById("submit-btn-loading");
+    btn.disabled = true;
+    btnContent.classList.add("hidden");
+    btnLoading.classList.remove("hidden");
+    btnLoading.style.display = "flex";
     try {
         const isEdit = !!editId;
 
@@ -238,8 +241,11 @@ document.getElementById("shipment-form").addEventListener("submit", async (e) =>
     } catch (err) {
         console.error("Submit error:", err);
         showError("Could not connect to server, please try again");
+    
     } finally {
-        btn.disabled    = false;
-        btn.textContent = "Log Shipment";
+        btn.disabled = false;
+        btnContent.classList.remove("hidden");
+        btnLoading.classList.add("hidden");
+        btnLoading.style.display = "none";
     }
 });
