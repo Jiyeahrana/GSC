@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>POMS | Edit Workforce</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+          "on-tertiary-fixed": "#ffffff",
+          "surface-container-high": "#172c3b",
+          "background": "#00111C",
+          "surface-dim": "#001523",
+          "on-surface-variant": "#c4c6cc",
+          "on-background": "#d0e5f9",
+          "on-primary-container": "#465465",
+          "primary-container": "#bac8dc",
+          "secondary": "#a4cce8",
+          "tertiary": "#ffdbcc",
+          "error": "#ffb4ab",
+          "surface-container-lowest": "#00101c",
+          "error-container": "#93000a",
+          "primary": "#d6e4f9",
+          "secondary-container": "#214b62",
+          "outline": "#8e9196",
+          "surface-bright": "#273b4b",
+          "tertiary-container": "#ffb693",
+          "surface-container": "#0c2230",
+          "on-tertiary-container": "#8d3900",
+          "surface": "#001523",
+          "on-primary": "#243141",
+          "tertiary-fixed-dim": "#ffb693",
+          "surface-container-low": "#071d2c",
+          "on-secondary-container": "#93bad6",
+          "outline-variant": "#44474c",
+          "surface-container-highest": "#233746",
+          "surface-variant": "#233746",
+          "on-surface": "#d0e5f9"
+        },
+        "borderRadius": {"DEFAULT": "0.125rem","lg": "0.25rem","xl": "0.5rem","full": "0.75rem"},
+        "fontFamily": {"headline": ["Manrope"],"body": ["Inter"],"label": ["Inter"]}
+      },
+    },
+  }
+</script>
+<style>
+  body { background-color: #001523; color: #d0e5f9; font-family: 'Inter', sans-serif; }
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: #001523; }
+  ::-webkit-scrollbar-thumb { background: #172c3b; border-radius: 10px; }
+  @keyframes sk-pulse { 0%,100%{opacity:0.45} 50%{opacity:1} }
+  .sk { background:#172c3b; border-radius:4px; animation:sk-pulse 1.4s ease-in-out infinite; display:inline-block; }
+  @keyframes submit-spin { to { transform: rotate(360deg); } }
+  .submit-spin { animation: submit-spin 0.7s linear infinite; }
+</style>
+</head>
+<body class="overflow-x-hidden">
+
+<!-- Top Navigation -->
+<header class="flex justify-between items-center px-4 md:px-6 h-16 w-full fixed top-0 z-50 bg-[#00111C]">
+  <div class="flex items-center gap-3">
+    <a href="labour_prediction.html" class="md:hidden flex items-center justify-center w-8 h-8 rounded-md bg-surface-container-high border border-outline-variant/20 text-[#bac8dc] hover:text-white transition-colors" aria-label="Back">
+      <span class="material-symbols-outlined" style="font-size:18px">arrow_back</span>
+    </a>
+    <span class="text-2xl font-black text-[#bac8dc] tracking-tighter font-headline">POMS</span>
+  </div>
+  <div class="flex items-center gap-4 text-[#bac8dc]">
+    <div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center border border-outline-variant/20">
+      <span id="user-avatar" class="text-xs font-bold text-[#243141]">--</span>
+    </div>
+  </div>
+</header>
+
+<!-- Sidebar -->
+<aside class="bg-[#00111C] fixed left-0 top-16 h-[calc(100%-4rem)] flex flex-col border-r border-[#172c3b]/30 w-64 z-40 hidden md:flex">
+  <div class="px-6 mb-6 pt-6">
+    <p id="sidebar-port-name" class="text-[#d8e4ec] font-extrabold text-lg tracking-tight font-headline">Port Name</p>
+    <p class="text-on-surface-variant text-xs mt-1">Workforce Configuration</p>
+  </div>
+  <div class="px-4 py-4 border-t border-[#172c3b]/30">
+    <a href="labour_prediction.html" class="w-full bg-surface-container-high text-[#bac8dc] font-bold py-3 rounded-md flex items-center justify-center space-x-2 hover:bg-surface-container transition-all border border-outline-variant/20">
+      <span class="material-symbols-outlined text-sm">arrow_back</span>
+      <span class="text-sm font-headline uppercase tracking-tight">Back to Labour Forecast</span>
+    </a>
+  </div>
+</aside>
+
+<!-- Main Content -->
+<main class="md:ml-64 ml-0 pt-20 md:pt-24 min-h-screen">
+  <div class="max-w-4xl mx-auto px-6 py-8">
+
+    <div class="mb-10">
+      <h1 class="text-4xl font-black font-headline text-[#d0e5f9] mb-2 uppercase">Edit Workforce</h1>
+      <p class="text-[#8e9196] font-body max-w-xl">Update your port's available workforce by role and reconfigure shift assignments.</p>
+    </div>
+
+    <div class="bg-surface-container rounded-xl p-8 border border-outline-variant/10 shadow-2xl relative overflow-hidden">
+
+      <form id="workforce-form" class="space-y-8">
+
+        <!-- Loading skeleton -->
+        <div id="workforce-loading" class="space-y-4">
+          <div class="sk" style="width:100%;height:48px"></div>
+          <div class="sk" style="width:100%;height:48px"></div>
+          <div class="sk" style="width:100%;height:48px"></div>
+          <div class="sk" style="width:100%;height:48px"></div>
+          <div class="sk" style="width:100%;height:48px"></div>
+          <div class="sk" style="width:100%;height:120px"></div>
+        </div>
+
+        <!-- Workforce Roles -->
+        <div id="workforce-content" class="hidden space-y-8">
+
+          <div>
+            <p class="text-[10px] uppercase tracking-widest font-bold text-[#fb6b00] mb-1 flex items-center gap-2">
+              <span class="w-1 h-3 bg-[#fb6b00]"></span>Workforce by Role
+            </p>
+            <p class="text-[10px] text-on-surface-variant mb-4">Total workers available at this port by role</p>
+
+            <div class="grid grid-cols-1 gap-3">
+
+              <div class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-sm text-outline">precision_manufacturing</span>
+                <label class="text-xs text-on-surface-variant w-36 shrink-0">Crane Operators</label>
+                <input id="wf-crane" type="number" min="0" value="0"
+                  class="flex-1 bg-surface-container-highest/30 border-b-2 border-primary/20 focus-within:border-[#fb6b00] text-sm py-2 px-2 rounded focus:ring-0"
+                  oninput="updateShiftMaxes()"/>
+              </div>
+
+              <div class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-sm text-outline">local_shipping</span>
+                <label class="text-xs text-on-surface-variant w-36 shrink-0">Truck Operators</label>
+                <input id="wf-truck" type="number" min="0" value="0"
+                  class="flex-1 bg-surface-container-highest/30 border-b-2 border-primary/20 focus-within:border-[#fb6b00] text-sm py-2 px-2 rounded focus:ring-0"
+                  oninput="updateShiftMaxes()"/>
+              </div>
+
+              <div class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-sm text-outline">policy</span>
+                <label class="text-xs text-on-surface-variant w-36 shrink-0">Customs Officers</label>
+                <input id="wf-customs" type="number" min="0" value="0"
+                  class="flex-1 bg-surface-container-highest/30 border-b-2 border-primary/20 focus-within:border-[#fb6b00] text-sm py-2 px-2 rounded focus:ring-0"
+                  oninput="updateShiftMaxes()"/>
+              </div>
+
+              <div class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-sm text-outline">groups</span>
+                <label class="text-xs text-on-surface-variant w-36 shrink-0">Ground Crew</label>
+                <input id="wf-ground" type="number" min="0" value="0"
+                  class="flex-1 bg-surface-container-highest/30 border-b-2 border-primary/20 focus-within:border-[#fb6b00] text-sm py-2 px-2 rounded focus:ring-0"
+                  oninput="updateShiftMaxes()"/>
+              </div>
+
+              <div class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-sm text-outline">anchor</span>
+                <label class="text-xs text-on-surface-variant w-36 shrink-0">Docking Staff</label>
+                <input id="wf-docking" type="number" min="0" value="0"
+                  class="flex-1 bg-surface-container-highest/30 border-b-2 border-primary/20 focus-within:border-[#fb6b00] text-sm py-2 px-2 rounded focus:ring-0"
+                  oninput="updateShiftMaxes()"/>
+              </div>
+
+              <div class="flex justify-between items-center pt-2 border-t border-primary/10 mt-1">
+                <span class="text-[10px] text-on-surface-variant uppercase tracking-widest">Total Workers</span>
+                <span id="wf-total" class="text-sm font-bold text-primary">0</span>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Shift Configuration -->
+          <div>
+            <p class="text-[10px] uppercase tracking-widest font-bold text-[#fb6b00] mb-1 flex items-center gap-2">
+              <span class="w-1 h-3 bg-[#fb6b00]"></span>Shift Configuration
+            </p>
+            <p class="text-[10px] text-on-surface-variant mb-4">
+              Shifts divide 00:00–24:00 equally. Assign workers per role per shift.
+              Removing a shift permanently deletes its data.
+            </p>
+
+            <div id="shifts-container" class="space-y-4"></div>
+
+            <button type="button" onclick="addShift()"
+              class="mt-3 px-3 py-1.5 bg-[#fb6b00] text-on-tertiary-fixed text-xs rounded font-bold font-headline uppercase tracking-wider">
+              + Add Shift
+            </button>
+
+            <div id="shift-validation" class="mt-3 space-y-1 hidden"></div>
+          </div>
+
+          <!-- Error div -->
+          <div id="form-error" class="hidden px-4 py-3 rounded bg-error-container text-on-error-container text-xs font-semibold tracking-wide">
+            <span class="material-symbols-outlined text-sm align-middle mr-1">error</span>
+            <span id="form-error-message"></span>
+          </div>
+
+          <!-- Success div -->
+          <div id="form-success" class="hidden px-4 py-3 rounded bg-surface-container-high text-[#bac8dc] text-xs font-semibold tracking-wide">
+            <span class="material-symbols-outlined text-sm align-middle mr-1">check_circle</span>
+            <span id="form-success-message"></span>
+          </div>
+
+          <!-- Submit -->
+          <div class="pt-4 flex items-center justify-end border-t border-outline-variant/10">
+            <button id="submit-btn" class="bg-gradient-to-br from-[#fb6b00] to-[#7a3000] text-on-tertiary-fixed px-10 py-4 rounded-md font-black font-headline uppercase tracking-widest text-sm flex items-center gap-2 group min-w-[180px] justify-center" type="submit">
+              <span id="submit-btn-content" class="flex items-center gap-2">
+                Save Changes
+                <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">save</span>
+              </span>
+              <span id="submit-btn-loading" class="hidden items-center gap-2">
+                <svg class="submit-spin" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-dasharray="31.4" stroke-dashoffset="10" opacity="0.3"/>
+                  <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+                </svg>
+                Saving...
+              </span>
+            </button>
+          </div>
+
+        </div>
+      </form>
+    </div>
+  </div>
+</main>
+
+<script src="edit_workforce.js"></script>
+</body></html>

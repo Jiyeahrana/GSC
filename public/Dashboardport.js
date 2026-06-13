@@ -3,13 +3,6 @@
 const token = localStorage.getItem("token");
 if (!token) window.location.href = "/index.html";
 
-// ── Logout ────────────────────────────────────────────────────────────────────
-
-document.getElementById("logout-btn").addEventListener("click", (e) => {
-    e.preventDefault();
-    localStorage.clear();
-    window.location.href = "/index.html";
-});
 
 // ── User info from localStorage ───────────────────────────────────────────────
 
@@ -266,6 +259,7 @@ function populateDashboard(shipments) {
     const incoming = shipments.filter(s => s.type === "incoming");
     const outgoing = shipments.filter(s => s.type === "outgoing");
 
+    // ── Replace spinners with real counts ─────────────────────────────────────
     document.getElementById("incoming-count").textContent = incoming.length;
     document.getElementById("outgoing-count").textContent = outgoing.length;
 
@@ -309,33 +303,44 @@ function updateStorageUI(zonesData) {
     let totalContainers = 0;
     let totalCapacity   = 0;
 
-    // First try to get capacity from Firebase zone data (most accurate)
     Object.values(zonesData).forEach(zone => {
         totalContainers += zone.container_count || 0;
         totalCapacity   += zone.max_capacity    || 0;
     });
 
-    // Fallback to MongoDB value stored in localStorage
     if (totalCapacity === 0) {
         totalCapacity = parseInt(localStorage.getItem("total_capacity")) || 0;
     }
 
-    console.log("Containers:", totalContainers, "/ Capacity:", totalCapacity);
+    // ── Hide loaders ──────────────────────────────────────────────────────────
+    document.getElementById("capacity-loader").style.display          = "none";
+    document.getElementById("capacity-remaining-loader").style.display = "none";
 
     if (totalCapacity === 0) {
-        document.getElementById("capacity-percent").textContent = "?";
-        document.getElementById("capacity-remaining-label").textContent = "Capacity data unavailable";
+        document.getElementById("capacity-percent").textContent    = "?";
+        document.getElementById("capacity-percent").style.display  = "inline";
+        document.getElementById("capacity-pct-sign").style.display = "inline";
+        document.getElementById("capacity-remaining-label").textContent   = "Capacity data unavailable";
+        document.getElementById("capacity-remaining-label").style.display = "inline";
         return;
     }
 
     const pct       = Math.min(Math.round((totalContainers / totalCapacity) * 100), 100);
     const remaining = totalCapacity - totalContainers;
 
-    document.getElementById("capacity-percent").textContent             = pct;
-    document.getElementById("capacity-remaining-label").textContent     = `${remaining} UNITS REMAINING`;
-    document.getElementById("capacity-bar").style.width                 = `${pct}%`;
+    // ── Show real values ──────────────────────────────────────────────────────
+    const pctEl = document.getElementById("capacity-percent");
+    pctEl.textContent   = pct;
+    pctEl.style.display = "inline";
+    document.getElementById("capacity-pct-sign").style.display = "inline";
+
+    const lblEl = document.getElementById("capacity-remaining-label");
+    lblEl.textContent   = `${remaining} UNITS REMAINING`;
+    lblEl.style.display = "inline";
+
+    document.getElementById("capacity-bar").style.width = `${pct}%`;
     document.getElementById("capacity-cube-fill").style.setProperty("--fill", `${pct}%`);
-    document.getElementById("capacity-available").textContent           = `${remaining} UNITS`;
+    document.getElementById("capacity-available").textContent = `${remaining} UNITS`;
 
     const bar = document.getElementById("capacity-bar");
     if (pct >= 90)      bar.style.background = "#E24B4A";
@@ -385,7 +390,6 @@ function updateExpectedUtilization(shipments) {
     const totalCapacity = parseInt(localStorage.getItem("total_capacity")) || 0;
     if (totalCapacity === 0) return;
 
-    // Sum container counts of all shipments arriving in the next 24 hours
     const now       = new Date();
     const in24Hours = new Date(now.getTime() + 24 * 60 * 60 * 1000);
 
@@ -399,7 +403,86 @@ function updateExpectedUtilization(shipments) {
 
     const pct = Math.min(Math.round((incomingContainers / totalCapacity) * 100), 100);
 
+    // ── Replace skeleton with real value ──────────────────────────────────────
     document.getElementById("capacity-expected").textContent = `+${pct}%`;
+}
+
+// ── Port Efficiency Score ──────────────────────────────────────────────────────
+
+async function fetchEfficiencyScore() {
+    try {
+        const res = await fetch("http://localhost:3000/api/v1/port/efficiency-score", {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (res.status === 401) {
+            localStorage.clear();
+            window.location.href = "/index.html";
+            return;
+        }
+
+        const data = await res.json();
+        if (!data.success) return;
+
+        renderEfficiencyScore(data);
+
+    } catch (err) {
+        console.error("Efficiency score error:", err);
+    }
+}
+
+function renderEfficiencyScore(data) {
+    const { score, label, breakdown } = data;
+
+    // ── Hide loader, show score ────────────────────────────────────────────────
+    document.getElementById("efficiency-loader").style.display = "none";
+
+    const scoreEl = document.getElementById("efficiency-score");
+    scoreEl.textContent   = score;
+    scoreEl.style.display = "inline";
+
+    // Label badge
+    const labelEl = document.getElementById("efficiency-label");
+    labelEl.innerHTML   = label;
+    labelEl.style.display = "inline";
+
+    const labelColors = {
+        "Excellent":       { bg: "rgba(99,153,34,0.15)",  text: "#639922" },
+        "Good":            { bg: "rgba(164,204,232,0.15)", text: "#a4cce8" },
+        "Needs Attention": { bg: "rgba(255,182,146,0.15)", text: "#ffb692" },
+        "Critical":        { bg: "rgba(226,75,74,0.15)",  text: "#E24B4A" }
+    };
+    const lc = labelColors[label] || labelColors["Good"];
+    labelEl.style.background = lc.bg;
+    labelEl.style.color      = lc.text;
+
+    // Gauge ring — circumference = 2 * π * r = 2 * π * 42 ≈ 264
+    const circumference = 264;
+    const offset = circumference - (score / 100) * circumference;
+    const ring   = document.getElementById("efficiency-ring");
+    ring.style.display        = "block";
+    ring.style.strokeDashoffset = offset;
+
+    // Ring color based on score
+    let ringColor = "#E24B4A"; // critical
+    if (score >= 85)      ringColor = "#639922"; // excellent
+    else if (score >= 70) ringColor = "#a4cce8"; // good
+    else if (score >= 50) ringColor = "#ffb692"; // needs attention
+    ring.style.stroke = ringColor;
+
+    // Breakdown bars
+    setBreakdown("ontime",     breakdown.on_time_arrival_rate.score);
+    setBreakdown("zone",       breakdown.zone_utilization.score);
+    setBreakdown("turnaround", breakdown.turnaround_efficiency.score);
+    setBreakdown("checkpoint", breakdown.checkpoint_adherence.score);
+    setBreakdown("disruption", breakdown.disruption_resilience.score);
+}
+
+function setBreakdown(key, value) {
+    document.getElementById(`bar-${key}`).style.width = `${value}%`;
+
+    const valEl = document.getElementById(`val-${key}`);
+    valEl.innerHTML = value; // replaces the skeleton span with the number
 }
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
@@ -410,3 +493,57 @@ setInterval(updateLiveTimeLine, 30000);
 activateToggle(btn24, btn48);
 fetchTodayShipments();
 fetchPortDetails(); 
+fetchEfficiencyScore();
+
+// ── Alert collapse logic ───────────────────────────────────────────────────
+
+const ALERTS_VISIBLE = 3;
+
+function applyAlertCollapse() {
+    const container = document.getElementById("alerts-container");
+    const btn       = document.getElementById("alerts-show-more");
+    const countEl   = document.getElementById("alerts-hidden-count");
+    if (!container || !btn) return;
+
+    const alerts = Array.from(container.children);
+    if (alerts.length <= ALERTS_VISIBLE) {
+        btn.classList.add("hidden");
+        return;
+    }
+
+    let visibleCount = ALERTS_VISIBLE;
+
+    function refresh() {
+        alerts.forEach((el, i) => {
+            el.style.display = i < visibleCount ? "" : "none";
+        });
+        const remaining = alerts.length - visibleCount;
+        if (remaining <= 0) {
+            btn.classList.add("hidden");
+        } else {
+            btn.classList.remove("hidden");
+            const showNext = Math.min(5, remaining);
+            countEl.textContent = `(${remaining} more)`;
+            btn.querySelector("span") 
+                ? btn.querySelector("span").textContent = `Show ${showNext} more `
+                : btn.firstChild.textContent = `Show ${showNext} more alerts `;
+        }
+    }
+
+    refresh();
+
+    btn.onclick = () => {
+        visibleCount += 5;
+        refresh();
+    };
+}
+
+// Watch for alerts being injected by dashboard_alerts_patch.js
+// Since it loads deferred, we use a MutationObserver to catch when it renders
+const _alertsObserver = new MutationObserver(() => {
+    applyAlertCollapse();
+});
+const _alertsTarget = document.getElementById("alerts-container");
+if (_alertsTarget) {
+    _alertsObserver.observe(_alertsTarget, { childList: true });
+}

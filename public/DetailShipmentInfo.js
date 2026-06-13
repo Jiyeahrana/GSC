@@ -771,5 +771,6 @@ function showError(msg) {
 // ─────────────────────────────────────────────────────────────────────────────
 // Boot
 // ─────────────────────────────────────────────────────────────────────────────
-fetchShipmentDetail();
-setInterval(fetchShipmentDetail, 10000);
+fetchShipmentDetail().finally(() => {
+    setInterval(fetchShipmentDetail, 10000);
+});

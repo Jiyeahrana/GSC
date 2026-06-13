@@ -5,7 +5,7 @@ const auth    = require("../middleware/authentication");
 
 
 // Requiring Controller Functions
-const {login, register, getPortDetails, getPortZones, getCapacityPrediction,getLabourPrediction,getWorkforce } = require("../controllers/port");
+const {login, register, getPortDetails, getPortZones, getCapacityPrediction,getLabourPrediction,getWorkforce,getEfficiencyScore,updateWorkforce } = require("../controllers/port");
 
 // Defining Routes
 router.route("/login").post(login);
@@ -15,5 +15,7 @@ router.get("/zones", auth, getPortZones);
 router.get("/ports/:portId/capacity-prediction", getCapacityPrediction);
 router.get("/labour-prediction", auth, getLabourPrediction);
 router.get("/workforce",         auth, getWorkforce);
+router.get("/efficiency-score", auth, getEfficiencyScore);
+router.put("/workforce", auth, updateWorkforce);
 
 module.exports = router; //Exporting the router to be used in app.js

@@ -55,50 +55,96 @@
     ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-track { background: #001523; }
     ::-webkit-scrollbar-thumb { background: #172c3b; border-radius: 10px; }
+ 
+    @keyframes spin { to { transform: rotate(360deg); } }
+@keyframes shimmer { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+.poms-spinner {
+    display: inline-block;
+    width: 18px; height: 18px;
+    border: 2px solid rgba(186,200,220,0.15);
+    border-top-color: #bac8dc;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    vertical-align: middle;
+}
+.poms-skel {
+    display: inline-block;
+    background: rgba(186,200,220,0.10);
+    border-radius: 4px;
+    animation: shimmer 1.5s ease-in-out infinite;
+}
+    
 </style>
 </head>
 <body class="bg-[#00111C] text-on-surface font-body">
-
+<div id="logout-modal" role="dialog" aria-modal="true"
+     style="display:none;position:fixed;inset:0;z-index:9000;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);padding:16px;">
+    <div style="background:#00111c;border:1px solid rgba(186,200,220,0.1);border-radius:12px;width:100%;max-width:360px;padding:24px;display:flex;flex-direction:column;gap:20px;animation:modalIn 0.2s ease forwards;">
+        <div style="display:flex;align-items:flex-start;gap:16px;">
+            <div style="width:40px;height:40px;border-radius:8px;background:rgba(251,107,0,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <span class="material-symbols-outlined" style="color:#fb6b00;">logout</span>
+            </div>
+            <div>
+                <h2 style="font-family:Manrope,sans-serif;font-weight:800;color:#d8e4ec;font-size:15px;margin:0;">Confirm Logout</h2>
+                <p style="font-size:13px;color:#c6c5d4;margin:6px 0 0;">You'll be signed out of the port dashboard. Any unsaved changes will be lost.</p>
+            </div>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;">
+            <button id="logout-cancel" style="padding:8px 16px;font-size:13px;font-weight:700;color:#c6c5d4;background:transparent;border:1px solid rgba(186,200,220,0.15);border-radius:8px;cursor:pointer;">
+                Stay Logged In
+            </button>
+            <button id="logout-confirm" style="padding:8px 16px;font-size:13px;font-weight:700;color:#031d34;background:#fb6b00;border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:6px;">
+                <span class="material-symbols-outlined" style="font-size:16px;">logout</span>
+                Yes, Logout
+            </button>
+        </div>
+    </div>
+</div>
 <!-- Sidebar -->
-<aside class="flex flex-col h-screen fixed left-0 top-0 py-8 bg-[#011c2e] w-64 z-50">
-    <div class="px-6 mb-10">
-        <h1 id="sidebar-port-name" class="text-[#d8e4ec] font-headline font-extrabold text-xl tracking-tight">Port name</h1>
+ <div id="sidebar-backdrop" class="fixed inset-0 bg-black/50 z-40 hidden md:hidden"></div>
+<aside id="sidebar" class="flex flex-col h-screen fixed left-0 top-0 py-8 bg-[#00111C] dark:bg-[#011c2e] text-[#011c2e] font-inter font-medium text-sm shadow-[48px_0_48px_rgba(5,16,21,0.06)] w-64 z-50 transition-transform duration-300 md:translate-x-0 -translate-x-full">    <div class="px-6 mb-10">
+        <h1 id="sidebar-port-name" class="text-[#d8e4ec] font-manrope font-extrabold text-xl tracking-tight">Port name</h1>
         <p class="text-on-surface-variant text-xs mt-1">Real-Time Port Operations & Monitoring</p>
     </div>
     <nav class="flex-1 flex flex-col gap-2">
-        <a class="flex items-center gap-3 px-6 py-3 text-[#c6c5d4] opacity-80 hover:bg-[#202b32] hover:text-[#d8e4ec] transition-all" href="Dashboardport.html">
+        <a class="flex items-center gap-3 px-6 py-3 text-[#c6c5d4] opacity-80 hover:bg-[#202b32] hover:text-[#d8e4ec] transition-all hover:translate-x-1 duration-200" href="Dashboardport.html">
             <span class="material-symbols-outlined">dashboard</span>Dashboard
         </a>
-        <a class="flex items-center gap-3 px-6 py-3 text-[#c6c5d4] opacity-80 hover:bg-[#202b32] hover:text-[#d8e4ec] transition-all" href="detailed_storage.html">
+        <a class="flex items-center gap-3 px-6 py-3 text-[#c6c5d4] opacity-80 hover:bg-[#202b32] hover:text-[#d8e4ec] transition-all hover:translate-x-1 duration-200" href="detailed_storage.html">
             <span class="material-symbols-outlined">inventory</span>Storage
         </a>
-        <a class="flex items-center gap-3 px-6 py-3 text-[#c6c5d4] opacity-80 hover:bg-[#202b32] hover:text-[#d8e4ec] transition-all" href="detailed_shipment.html">
+        <a class="flex items-center gap-3 px-6 py-3 text-[#c6c5d4] opacity-80 hover:bg-[#202b32] hover:text-[#d8e4ec] transition-all hover:translate-x-1 duration-200" href="detailed_shipment.html">
             <span class="material-symbols-outlined">directions_boat</span>Shipments
         </a>
-        <a class="bg-[#202b32] text-[#fb6b00] border-l-4 border-[#fb6b00] flex items-center gap-3 px-4 py-3 mx-2 rounded-sm transition-all">
+        <a class="bg-[#202b32] text-[#fb6b00] border-l-4 border-[#fb6b00] flex items-center gap-3 px-4 py-3 mx-2 rounded-sm transition-all hover:translate-x-1 duration-200">
             <span class="material-symbols-outlined">timeline</span>Shipment Timeline
         </a>
         <a class="flex items-center gap-3 px-6 py-3 text-[#c6c5d4] opacity-80 hover:bg-[#202b32] hover:text-[#d8e4ec] transition-all hover:translate-x-1 duration-200" href="labour_prediction.html">
             <span class="material-symbols-outlined">groups</span>Labour Forecast
         </a>
+       
     </nav>
-    <div class="mt-auto border-t border-outline-variant/10 pt-6">
-        <a id="logout-btn" class="flex items-center gap-3 px-6 py-3 text-[#c6c5d4] opacity-80 hover:bg-[#202b32] hover:text-[#d8e4ec] transition-all cursor-pointer">
-            <span class="material-symbols-outlined">logout</span>Logout
-        </a>
+    <div class="mt-auto flex flex-col gap-2 border-t border-outline-variant/10 pt-6">
+        <button id="logout-btn" class="flex items-center gap-3 px-6 py-3 text-[#c6c5d4] opacity-80 hover:bg-[#202b32] hover:text-[#d8e4ec] transition-all w-full text-left cursor-pointer">
+    <span class="material-symbols-outlined">logout</span>Logout
+</button>
     </div>
 </aside>
 
-<!-- Main -->
-<main class="ml-64 min-h-screen flex flex-col">
 
+<!-- Main -->
+<main class="md:ml-64 ml-0 min-h-screen flex flex-col">
     <!-- Header -->
-    <header class="bg-[#000d16]/80 backdrop-blur-xl sticky top-0 z-40 border-b border-white/5 flex justify-between items-center px-6 h-16">
-        <div class="flex items-center gap-4">
-            <!-- Prev -->
-            <button id="btn-prev" class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors p-1">chevron_left</button>
-            <!-- Label -->
-            <span id="calendar-label" class="text-primary font-bold font-headline tracking-tight text-sm min-w-[160px] text-center">—</span>
+<header class="bg-[#000d16]/80 backdrop-blur-xl sticky top-0 z-40 border-b border-white/5 flex justify-between items-center px-4 md:px-6 h-16">
+<div class="flex items-center gap-2 flex-wrap">            <!-- Prev -->
+<button id="sidebar-toggle" class="md:hidden mr-3 text-on-surface-variant hover:text-primary p-1" aria-label="Toggle sidebar">
+    <span class="material-symbols-outlined">menu</span>
+</button>
+<button id="btn-prev" class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors p-1">chevron_left</button>
+<span id="calendar-label" class="text-primary font-bold font-headline tracking-tight text-sm min-w-[160px] text-center flex items-center justify-center gap-2">
+    <span class="poms-spinner"></span>
+</span>
             <!-- Next -->
             <button id="btn-next" class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors p-1">chevron_right</button>
             <!-- Today -->
@@ -106,7 +152,7 @@
         </div>
         <div class="flex items-center gap-6">
             <!-- View Toggles -->
-            <div class="flex bg-surface-container-lowest p-1 rounded-lg gap-1">
+<div class="flex bg-surface-container-lowest p-1 rounded-lg gap-1 flex-shrink-0">
                 <button id="view-day"   class="view-btn px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded transition-colors">Day</button>
                 <button id="view-week"  class="view-btn px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded transition-colors">Week</button>
                 <button id="view-month" class="view-btn px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded transition-colors">Month</button>
@@ -132,8 +178,7 @@
         <div id="calendar-container" class="bg-surface-container-lowest rounded-xl overflow-hidden border border-white/5 shadow-inner"></div>
 
         <!-- Legend -->
-        <div class="mt-6 flex items-center justify-center gap-8 py-4 bg-surface-container-low/50 rounded-xl border border-white/5">
-            <div class="flex items-center gap-2">
+<div class="mt-6 flex flex-wrap items-center justify-center gap-4 md:gap-8 py-4 bg-surface-container-low/50 rounded-xl border border-white/5">            <div class="flex items-center gap-2">
                 <div class="w-2 h-2 rounded-full bg-[#639922]"></div>
                 <span class="text-[10px] font-black uppercase tracking-widest text-on-surface-variant font-headline">Inbound</span>
             </div>
@@ -286,6 +331,10 @@
   #poms-send:hover { opacity: 0.9; transform: scale(1.05); }
   #poms-send:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
   #poms-send svg { width: 16px; height: 16px; fill: white; }
+  @keyframes modalIn {
+    from { opacity:0; transform:scale(0.94) translateY(8px); }
+    to   { opacity:1; transform:scale(1) translateY(0); }
+}
 </style>
 
 <div id="poms-chat-widget">
@@ -318,6 +367,31 @@
     </div>
   </div>
 </div>
+
+<script>
+  (function(){
+    const sidebar = document.getElementById('sidebar');
+    const toggle  = document.getElementById('sidebar-toggle');
+    const backdrop= document.getElementById('sidebar-backdrop');
+    function open(){
+        sidebar.classList.remove('-translate-x-full');
+        backdrop.classList.remove('hidden');
+    }
+    function close(){
+        sidebar.classList.add('-translate-x-full');
+        backdrop.classList.add('hidden');
+    }
+    toggle && toggle.addEventListener('click', function(){
+        sidebar.classList.contains('-translate-x-full') ? open() : close();
+    });
+    backdrop.addEventListener('click', close);
+    sidebar.querySelectorAll('a').forEach(function(a){
+        a.addEventListener('click', function(){
+            if(window.innerWidth < 768) close();
+        });
+    });
+})();
+</script>
 
 <script>
 (function() {
@@ -380,19 +454,21 @@
     renderSuggestions();
   }
 
-  function renderSuggestions() {
+function renderSuggestions() {
     suggestBox.innerHTML = "";
     suggestions.forEach(s => {
-      const btn = document.createElement("button");
-      btn.className   = "poms-suggestion";
-      btn.textContent = s;
-      btn.addEventListener("click", () => {
-        suggestBox.innerHTML = "";
-        sendMessage(s);
-      });
-      suggestBox.appendChild(btn);
+        const btn = document.createElement("button");
+        btn.type         = "button";   // ← add this line
+        btn.className    = "poms-suggestion";
+        btn.textContent  = s;
+        btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            suggestBox.innerHTML = "";
+            sendMessage(s);
+        });
+        suggestBox.appendChild(btn);
     });
-  }
+}
 
   function appendMessage(role, text) {
     const wrap = document.createElement("div");
@@ -453,7 +529,7 @@
 
       const res = await fetch(endpoint, {
           method: "POST", headers,
-          body: JSON.stringify({ messages: history, sensor_data: sensorPayload })
+          body: JSON.stringify({ messages: history })
       });
       const data = await res.json();
       removeTyping();
@@ -482,6 +558,39 @@
     input.style.height = Math.min(input.scrollHeight, 80) + "px";
   });
 
+})();
+
+(function () {
+    const modal      = document.getElementById("logout-modal");
+    const logoutBtn  = document.getElementById("logout-btn");
+    const cancelBtn  = document.getElementById("logout-cancel");
+    const confirmBtn = document.getElementById("logout-confirm");
+
+    logoutBtn.addEventListener("click", () => {
+        modal.style.display = "flex";
+        setTimeout(() => confirmBtn.focus(), 50);
+    });
+
+    cancelBtn.addEventListener("click", () => {
+        modal.style.display = "none";
+    });
+
+    modal.addEventListener("click", (e) => {
+        if (e.target === modal) modal.style.display = "none";
+    });
+
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") modal.style.display = "none";
+    });
+
+    confirmBtn.addEventListener("click", () => {
+        confirmBtn.textContent = "Logging out…";
+        confirmBtn.disabled = true;
+        localStorage.removeItem("token");
+        localStorage.removeItem("port_id");
+        localStorage.removeItem("user_name");
+        setTimeout(() => { window.location.href = "/index.html"; }, 600);
+    });
 })();
 </script>
 </body>

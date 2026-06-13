@@ -6,11 +6,7 @@ if (!token) window.location.href = "/index.html";
 document.getElementById("sidebar-port-name").textContent =
     localStorage.getItem("port_name") || "Port";
 
-document.getElementById("logout-btn").addEventListener("click", (e) => {
-    e.preventDefault();
-    localStorage.clear();
-    window.location.href = "/index.html";
-});
+
 
 // ── Role display config ───────────────────────────────────────────────────────
 
@@ -22,9 +18,80 @@ const ROLE_CONFIG = {
     docking_staff:    { label: "Docking Staff",    icon: "anchor",                  color: "#bac8dc" },
 };
 
+//loader
+function renderSkeletons() {
+    // HUD
+    document.getElementById("hud-total-workers").innerHTML  = `<span class="sk" style="display:inline-block;width:120px;height:20px;border-radius:4px"></span>`;
+    document.getElementById("hud-shortage-days").innerHTML  = `<span class="sk" style="display:inline-block;width:50px;height:20px;border-radius:4px"></span>`;
+    document.getElementById("hud-total-shipments").innerHTML = `<span class="sk" style="display:inline-block;width:40px;height:20px;border-radius:4px"></span>`;
+
+    // Role cards
+    const roleContainer = document.getElementById("role-cards");
+    roleContainer.innerHTML = "";
+    for (let i = 0; i < 5; i++) {
+        const card = document.createElement("div");
+        card.className = "bg-surface-container-high rounded-xl p-4 flex flex-col gap-3";
+        card.innerHTML = `
+            <div class="flex justify-between items-start">
+                <div class="sk" style="width:20px;height:20px;border-radius:4px"></div>
+                <div class="sk" style="width:36px;height:28px;border-radius:4px"></div>
+            </div>
+            <div class="sk" style="height:10px;width:80%;border-radius:4px"></div>
+            <div class="sk" style="height:4px;width:100%;border-radius:4px"></div>
+        `;
+        roleContainer.appendChild(card);
+    }
+
+    // Forecast chart
+    const chart = document.getElementById("forecast-chart");
+    chart.innerHTML = "";
+    for (let i = 0; i < 7; i++) {
+        const col = document.createElement("div");
+        col.className = "flex flex-col items-center flex-1 gap-2 justify-end";
+        const h = 60 + Math.random() * 120 | 0;
+        col.innerHTML = `
+            <div class="sk w-full rounded-t" style="height:${h}px"></div>
+            <div class="sk" style="height:10px;width:36px;border-radius:4px"></div>
+        `;
+        chart.appendChild(col);
+    }
+
+    // Day cards
+    const dayContainer = document.getElementById("day-cards");
+    dayContainer.innerHTML = "";
+    for (let i = 0; i < 7; i++) {
+        const card = document.createElement("div");
+        card.className = "bg-surface-container rounded-xl p-5 border-l-4 border-outline-variant/20 flex flex-col gap-4";
+        card.innerHTML = `
+            <div class="flex justify-between items-center">
+                <div class="flex flex-col gap-2">
+                    <div class="sk" style="height:14px;width:140px;border-radius:4px"></div>
+                    <div class="sk" style="height:10px;width:90px;border-radius:4px"></div>
+                </div>
+                <div class="sk" style="height:36px;width:80px;border-radius:8px"></div>
+            </div>
+            <div class="flex flex-col gap-2">
+                <div class="sk" style="height:10px;width:60px;border-radius:4px"></div>
+                <div class="sk" style="height:10px;width:100%;border-radius:4px"></div>
+                <div class="sk" style="height:10px;width:90%;border-radius:4px"></div>
+                <div class="sk" style="height:10px;width:95%;border-radius:4px"></div>
+            </div>
+        `;
+        dayContainer.appendChild(card);
+    }
+
+    // Summary cards
+    document.getElementById("peak-day-label").innerHTML        = `<span class="sk" style="display:inline-block;width:100px;height:20px;border-radius:4px"></span>`;
+    document.getElementById("shortage-risk-label").innerHTML   = `<span class="sk" style="display:inline-block;width:60px;height:20px;border-radius:4px"></span>`;
+    document.getElementById("total-shipments-label").innerHTML = `<span class="sk" style="display:inline-block;width:40px;height:20px;border-radius:4px"></span>`;
+}
+
+
+
 // ── Fetch and render ──────────────────────────────────────────────────────────
 
 async function fetchLabourPrediction() {
+     renderSkeletons();
     try {
         const res  = await fetch("http://localhost:3000/api/v1/port/labour-prediction", {
             headers: { "Authorization": `Bearer ${token}` }
@@ -131,11 +198,6 @@ function renderForecastChart(days, workforce) {
                         background:${hasShortage ? '#ef4444' : '#fb6b00'};
                         opacity:0.9">
 
-                <!-- Available line marker -->
-                <div class="absolute w-full border-t-2 border-dashed border-secondary/60"
-                     style="bottom:${Math.max(availablePct - demandPct + (availablePct < demandPct ? 0 : availablePct - demandPct), 0)}px">
-                </div>
-
                 <!-- Tooltip -->
                 <div class="absolute -top-16 left-1/2 -translate-x-1/2 bg-surface-container-highest
                             px-3 py-2 rounded-lg text-[10px] font-bold whitespace-nowrap
@@ -155,13 +217,30 @@ function renderForecastChart(days, workforce) {
         container.appendChild(col);
     });
 
-    // Available capacity line label
-    const lineLabel = document.createElement("div");
-    lineLabel.className = "absolute right-0 text-[10px] text-secondary font-bold";
-    lineLabel.style.bottom = `${Math.round((totalAvailable / maxDemand) * 220) + 30}px`;
-    lineLabel.textContent  = `Available: ${totalAvailable}`;
-    container.style.position = "relative";
-    container.appendChild(lineLabel);
+// Fixed available capacity line across full chart width
+container.style.position = "relative";
+
+const availableBottomPx = Math.round((totalAvailable / maxDemand) * 220);
+
+// Fixed label — always top-right of chart, never overlaps bars/dates
+const lineLabel = document.createElement("div");
+lineLabel.style.cssText = `
+    position: absolute;
+    top: -24px;
+    right: 0;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #a4cce8;
+    background: rgba(12,34,48,0.9);
+    padding: 2px 8px;
+    border-radius: 4px;
+    z-index: 10;
+    white-space: nowrap;
+`;
+lineLabel.textContent = `Available: ${totalAvailable}`;
+container.appendChild(lineLabel);
 }
 
 // ── Day Cards ─────────────────────────────────────────────────────────────────

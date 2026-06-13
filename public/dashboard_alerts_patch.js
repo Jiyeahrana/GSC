@@ -200,7 +200,7 @@
                   })
                 : "";
             const link = a.linkable && a.shipmentId
-                ? `<a href="DetailShipmentInfo.html?id=${a.shipmentId}"
+                ? `<a href="DetailShipmentInfo.html?id=${a.shipmentId}" target="_blank"
                       style="font-size:9px;color:${st.label};font-weight:700;
                              text-decoration:none;border:1px solid ${st.border};
                              padding:2px 8px;border-radius:10px;display:inline-block;

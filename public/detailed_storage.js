@@ -5,13 +5,6 @@ const portId = localStorage.getItem("port_id");
 
 if (!token) window.location.href = "/index.html";
 
-// ── Logout ────────────────────────────────────────────────────────────────────
-
-document.getElementById("logout-btn").addEventListener("click", (e) => {
-    e.preventDefault();
-    localStorage.clear();
-    window.location.href = "/index.html";
-});
 
 // ── Sidebar port name ─────────────────────────────────────────────────────────
 
@@ -43,11 +36,12 @@ async function fetchZones() {
 
         zonesData = data.zones;
 
+        // ── Replace skeleton with real value ──────────────────────────────
         document.getElementById("hud-total-capacity").textContent =
             data.total_capacity.toLocaleString() + " UNITS";
 
-        renderZoneCards();
-        updateGlobalOccupancy();
+        renderZoneCards();        // clears skeleton cards and injects real ones
+        updateGlobalOccupancy();  // replaces spinner with real %
 
     } catch (err) {
         console.error("Fetch zones error:", err);
@@ -277,30 +271,29 @@ async function loadCapacityPrediction() {
             day: "2-digit", month: "short", year: "numeric"
         });
 
-        // Update peak date card
+        // ── Replace skeletons with real values ────────────────────────────
         document.getElementById("peak-date-label").textContent = peakDate;
 
-        // Overflow risk
         const peakPct = Math.max(...days.map(d => d.pct));
-        const riskEl = document.getElementById("overflow-risk-label");
+        const riskEl  = document.getElementById("overflow-risk-label");
         if (peakPct >= 90)      riskEl.textContent = "High";
         else if (peakPct >= 70) riskEl.textContent = "Medium";
         else if (peakPct >= 40) riskEl.textContent = "Medium-Low";
         else                    riskEl.textContent = "Low";
 
-        // Render bars
+        // Render chart bars — unchanged from your original
         const container = document.querySelector(".chart-bars-container");
         container.innerHTML = "";
 
         days.forEach(day => {
-            const date = new Date(day.date);
+            const date    = new Date(day.date);
             const dateStr = date.toLocaleDateString("en-IN", {
                 day: "2-digit", month: "short"
             }).toUpperCase().replace(" ", " ");
 
-            const barHeightPx = Math.max(Math.round((day.pct / maxPct) * 220), 8);
+            const barHeightPx    = Math.max(Math.round((day.pct / maxPct) * 220), 8);
             const innerHeightPct = Math.round(day.pct * 0.75);
-            const isToday = date.toDateString() === new Date().toDateString();
+            const isToday        = date.toDateString() === new Date().toDateString();
 
             const col = document.createElement("div");
             col.className = "flex flex-col items-center flex-1 group cursor-pointer";
@@ -310,7 +303,6 @@ async function loadCapacityPrediction() {
                     <div class="absolute bottom-0 left-0 w-full bg-secondary/30"
                          style="height: ${innerHeightPct}%"></div>
                     <div class="absolute -top-2 left-1/2 -translate-x-1/2 w-3 h-3 bg-brand-orange rounded-full shadow-lg shadow-brand-orange/50"></div>
-                    <!-- Tooltip -->
                     <div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-surface-container-highest px-2 py-1 rounded text-[10px] font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-10">
                         ${day.pct}% (${day.predicted_used} units)
                     </div>

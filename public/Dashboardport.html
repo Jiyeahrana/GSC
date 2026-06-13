@@ -46,17 +46,77 @@
     .fill-back { display: none; }
     .fill-top { position: absolute; width: 80px; height: 80px; bottom: 100%; transform: rotateX(90deg) translateY(40px); transform-origin: bottom; background: linear-gradient(to bottom, #d6e4f9, #bac8dc); }
     .cube-fill::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.25), rgba(0,0,0,0.05)); pointer-events: none; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+@keyframes shimmer { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+.poms-spinner {
+    display: inline-block;
+    width: 36px; height: 36px;
+    border: 3px solid rgba(186,200,220,0.15);
+    border-top-color: #bac8dc;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    vertical-align: middle;
+}
+.poms-spinner-sm {
+    width: 14px; height: 14px;
+    border-width: 2px;
+    border-top-color: #ffb692;
+}
+.poms-skel {
+    display: inline-block;
+    background: rgba(186,200,220,0.12);
+    border-radius: 4px;
+    animation: shimmer 1.5s ease-in-out infinite;
+}
+/* ── Sidebar responsive ── */
+@media (max-width: 767px) {
+    #sidebar {
+        transform: translateX(-100%);
+    }
+    #sidebar.open {
+        transform: translateX(0);
+    }
+}
+@keyframes modalIn {
+    from { opacity:0; transform:scale(0.94) translateY(8px); }
+    to   { opacity:1; transform:scale(1) translateY(0); }
+}
 </style>
 </head>
 <body class="bg-surface text-on-surface font-body selection:bg-tertiary/30">
+    <div id="logout-modal" role="dialog" aria-modal="true"
+     style="display:none;position:fixed;inset:0;z-index:9000;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);padding:16px;">
+    <div style="background:#00111c;border:1px solid rgba(186,200,220,0.1);border-radius:12px;width:100%;max-width:360px;padding:24px;display:flex;flex-direction:column;gap:20px;animation:modalIn 0.2s ease forwards;">
+        <div style="display:flex;align-items:flex-start;gap:16px;">
+            <div style="width:40px;height:40px;border-radius:8px;background:rgba(251,107,0,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <span class="material-symbols-outlined" style="color:#fb6b00;">logout</span>
+            </div>
+            <div>
+                <h2 style="font-family:Manrope,sans-serif;font-weight:800;color:#d8e4ec;font-size:15px;margin:0;">Confirm Logout</h2>
+                <p style="font-size:13px;color:#c6c5d4;margin:6px 0 0;">You'll be signed out of the port dashboard. Any unsaved changes will be lost.</p>
+            </div>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;">
+            <button id="logout-cancel" style="padding:8px 16px;font-size:13px;font-weight:700;color:#c6c5d4;background:transparent;border:1px solid rgba(186,200,220,0.15);border-radius:8px;cursor:pointer;">
+                Stay Logged In
+            </button>
+            <button id="logout-confirm" style="padding:8px 16px;font-size:13px;font-weight:700;color:#031d34;background:#fb6b00;border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:6px;">
+                <span class="material-symbols-outlined" style="font-size:16px;">logout</span>
+                Yes, Logout
+            </button>
+        </div>
+    </div>
+</div>
+<aside id="sidebar" class="flex flex-col h-screen fixed left-0 top-0 py-8 bg-[#00111C] dark:bg-[#011c2e] text-[#011c2e] font-inter font-medium text-sm shadow-[48px_0_48px_rgba(5,16,21,0.06)] w-64 z-50 transition-transform duration-300">
 
-<aside class="flex flex-col h-screen fixed left-0 top-0 py-8 bg-[#00111C] dark:bg-[#011c2e] text-[#011c2e] font-inter font-medium text-sm shadow-[48px_0_48px_rgba(5,16,21,0.06)] w-64 z-50">
     <div class="px-6 mb-10">
         <h1 id="sidebar-port-name" class="text-[#d8e4ec] font-manrope font-extrabold text-xl tracking-tight">Port name</h1>
         <p class="text-on-surface-variant text-xs mt-1">Real-Time Port Operations & Monitoring</p>
     </div>
     <nav class="flex-1 flex flex-col gap-2">
-        <a class="bg-[#202b32] text-[#fb6b00] border-l-4 border-[#fb6b00] flex items-center px-4 py-3 mx-2 rounded-sm transition-all hover:translate-x-1 duration-200">
+        <a class="bg-[#202b32] text-[#fb6b00] border-l-4 border-[#fb6b00] flex items-center gap-3 px-4 py-3 mx-2 rounded-sm transition-all hover:translate-x-1 duration-200">
             <span class="material-symbols-outlined">dashboard</span>Dashboard
         </a>
         <a class="flex items-center gap-3 px-6 py-3 text-[#c6c5d4] opacity-80 hover:bg-[#202b32] hover:text-[#d8e4ec] transition-all  hover:translate-x-1 duration-200" href="detailed_storage.html">
@@ -74,14 +134,24 @@
        
     </nav>
     <div class="mt-auto flex flex-col gap-2 border-t border-outline-variant/10 pt-6">
-        <a id="logout-btn" class="flex items-center gap-3 px-6 py-3 text-[#c6c5d4] opacity-80 hover:bg-[#202b32] hover:text-[#d8e4ec] transition-all cursor-pointer" href="#">
-            <span class="material-symbols-outlined">logout</span>Logout
-        </a>
+        <button id="logout-btn" class="flex items-center gap-3 px-6 py-3 text-[#c6c5d4] opacity-80 hover:bg-[#202b32] hover:text-[#d8e4ec] transition-all w-full text-left cursor-pointer">
+    <span class="material-symbols-outlined">logout</span>Logout
+</button>
     </div>
 </aside>
+<div id="sidebar-backdrop"
+    class="fixed inset-0 z-40 bg-black/50 opacity-0 pointer-events-none transition-opacity duration-300 md:hidden"></div>
 
-<header class="flex justify-between items-center px-6 h-16 w-full fixed top-0 z-40 bg-[#001523] dark:bg-[#001523] pl-72">
-    <div class="flex items-left gap-4">
+<header class="flex justify-between items-center px-4 sm:px-6 h-16 w-full fixed top-0 z-40 bg-[#001523] dark:bg-[#001523] md:pl-72">
+    <div class="flex items-center gap-4">
+        <!-- Hamburger — mobile only -->
+        <button id="sidebar-toggle"
+            class="md:hidden flex flex-col justify-center items-center w-9 h-9 gap-[5px] rounded-lg hover:bg-white/5 transition-colors"
+            aria-label="Toggle sidebar">
+            <span id="sb1" class="block w-5 h-[1.5px] bg-[#bac8dc] transition-all duration-300"></span>
+            <span id="sb2" class="block w-5 h-[1.5px] bg-[#bac8dc] transition-all duration-300"></span>
+            <span id="sb3" class="block w-4 h-[1.5px] bg-[#bac8dc] transition-all duration-300"></span>
+        </button>
         <span class="text-2xl font-black text-[#bac8dc] tracking-tighter font-headline">POMS</span>
     </div>
     <div class="flex items-center gap-6">
@@ -93,12 +163,94 @@
     </div>
 </header>
 
-<main class="pl-64 pt-16 min-h-screen bg-surface">
-    <div class="p-8 max-w-[1600px] mx-auto space-y-8">
-        <div class="grid grid-cols-12 gap-6">
+<main class="md:pl-64 pt-16 min-h-screen bg-surface">
+<div class="p-4 sm:p-8 max-w-[1600px] mx-auto space-y-6 sm:space-y-8">
+      <!-- Port Efficiency Score Card -->
+      <div class="bg-surface-container-low rounded-xl p-6 border border-outline-variant/10">
+          <div class="flex items-center justify-between mb-4">
+              <h3 class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">
+                  Port Efficiency Score
+              </h3>
+              <span id="efficiency-label" class="text-[10px] font-bold px-2 py-1 rounded-full bg-surface-container-high text-on-surface-variant">
+                  <span class="poms-skel" style="width:50px;height:12px;display:inline-block;"></span>
+              </span>
+          </div>
+      
+          <div class="flex items-center gap-6">
+              <!-- Gauge -->
+              <div class="relative w-28 h-28 shrink-0 flex items-center justify-center">
+                  <svg viewBox="0 0 100 100" class="w-full h-full -rotate-90">
+                      <circle cx="50" cy="50" r="42" fill="none" stroke="#172c3b" stroke-width="10"/>
+                      <circle id="efficiency-ring" cx="50" cy="50" r="42" fill="none"
+                              stroke="#fb6b00" stroke-width="10"
+                              stroke-dasharray="264" stroke-dashoffset="264"
+                              stroke-linecap="round"
+                              style="transition: stroke-dashoffset 1s ease, stroke 0.3s; display:none;"/>
+                  </svg>
+                  <div class="absolute inset-0 flex items-center justify-center">
+                      <span id="efficiency-loader" class="poms-spinner"></span>
+                      <span id="efficiency-score" class="text-3xl font-extrabold font-headline text-primary" style="display:none;"></span>
+                  </div>
+              </div>
+      
+              <!-- Breakdown -->
+              <div class="flex-1 space-y-2.5">
+                  <div class="flex items-center justify-between gap-3">
+                      <span class="text-[10px] text-on-surface-variant uppercase tracking-wider w-32 shrink-0">On-Time Arrivals</span>
+                      <div class="flex-1 h-1.5 bg-surface-container-high rounded-full overflow-hidden">
+                          <div id="bar-ontime" class="h-full bg-[#639922] rounded-full transition-all duration-700" style="width:0%"></div>
+                      </div>
+                      <span id="val-ontime" class="text-xs font-bold w-8 text-right">
+                          <span class="poms-skel" style="width:24px;height:12px;display:inline-block;"></span>
+                      </span>
+                  </div>
+      
+                  <div class="flex items-center justify-between gap-3">
+                      <span class="text-[10px] text-on-surface-variant uppercase tracking-wider w-32 shrink-0">Zone Utilization</span>
+                      <div class="flex-1 h-1.5 bg-surface-container-high rounded-full overflow-hidden">
+                          <div id="bar-zone" class="h-full bg-[#a4cce8] rounded-full transition-all duration-700" style="width:0%"></div>
+                      </div>
+                      <span id="val-zone" class="text-xs font-bold w-8 text-right">
+                          <span class="poms-skel" style="width:24px;height:12px;display:inline-block;"></span>
+                      </span>
+                  </div>
+      
+                  <div class="flex items-center justify-between gap-3">
+                      <span class="text-[10px] text-on-surface-variant uppercase tracking-wider w-32 shrink-0">Turnaround Efficiency</span>
+                      <div class="flex-1 h-1.5 bg-surface-container-high rounded-full overflow-hidden">
+                          <div id="bar-turnaround" class="h-full bg-[#ffb692] rounded-full transition-all duration-700" style="width:0%"></div>
+                      </div>
+                      <span id="val-turnaround" class="text-xs font-bold w-8 text-right">
+                          <span class="poms-skel" style="width:24px;height:12px;display:inline-block;"></span>
+                      </span>
+                  </div>
+      
+                  <div class="flex items-center justify-between gap-3">
+                      <span class="text-[10px] text-on-surface-variant uppercase tracking-wider w-32 shrink-0">Checkpoint Adherence</span>
+                      <div class="flex-1 h-1.5 bg-surface-container-high rounded-full overflow-hidden">
+                          <div id="bar-checkpoint" class="h-full bg-[#5DCAA5] rounded-full transition-all duration-700" style="width:0%"></div>
+                      </div>
+                      <span id="val-checkpoint" class="text-xs font-bold w-8 text-right">
+                          <span class="poms-skel" style="width:24px;height:12px;display:inline-block;"></span>
+                      </span>
+                  </div>
+      
+                  <div class="flex items-center justify-between gap-3">
+                      <span class="text-[10px] text-on-surface-variant uppercase tracking-wider w-32 shrink-0">Disruption Resilience</span>
+                      <div class="flex-1 h-1.5 bg-surface-container-high rounded-full overflow-hidden">
+                          <div id="bar-disruption" class="h-full bg-[#bac8dc] rounded-full transition-all duration-700" style="width:0%"></div>
+                      </div>
+                      <span id="val-disruption" class="text-xs font-bold w-8 text-right">
+                          <span class="poms-skel" style="width:24px;height:12px;display:inline-block;"></span>
+                      </span>
+                  </div>
+              </div>
+          </div>
+      </div>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
             <!-- Storage Capacity Widget -->
-            <section class="col-span-12 lg:col-span-5 bg-surface-container-low p-8 rounded-xl flex flex-col justify-between border border-outline-variant/10">
+<section class="col-span-1 lg:col-span-5 bg-surface-container-low p-6 sm:p-8 rounded-xl flex flex-col justify-between border border-outline-variant/10">
                 <div>
                     <div class="flex items-center justify-between mb-6">
                         <h2 class="font-headline text-lg font-bold text-primary tracking-tight">STORAGE CAPACITY</h2>
@@ -123,47 +275,60 @@
                             </div>
                         </div>
                         <div class="flex-1 space-y-4">
-                            <div class="flex flex-col">
-                                <span class="font-headline text-5xl font-extrabold text-on-surface tracking-tighter">
-                                    <span id="capacity-percent">—</span>% <span class="text-xl font-medium text-on-surface-variant">Full</span>
-                                </span>
-                                <span id="capacity-remaining-label" class="text-tertiary font-bold tracking-widest text-xs mt-1 uppercase">— REMAINING</span>
-                            </div>
-                            <div class="space-y-2">
-                                <div class="h-2 w-full rounded-full overflow-hidden flex border border-outline-variant/10">
-                                    <div id="capacity-bar" class="h-full bg-primary shadow-[0_0_8px_rgba(186,200,220,0.4)] transition-all duration-1000" style="width: 0%"></div>
-                                </div>
-                                <p class="text-[10px] text-on-surface-variant uppercase tracking-widest font-semibold">Bay Utilization Index</p>
-                            </div>
-                        </div>
+    <div class="flex flex-col">
+        <span class="font-headline text-5xl font-extrabold text-on-surface tracking-tighter flex items-baseline gap-2">
+            <span id="capacity-loader" class="poms-spinner"></span>
+            <span id="capacity-percent" style="display:none;"></span>
+            <span id="capacity-pct-sign" style="display:none;">%</span>
+            <span class="text-xl font-medium text-on-surface-variant">Full</span>
+        </span>
+        <span id="capacity-remaining-loader" class="poms-spinner poms-spinner-sm mt-2" style="display:inline-block;"></span>
+        <span id="capacity-remaining-label" class="text-tertiary font-bold tracking-widest text-xs mt-1 uppercase" style="display:none;"></span>
+    </div>
+    <div class="space-y-2">
+        <div class="h-2 w-full rounded-full overflow-hidden flex border border-outline-variant/10" style="background:rgba(186,200,220,0.08);">
+            <div id="capacity-bar" class="h-full bg-primary shadow-[0_0_8px_rgba(186,200,220,0.4)] transition-all duration-1000" style="width:0%"></div>
+        </div>
+        <p class="text-[10px] text-on-surface-variant uppercase tracking-widest font-semibold">Bay Utilization Index</p>
+    </div>
+</div>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4 mt-4 pt-8 border-t border-outline-variant/10">
                     <div>
                         <p class="text-xs text-on-surface-variant uppercase tracking-widest font-medium">Available Slots</p>
-                        <p id="capacity-available" class="text-xl font-bold font-headline">— UNITS</p>
+<p id="capacity-available" class="text-xl font-bold font-headline">
+    <span class="poms-skel" style="width:90px;height:22px;display:inline-block;"></span>
+</p>
                     </div>
                     <div>
                         <p class="text-xs text-on-surface-variant uppercase tracking-widest font-medium">Expected Utilization (24h)</p>
-                        <p id="capacity-expected" class="text-xl font-bold font-headline text-tertiary">+—%</p>
+<p id="capacity-expected" class="text-xl font-bold font-headline text-tertiary">
+    <span class="poms-skel" style="width:50px;height:22px;display:inline-block;"></span>
+</p>
                     </div>
                 </div>
             </section>
 
             <!-- Shipment Summary Cards -->
-            <div class="col-span-12 lg:col-span-7 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="col-span-1 lg:col-span-7 grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Incoming Today -->
                 <div class="bg-surface-container p-6 rounded-xl border-l-4 border-[#b2c8e7] flex flex-col justify-between">
                     <div class="flex justify-between items-start">
                         <div>
                             <h3 class="text-on-surface-variant text-xs uppercase tracking-widest font-bold">Incoming Today</h3>
-                            <p id="incoming-count" class="text-5xl font-headline font-extrabold mt-2">—</p>
+<p id="incoming-count" class="text-5xl font-headline font-extrabold mt-2">
+    <span class="poms-spinner" style="width:32px;height:32px;border-width:3px;"></span>
+</p>
+
                         </div>
                         <span class="material-symbols-outlined text-[#b2c8e7] text-4xl">anchor</span>
                     </div>
                     <div class="mt-4 flex items-center gap-2 text-sm text-[#b2c8e7]">
                         <span class="material-symbols-outlined text-sm">schedule</span>
-                        <span id="next-vessel-label">Loading...</span>
+<span id="next-vessel-label">
+    <span class="poms-skel" style="width:140px;height:13px;display:inline-block;border-radius:3px;"></span>
+</span>
                     </div>
                 </div>
                 <!-- Outgoing Today -->
@@ -171,7 +336,9 @@
                     <div class="flex justify-between items-start">
                         <div>
                             <h3 class="text-on-surface-variant text-xs uppercase tracking-widest font-bold">Outgoing Today</h3>
-                            <p id="outgoing-count" class="text-5xl font-headline font-extrabold mt-2">—</p>
+<p id="outgoing-count" class="text-5xl font-headline font-extrabold mt-2">
+    <span class="poms-spinner" style="width:32px;height:32px;border-width:3px;border-top-color:#fb6b00;border-color:rgba(251,107,0,0.15);border-top-color:#fb6b00;"></span>
+</p>
                         </div>
                         <span class="material-symbols-outlined text-[#fb6b00] text-4xl">sailing</span>
                     </div>
@@ -224,9 +391,10 @@
                     <span class="material-symbols-outlined text-[#fb6b00] text-xl">gavel</span>
                     <h3 class="font-headline text-sm font-bold uppercase tracking-wider">Active Alerts</h3>
                 </div>
-                <div id="alerts-container" class="space-y-4 flex-1">
-                <!-- alerts injected by dashboard_alerts_patch.js -->
-                </div>
+                <div id="alerts-container" class="space-y-3 flex-1"></div>
+                <button id="alerts-show-more" class="hidden mt-4 w-full py-2 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant border border-outline-variant/20 rounded-lg hover:bg-surface-container-high hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40">
+                    Show older alerts <span id="alerts-hidden-count"></span>
+                </button>
             </div>
         </div>
     </div>
@@ -454,19 +622,21 @@
     renderSuggestions();
   }
 
-  function renderSuggestions() {
+function renderSuggestions() {
     suggestBox.innerHTML = "";
     suggestions.forEach(s => {
-      const btn = document.createElement("button");
-      btn.className   = "poms-suggestion";
-      btn.textContent = s;
-      btn.addEventListener("click", () => {
-        suggestBox.innerHTML = "";
-        sendMessage(s);
-      });
-      suggestBox.appendChild(btn);
+        const btn = document.createElement("button");
+        btn.type         = "button";   // ← add this line
+        btn.className    = "poms-suggestion";
+        btn.textContent  = s;
+        btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            suggestBox.innerHTML = "";
+            sendMessage(s);
+        });
+        suggestBox.appendChild(btn);
     });
-  }
+}
 
   function appendMessage(role, text) {
     const wrap = document.createElement("div");
@@ -523,11 +693,11 @@
     // Pass live Firebase sensor data if available on this page
     const sensorPayload = (isAdmin && typeof sensorData !== "undefined")
         ? sensorData
-        : null;
+        : {};
 
     const res = await fetch(endpoint, {
         method: "POST", headers,
-        body: JSON.stringify({ messages: history, sensor_data: sensorPayload })
+        body: JSON.stringify({ messages: history})
     });
       const data = await res.json();
       removeTyping();
@@ -556,6 +726,80 @@
     input.style.height = Math.min(input.scrollHeight, 80) + "px";
   });
 
+})();
+(function () {
+    const sidebar   = document.getElementById("sidebar");
+    const backdrop  = document.getElementById("sidebar-backdrop");
+    const toggleBtn = document.getElementById("sidebar-toggle");
+    const sb1 = document.getElementById("sb1");
+    const sb2 = document.getElementById("sb2");
+    const sb3 = document.getElementById("sb3");
+
+    function openSidebar() {
+        sidebar.classList.add("open");
+        backdrop.style.opacity = "1";
+        backdrop.style.pointerEvents = "auto";
+        sb1.style.transform = "translateY(6.5px) rotate(45deg)";
+        sb2.style.opacity = "0";
+        sb3.style.transform = "translateY(-6.5px) rotate(-45deg)";
+        sb3.style.width = "20px";
+        document.body.style.overflow = "hidden";
+    }
+
+    function closeSidebar() {
+        sidebar.classList.remove("open");
+        backdrop.style.opacity = "0";
+        backdrop.style.pointerEvents = "none";
+        sb1.style.transform = "";
+        sb2.style.opacity = "1";
+        sb3.style.transform = "";
+        sb3.style.width = "16px";
+        document.body.style.overflow = "";
+    }
+
+    toggleBtn.addEventListener("click", () =>
+        sidebar.classList.contains("open") ? closeSidebar() : openSidebar()
+    );
+    backdrop.addEventListener("click", closeSidebar);
+
+    // Close sidebar when a nav link is tapped on mobile
+    sidebar.querySelectorAll("a").forEach(link =>
+        link.addEventListener("click", () => {
+            if (window.innerWidth < 768) closeSidebar();
+        })
+    );
+})();
+(function () {
+    const modal      = document.getElementById("logout-modal");
+    const logoutBtn  = document.getElementById("logout-btn");
+    const cancelBtn  = document.getElementById("logout-cancel");
+    const confirmBtn = document.getElementById("logout-confirm");
+
+    logoutBtn.addEventListener("click", () => {
+        modal.style.display = "flex";
+        setTimeout(() => confirmBtn.focus(), 50);
+    });
+
+    cancelBtn.addEventListener("click", () => {
+        modal.style.display = "none";
+    });
+
+    modal.addEventListener("click", (e) => {
+        if (e.target === modal) modal.style.display = "none";
+    });
+
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") modal.style.display = "none";
+    });
+
+    confirmBtn.addEventListener("click", () => {
+        confirmBtn.textContent = "Logging out…";
+        confirmBtn.disabled = true;
+        localStorage.removeItem("token");
+        localStorage.removeItem("port_id");
+        localStorage.removeItem("user_name");
+        setTimeout(() => { window.location.href = "/index.html"; }, 600);
+    });
 })();
 </script>
 </body></html>
