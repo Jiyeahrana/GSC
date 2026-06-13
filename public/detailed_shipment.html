@@ -538,19 +538,21 @@ Monitor vessel activity, arrivals, and departures in real time.    </p>
     renderSuggestions();
   }
 
-  function renderSuggestions() {
+function renderSuggestions() {
     suggestBox.innerHTML = "";
     suggestions.forEach(s => {
-      const btn = document.createElement("button");
-      btn.className   = "poms-suggestion";
-      btn.textContent = s;
-      btn.addEventListener("click", () => {
-        suggestBox.innerHTML = "";
-        sendMessage(s);
-      });
-      suggestBox.appendChild(btn);
+        const btn = document.createElement("button");
+        btn.type         = "button";   // ← add this line
+        btn.className    = "poms-suggestion";
+        btn.textContent  = s;
+        btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            suggestBox.innerHTML = "";
+            sendMessage(s);
+        });
+        suggestBox.appendChild(btn);
     });
-  }
+}
 
   function appendMessage(role, text) {
     const wrap = document.createElement("div");
@@ -611,7 +613,7 @@ Monitor vessel activity, arrivals, and departures in real time.    </p>
 
       const res = await fetch(endpoint, {
           method: "POST", headers,
-          body: JSON.stringify({ messages: history, sensor_data: sensorPayload })
+          body: JSON.stringify({ messages: history })
       });
       const data = await res.json();
       removeTyping();

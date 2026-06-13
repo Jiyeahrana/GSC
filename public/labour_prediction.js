@@ -217,37 +217,30 @@ function renderForecastChart(days, workforce) {
         container.appendChild(col);
     });
 
-    // Fixed available capacity line across full chart width
-    container.style.position = "relative";
+// Fixed available capacity line across full chart width
+container.style.position = "relative";
 
-    const availableBottomPx = Math.round((totalAvailable / maxDemand) * 220);
+const availableBottomPx = Math.round((totalAvailable / maxDemand) * 220);
 
-    const line = document.createElement("div");
-    line.style.cssText = `
-        position: absolute;
-        left: 0; right: 0;
-        bottom: ${availableBottomPx + 30}px;
-        border-top: 2px dashed rgba(164,204,232,0.55);
-        pointer-events: none;
-        z-index: 10;
-    `;
-    container.appendChild(line);
-
-    const lineLabel = document.createElement("div");
-    lineLabel.style.cssText = `
-        position: absolute;
-        right: 4px;
-        bottom: ${availableBottomPx + 34}px;
-        font-size: 10px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: #a4cce8;
-        z-index: 10;
-        white-space: nowrap;
-    `;
-    lineLabel.textContent = `Available: ${totalAvailable}`;
-    container.appendChild(lineLabel);
+// Fixed label — always top-right of chart, never overlaps bars/dates
+const lineLabel = document.createElement("div");
+lineLabel.style.cssText = `
+    position: absolute;
+    top: -24px;
+    right: 0;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #a4cce8;
+    background: rgba(12,34,48,0.9);
+    padding: 2px 8px;
+    border-radius: 4px;
+    z-index: 10;
+    white-space: nowrap;
+`;
+lineLabel.textContent = `Available: ${totalAvailable}`;
+container.appendChild(lineLabel);
 }
 
 // ── Day Cards ─────────────────────────────────────────────────────────────────

@@ -153,7 +153,7 @@
   <!-- Centered Desktop Nav -->
   <nav class="hidden md:flex mx-auto space-x-10 font-['Manrope'] font-bold tracking-tight">
     <a class="text-[#c6c5d4] border-b-2 border-[#bac8dc] pb-1 hover:text-[#caf0f8] transition-colors" href="landingPage.html">About</a>
-<a class="text-[#c6c5d4] hover:text-[#caf0f8] transition-colors" href="index.html">Port Portal</a>
+<a class="text-[#c6c5d4] hover:text-[#caf0f8] transition-colors" href="index.html">Port Access</a>
 <a class="text-[#c6c5d4] hover:text-[#caf0f8] transition-colors" href="user_tracking.html">Shipment Tracking</a>
   </nav>
  
@@ -194,7 +194,7 @@
     <a href="index.html"
       class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#8e9196] hover:text-[#bac8dc] hover:bg-[rgba(186,200,220,0.06)] transition-all text-sm">
       <span class="material-symbols-outlined text-[#fb6b00]" style="font-size:18px">anchor</span>
-      Port Portal
+      Port Access
     </a>
     <a href="user_tracking.html"
       class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#8e9196] hover:text-[#bac8dc] hover:bg-[rgba(186,200,220,0.06)] transition-all text-sm">
@@ -216,7 +216,7 @@
                     Port Operations Management System for <span class="text-alert-orange">Real-Time Port Intelligence</span>
 </h1>
 <p class="text-lg text-on-secondary-container mb-10 max-w-xl">
-                    Monitor shipments, predict delays, optimize storage capacity, and streamline port operations through AI-powered insights.
+                    Monitor shipments, predict delays, optimize storage capacity, get optimized route recommendations and streamline port operations through AI-powered insights.
                 </p>
 <div class="flex flex-wrap gap-4">
 <button 
@@ -261,21 +261,21 @@ class="px-8 py-4 bg-surface-variant text-primary-fixed font-bold rounded-lg bord
 <span class="material-symbols-outlined">visibility</span>
 </div>
 <h3 class="font-headline-md text-primary-fixed mb-2 text-base">Real-Time Visibility</h3>
-<p class="text-sm text-on-surface-variant">Monitor vessels, weather, and port operations through a unified live dashboard.</p>
+<p class="text-sm text-on-surface-variant">Monitor vessels, weather, port efficiency score and port operations through a unified live dashboard.</p>
 </div>
 <div class="glass-card p-inner-padding rounded-xl hover:border-tertiary/50 transition-colors group">
 <div class="w-12 h-12 bg-tertiary/10 flex items-center justify-center rounded-lg mb-4 text-tertiary group-hover:bg-tertiary group-hover:text-surface transition-all">
 <span class="material-symbols-outlined">schedule</span>
 </div>
 <h3 class="font-headline-md text-primary-fixed mb-2 text-base">Shipment Delay Prevention</h3>
-<p class="text-sm text-on-surface-variant">Predict potential delays early and receive alerts before they impact cargo movement.</p>
+<p class="text-sm text-on-surface-variant">Predict potential delays early and receive alerts and optimized routes before they impact cargo movement.</p>
 </div>
 <div class="glass-card p-inner-padding rounded-xl hover:border-primary/50 transition-colors group">
 <div class="w-12 h-12 bg-primary/10 flex items-center justify-center rounded-lg mb-4 text-primary group-hover:bg-primary group-hover:text-surface transition-all">
 <span class="material-symbols-outlined">precision_manufacturing</span>
 </div>
 <h3 class="font-headline-md text-primary-fixed mb-2 text-base">Faster Decision-Making</h3>
-<p class="text-sm text-on-surface-variant">Replace manual workflows with real-time insights and automated operations.</p>
+<p class="text-sm text-on-surface-variant">Replace manual workflows with real-time insights and automated operations with our labour demand prediction</p>
 </div>
 </div>
 </div>
@@ -289,7 +289,7 @@ class="px-8 py-4 bg-surface-variant text-primary-fixed font-bold rounded-lg bord
 </h2>
 
 <p class="text-on-secondary-container mt-2">
-    Track shipments, monitor vessels, predict delays, forecast capacity, and optimize port operations with AI-powered insights.
+    Track shipments, monitor vessels, predict delays, suggestive rerouting, forecast capacity, and optimize port operations with AI-powered insights.
 </p>
 </div>
 </div>
@@ -298,7 +298,7 @@ class="px-8 py-4 bg-surface-variant text-primary-fixed font-bold rounded-lg bord
 <div class="glass-card feature-card w-[85vw] md:w-[320px] lg:w-[280px] flex-shrink-0 p-5 rounded-xl border-l-4 border-l-hull-green">    <span class="material-symbols-outlined text-hull-green text-3xl mb-4">smart_toy</span>
     <h4 class="font-headline-md text-white mb-2">AI Port Assistant</h4>
     <p class="text-on-surface-variant">
-        Gemini-powered assistant for administrators and businesses.
+        Gemini-powered assistant for administrators and public.
     </p>
 </div>
 
@@ -307,6 +307,15 @@ class="px-8 py-4 bg-surface-variant text-primary-fixed font-bold rounded-lg bord
     <h4 class="font-headline-md text-white mb-2">Intelligent Rerouting</h4>
     <p class="text-on-surface-variant">
         Suggest alternate ports and routes when delays or congestion occur.
+    </p>
+</div>
+
+<!-- Labour Demand Prediction -->
+<div class="glass-card feature-card w-[85vw] md:w-[320px] lg:w-[280px] flex-shrink-0 p-5 rounded-xl border-l-4 border-l-hull-green">
+    <span class="material-symbols-outlined text-hull-green text-3xl mb-4">groups</span>
+    <h4 class="font-headline-md text-white mb-2">Labour Demand Forecast</h4>
+    <p class="text-on-surface-variant">
+        Predict daily workforce needs by role using upcoming shipment data, flagging staffing shortages before they happen.
     </p>
 </div>
 
@@ -355,7 +364,7 @@ class="px-8 py-4 bg-surface-variant text-primary-fixed font-bold rounded-lg bord
 </div>
 <div>
 <h4 class="font-bold text-white mb-1">Delay Prediction Engine</h4>
-<p class="text-sm text-on-surface-variant">Analyzing 50+ variables including sea state, port wait times, and global carrier performance.</p>
+<p class="text-sm text-on-surface-variant">Continuously analyzes live GPS speed and weather conditions along the route to flag at-risk shipments before delays occur.</p>
 </div>
 </div>
 <div class="flex gap-4 p-4 glass-card rounded-xl hover:bg-white/5 transition-colors">
@@ -364,7 +373,16 @@ class="px-8 py-4 bg-surface-variant text-primary-fixed font-bold rounded-lg bord
 </div>
 <div>
 <h4 class="font-bold text-white mb-1">Smart Capacity Forecasting</h4>
-<p class="text-sm text-on-surface-variant">Move from reactive to proactive yard management with 30-day capacity heatmaps.</p>
+<p class="text-sm text-on-surface-variant">Move from reactive to proactive yard management with a 10-day storage capacity prediction based on live sensor data and incoming shipments.</p>
+</div>
+</div>
+<div class="flex gap-4 p-4 glass-card rounded-xl hover:bg-white/5 transition-colors">
+<div class="shrink-0 w-10 h-10 bg-alert-orange/20 text-alert-orange flex items-center justify-center rounded-lg">
+<span class="material-symbols-outlined">alt_route</span>
+</div>
+<div>
+<h4 class="font-bold text-white mb-1">Dynamic Route Optimization</h4>
+<p class="text-sm text-on-surface-variant">When a disruption is detected, the system recommends optimized route adjustments based on weather risk and travel time — before delays cascade.</p>
 </div>
 </div>
 </div>
@@ -415,25 +433,43 @@ class="px-8 py-4 bg-surface-variant text-primary-fixed font-bold rounded-lg bord
 <span class="material-symbols-outlined group-open:rotate-180 transition-transform">expand_more</span>
 </summary>
 <div class="px-6 pb-6 text-on-surface-variant">
-                    Our engine ingests live AIS vessel data, historical transit times for specific carriers, real-time weather alerts, and port performance KPIs. Using a custom Transformer-based model, it calculates the ETA probability for every terminal on a shipment's route.
+                    Every active shipment is tracked via a GPS device that streams live coordinates and weather conditions along its route. Our engine continuously checks vessel speed against expected speed and monitors storm flags from live weather data. If a vessel slows significantly or enters a high-risk weather zone, the shipment is flagged as delayed and a revised ETA is calculated automatically — visible to both port staff and the cargo sender.
                 </div>
 </details>
 <details class="glass-card rounded-xl group transition-all duration-300">
 <summary class="flex justify-between items-center p-6 cursor-pointer list-none">
-<span class="font-bold text-white">Can POMS integrate with our existing TOS?</span>
+<span class="font-bold text-white">How does the storage capacity forecast work?</span>
 <span class="material-symbols-outlined group-open:rotate-180 transition-transform">expand_more</span>
 </summary>
 <div class="px-6 pb-6 text-on-surface-variant">
-                    Yes. POMS is built with a "Connect-First" philosophy. We offer robust API endpoints and webhooks that integrate seamlessly with major Terminal Operating Systems like Navis, Cosmos, and Tideworks.
+                    Each port zone is fitted with LiDAR sensors that report live container counts in real time. Combined with the incoming shipment schedule, our AI model forecasts how zone occupancy will change over the next 10 days — helping port operators identify potential overflow before it happens.
                 </div>
 </details>
 <details class="glass-card rounded-xl group transition-all duration-300">
 <summary class="flex justify-between items-center p-6 cursor-pointer list-none">
-<span class="font-bold text-white">What is the onboarding timeline for new ports?</span>
+<span class="font-bold text-white">Do I need an account to track a shipment?</span>
 <span class="material-symbols-outlined group-open:rotate-180 transition-transform">expand_more</span>
 </summary>
 <div class="px-6 pb-6 text-on-surface-variant">
-                    A typical deployment takes 4–6 weeks, covering data mapping, API integration, and staff training. Our cloud-native architecture allows for rapid scaling without on-site hardware installation.
+                    No. Every registered shipment receives a unique tracking ID. Anyone with that ID can use the public tracking page to view live vessel location, route progress, weather conditions, and estimated arrival — no login required.
+                </div>
+</details>
+<details class="glass-card rounded-xl group transition-all duration-300">
+<summary class="flex justify-between items-center p-6 cursor-pointer list-none">
+<span class="font-bold text-white">How does labour demand forecasting work?</span>
+<span class="material-symbols-outlined group-open:rotate-180 transition-transform">expand_more</span>
+</summary>
+<div class="px-6 pb-6 text-on-surface-variant">
+                    During registration, ports configure their available workforce by role and shift. Using container counts from upcoming shipments, the system calculates how many crane operators, dock workers, truck drivers, and admin staff are needed each day — and flags any day where demand exceeds available staff.
+                </div>
+</details>
+<details class="glass-card rounded-xl group transition-all duration-300">
+<summary class="flex justify-between items-center p-6 cursor-pointer list-none">
+<span class="font-bold text-white">What is the Port Efficiency Score?</span>
+<span class="material-symbols-outlined group-open:rotate-180 transition-transform">expand_more</span>
+</summary>
+<div class="px-6 pb-6 text-on-surface-variant">
+                    It's a single score (0–100) summarizing overall port performance, calculated from on-time arrival rate, zone utilization efficiency, vessel turnaround time, checkpoint route adherence, and how well shipments performed during storm conditions. It gives port operators an at-a-glance view of operational health.
                 </div>
 </details>
 </div>
@@ -454,9 +490,7 @@ class="px-8 py-4 bg-surface-variant text-primary-fixed font-bold rounded-lg bord
       </div>
 
       <p class="text-on-secondary-container mb-6">
-        Port Operations Management System that helps ports reduce delays,
-        prevent congestion, optimize storage capacity, and improve operational
-        efficiency through AI-powered insights and real-time monitoring.
+        A real-time port management platform powered by IoT sensors, GPS tracking, and AI — predicting delays, optimizing routes, forecasting storage and labour needs, and scoring overall port efficiency, with public shipment tracking and an AI assistant built in.
       </p>
 
       <div class="flex flex-wrap justify-center gap-3 text-sm">
@@ -469,13 +503,16 @@ class="px-8 py-4 bg-surface-variant text-primary-fixed font-bold rounded-lg bord
         <span class="px-3 py-1 rounded-full bg-surface-variant">
           Capacity Forecasting
         </span>
+            <span class="px-3 py-1 rounded-full bg-surface-variant">
+          Workforce Demand Prediction
+        </span>
         <span class="px-3 py-1 rounded-full bg-surface-variant">
           Intelligent Rerouting
         </span>
       </div>
 
       <p class="text-sm text-on-secondary-container mt-8">
-        © 2026 POMS — Built for smarter maritime logistics.
+        MADE WITH ❤️ BY TEAM FORK YOU
       </p>
     </div>
 

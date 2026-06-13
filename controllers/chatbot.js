@@ -1,7 +1,7 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const Shipment = require("../models/shipment");
 const Port     = require("../models/port");
-
+const db = require("../config/firebase"); // adjust path to match your project
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // ── Tool definitions ──────────────────────────────────────────────────────────
@@ -207,7 +207,7 @@ async function executePublicTool(name, args) {
     }
 }
 
-async function executeAdminTool(name, args, portId, sensorData = {}) {
+async function executeAdminTool(name, args, portId) {
     switch (name) {
 
         case "getTodayShipments": {
@@ -262,7 +262,15 @@ async function executeAdminTool(name, args, portId, sensorData = {}) {
 
             const totalCapacity = port.total_capacity || 0;
 
-            // Calculate total occupied from Firebase sensor data
+            // ── Fetch live sensor data from Firebase directly ──────────────────────
+            let sensorData = {};
+            try {
+                const snapshot = await db.ref(`sensor_readings/${portId}`).once("value");
+                sensorData = snapshot.val() || {};
+            } catch (err) {
+                console.error("Firebase fetch error in getZoneCapacity:", err.message);
+            }
+
             let totalOccupied = 0;
             if (sensorData && typeof sensorData === "object") {
                 totalOccupied = Object.values(sensorData)
@@ -270,8 +278,6 @@ async function executeAdminTool(name, args, portId, sensorData = {}) {
             }
 
             const zones = port.zones.map(z => {
-                // Firebase key format: "zone_A", "zone_B" etc.
-                // Zone name is like "Zone A" → key is "zone_A"
                 const parts   = z.name?.split(" ") || [];
                 const letter  = parts[1] || "";
                 const zoneKey = `zone_${letter}`;
@@ -300,7 +306,6 @@ async function executeAdminTool(name, args, portId, sensorData = {}) {
                 globalOccupancyPct: totalCapacity > 0
                     ? Math.round((totalOccupied / totalCapacity) * 100)
                     : 0,
-                sensorDataReceived: !!sensorData,
                 zones
             };
         }
@@ -595,7 +600,7 @@ const publicChat = async (req, res) => {
         }
 
         const model = genAI.getGenerativeModel({
-            model:          "gemini-2.5-flash-lite",
+            model:          "gemini-2.5-flash",
             systemInstruction: PUBLIC_SYSTEM_PROMPT,
             tools:          PUBLIC_TOOLS
         });
@@ -637,7 +642,7 @@ const publicChat = async (req, res) => {
 
 const adminChat = async (req, res) => {
     try {
-        const { messages, sensor_data } = req.body;  // ← destructure sensor_data
+        const { messages } = req.body; 
         const portId = req.user.port_id;
 
         if (!messages || messages.length === 0) {
@@ -645,7 +650,7 @@ const adminChat = async (req, res) => {
         }
 
         const model = genAI.getGenerativeModel({
-            model:             "gemini-2.5-flash-lite",
+            model:             "gemini-2.5-flash",
             systemInstruction: ADMIN_SYSTEM_PROMPT,
             tools:             ADMIN_TOOLS
         });
@@ -664,7 +669,6 @@ const adminChat = async (req, res) => {
                     call.name,
                     call.args,
                     portId,
-                    sensor_data   // ← pass sensor data through
                 );
                 toolResults.push({
                     functionResponse: {

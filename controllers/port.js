@@ -557,6 +557,115 @@ const getWorkforce = async (req, res) => {
     }
 };
 
+// ── PUT /port/workforce ────────────────────────────────────────────────────────
+
+const updateWorkforce = async (req, res) => {
+    try {
+        const { roles, shifts } = req.body;
+
+        if (!roles || !shifts || !Array.isArray(shifts)) {
+            return res.status(400).json({
+                success: false,
+                message: "roles and shifts array are required"
+            });
+        }
+
+        const port = await Port.findById(req.user.port_id);
+        if (!port) {
+            return res.status(404).json({ success: false, message: "Port not found" });
+        }
+
+        const ROLE_KEYS = [
+            "crane_operators",
+            "truck_operators",
+            "customs_officers",
+            "ground_crew",
+            "docking_staff"
+        ];
+
+        // ── Validate roles ──────────────────────────────────────────────────────
+        const cleanRoles = {};
+        ROLE_KEYS.forEach(key => {
+            const val = parseInt(roles[key]);
+            cleanRoles[key] = isNaN(val) || val < 0 ? 0 : val;
+        });
+
+        // ── Validate shift count ─────────────────────────────────────────────────
+        if (shifts.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "At least one shift is required"
+            });
+        }
+
+        // ── Compute shift times (divide 00:00–24:00 equally) ─────────────────────
+        const totalMins = 1440;
+        const shiftCount = shifts.length;
+        const perShift   = Math.floor(totalMins / shiftCount);
+
+        const toTime = (m) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+
+        const newShifts = shifts.map((shift, i) => {
+            const startMins = perShift * i;
+            const endMins   = i === shiftCount - 1 ? totalMins : perShift * (i + 1);
+            const start     = toTime(startMins);
+            const end       = toTime(endMins >= 1440 ? 0 : endMins);
+
+            const cleanWorkers = {};
+            ROLE_KEYS.forEach(key => {
+                const val = parseInt(shift.workers?.[key]);
+                cleanWorkers[key] = isNaN(val) || val < 0 ? 0 : val;
+            });
+
+            const shiftTotal = ROLE_KEYS.reduce((sum, key) => sum + cleanWorkers[key], 0);
+
+            return {
+                shift_number: i + 1,
+                label:        `Shift ${i + 1} (${start}–${end})`,
+                start_time:   start,
+                end_time:     end,
+                workers:      cleanWorkers,
+                shift_total:  shiftTotal
+            };
+        });
+
+        // ── Validate shift totals don't exceed role totals ───────────────────────
+        const errors = [];
+        ROLE_KEYS.forEach(key => {
+            const total    = cleanRoles[key];
+            const shiftSum = newShifts.reduce((sum, s) => sum + s.workers[key], 0);
+
+            if (shiftSum > total) {
+                errors.push(`${key.replace(/_/g, " ")}: assigned ${shiftSum} across shifts but total is ${total}`);
+            }
+        });
+
+        if (errors.length > 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Shift worker assignments exceed total available workers",
+                errors
+            });
+        }
+
+        // ── Update and save ────────────────────────────────────────────────────────
+        port.workforce.roles  = cleanRoles;
+        port.workforce.shifts = newShifts; // ← replaces entire array, old shifts removed if count decreased
+
+        await port.save(); // pre-save hooks recalculate total_workers and shift_totals
+
+        return res.status(200).json({
+            success: true,
+            message: "Workforce updated successfully",
+            workforce: port.workforce
+        });
+
+    } catch (err) {
+        console.error("Update workforce error:", err);
+        return res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
 // ── GET /port/labour-prediction ───────────────────────────────────────────────
 
 const getLabourPrediction = async (req, res) => {
@@ -864,4 +973,4 @@ const getEfficiencyScore = async (req, res) => {
     }
 };
 
-module.exports = { register, login, getPortDetails, getPortZones, getPublicPorts, getPublicPortTimeline,trackShipment, getCapacityPrediction,getLabourPrediction,getWorkforce,getEfficiencyScore  };
+module.exports = { register, login, getPortDetails, getPortZones, getPublicPorts, getPublicPortTimeline,trackShipment, getCapacityPrediction,getLabourPrediction,getWorkforce,getEfficiencyScore, updateWorkforce  };

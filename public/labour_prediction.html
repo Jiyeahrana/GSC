@@ -228,6 +228,14 @@
         </div>
     </div>
 
+<div class="flex justify-end mb-6">
+    <a href="edit_workforce.html"
+       class="px-4 py-2 bg-surface-container-high text-[#bac8dc] text-xs font-bold uppercase tracking-wider rounded-md border border-outline-variant/20 hover:bg-surface-container transition-all flex items-center gap-2">
+        <span class="material-symbols-outlined text-sm">edit</span>
+        Edit Workforce
+    </a>
+</div>
+
     <!-- Workforce Role Summary Cards -->
     <div class="mb-8">
         <h3 class="text-sm font-bold font-headline uppercase tracking-widest text-on-surface-variant mb-4">
@@ -237,7 +245,7 @@
             <!-- injected by JS -->
         </div>
     </div>
-
+    
     <!-- 7-Day Forecast Bar Chart -->
     <div class="bg-surface-container rounded-2xl overflow-hidden border-t border-primary/5 mb-8">
         <div class="p-8 border-b border-outline-variant/10 flex justify-between items-center">
@@ -267,18 +275,8 @@
         </div>
     </div>
 
-    <!-- Day-by-Day Breakdown -->
-    <div class="space-y-4 mb-8">
-        <h3 class="text-sm font-bold font-headline uppercase tracking-widest text-on-surface-variant mb-4">
-            Daily Breakdown by Role & Shift
-        </h3>
-        <div id="day-cards" class="space-y-4">
-            <!-- injected by JS -->
-        </div>
-    </div>
-
     <!-- Summary Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         <div class="p-6 bg-surface-container-low rounded-xl flex items-center gap-4">
             <div class="w-12 h-12 bg-brand-orange/10 flex items-center justify-center rounded-lg">
                 <span class="material-symbols-outlined text-brand-orange">trending_up</span>
@@ -310,6 +308,17 @@
             </div>
         </div>
     </div>
+
+    <!-- Day-by-Day Breakdown -->
+    <div class="space-y-4 mb-8">
+        <h3 class="text-sm font-bold font-headline uppercase tracking-widest text-on-surface-variant mb-4">
+            Daily Breakdown by Role & Shift
+        </h3>
+        <div id="day-cards" class="space-y-4">
+            <!-- injected by JS -->
+        </div>
+    </div>
+
 
 </main>
 
@@ -399,7 +408,21 @@
   const sendBtn = document.getElementById("poms-send");
   fab.addEventListener("click", () => { const isOpen = panel.classList.toggle("open"); fab.classList.toggle("open"); if (isOpen && messages.children.length === 0) { appendMessage("bot", "Hello! Ask me about labour demand, workforce shortages, or upcoming shipment workload."); renderSuggestions(); } });
   document.addEventListener("click", (e) => { if (!document.getElementById("poms-chat-widget").contains(e.target)) { panel.classList.remove("open"); fab.classList.remove("open"); } });
-  function renderSuggestions() { suggestBox.innerHTML = ""; suggestions.forEach(s => { const btn = document.createElement("button"); btn.className = "poms-suggestion"; btn.textContent = s; btn.addEventListener("click", () => { suggestBox.innerHTML = ""; sendMessage(s); }); suggestBox.appendChild(btn); }); }
+  function renderSuggestions() {
+    suggestBox.innerHTML = "";
+    suggestions.forEach(s => {
+        const btn = document.createElement("button");
+        btn.type         = "button";   // ← add this line
+        btn.className    = "poms-suggestion";
+        btn.textContent  = s;
+        btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            suggestBox.innerHTML = "";
+            sendMessage(s);
+        });
+        suggestBox.appendChild(btn);
+    });
+}
   function appendMessage(role, text) { const wrap = document.createElement("div"); wrap.className = `poms-msg ${role}`; if (role === "bot") { const icon = document.createElement("div"); icon.className = "poms-bot-icon"; icon.innerHTML = `<svg viewBox="0 0 24 24"><path d="M12 2a2 2 0 012 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 017 7H3a7 7 0 017-7h1V5.73A2 2 0 0110 4a2 2 0 012-2z"/></svg>`; wrap.appendChild(icon); } const bubble = document.createElement("div"); bubble.className = "poms-bubble"; bubble.textContent = text; wrap.appendChild(bubble); messages.appendChild(wrap); messages.scrollTop = messages.scrollHeight; }
   function showTyping() { const wrap = document.createElement("div"); wrap.className = "poms-msg bot"; wrap.id = "poms-typing-wrap"; const icon = document.createElement("div"); icon.className = "poms-bot-icon"; icon.innerHTML = `<svg viewBox="0 0 24 24"><path d="M12 2a2 2 0 012 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 017 7H3a7 7 0 017-7h1V5.73A2 2 0 0110 4a2 2 0 012-2z"/></svg>`; wrap.appendChild(icon); const dots = document.createElement("div"); dots.className = "poms-typing"; dots.innerHTML = "<span></span><span></span><span></span>"; wrap.appendChild(dots); messages.appendChild(wrap); messages.scrollTop = messages.scrollHeight; }
   function removeTyping() { const el = document.getElementById("poms-typing-wrap"); if (el) el.remove(); }
