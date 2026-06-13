@@ -1,10 +1,15 @@
 /**
- * NAUTICAL.OS — Intelligence Engine v2
+ * NAUTICAL.OS — Intelligence Engine v4.1
  * intelligenceEngine.js
  *
- * Pure rule-based + ML scoring.
- * Fixed: elapsed time, button handlers, speed calc, stationary detection.
- * New: terminate action, stationary alerts, ML narrative generator.
+ * FIXES:
+ *   1. Stationary detection — uses schedule-based elapsed time, not GPS drift.
+ *      A ship is "stationary" if no checkpoints reached AND scheduled departure
+ *      was more than STATIONARY_THRESHOLD_DAYS ago.
+ *   2. Risk score — stationary time overrides ML score: 60d stationary = 100/100.
+ *   3. Auto-cancellation flag — fires when stationary > CANCEL_THRESHOLD_DAYS.
+ *   4. Risk tier logic now accounts for stationary overrides.
+ *   5. "Days overdue" computed from schedule.departure and shown prominently.
  */
 
 const IE_COLORS = {
@@ -16,408 +21,648 @@ const IE_COLORS = {
     accent   : "#fb6b00",
 };
 
-const ALERT_STORAGE_KEY = (id) => `nautical_alerts_v2_${id}`;
+const ML_SERVICE_URL    = "http://localhost:5001/predict";
+const ALERT_STORAGE_KEY = (id) => `nautical_alerts_v4_${id}`;
+const CP_STORAGE_KEY    = (id) => `nautical_checkpoints_${id}`;
+
+// ── Stationary thresholds ─────────────────────────────────────────────────────
+const STATIONARY_THRESHOLD_DAYS  = 3;   // flag as stationary if no progress for 3+ days
+const CRITICAL_STATIONARY_DAYS   = 14;  // risk score forced to 90+ after 2 weeks
+const CANCEL_THRESHOLD_DAYS      = 30;  // recommend cancellation after 1 month
+
 let _currentShipmentId = null;
+let _lastMLResult      = null;
+let _routeLayers       = [];
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Entry Point
+// ENTRY POINT
 // ─────────────────────────────────────────────────────────────────────────────
-function runIntelligenceEngine(s) {
+async function runIntelligenceEngine(s) {
     _currentShipmentId = s._id?.toString() || "unknown";
-
-    // Merge persisted checkpoint states with live data
     s = mergePersistedCheckpoints(s);
+    renderLoadingState();
 
-    const metrics = computeMetrics(s);
-    const alerts  = runAlertEngine(s, metrics);
-    renderIntelligencePanel(s, metrics, alerts);
-    attachActionHandlers(s, metrics, alerts);
-}
-// ─────────────────────────────────────────────────────────────────────────────
-// CHECKPOINT PERSISTENCE
-// Once a checkpoint is marked "reached", it stays reached forever in localStorage.
-// Merges persisted state onto live backend data so progress never regresses.
-// ─────────────────────────────────────────────────────────────────────────────
-const CP_STORAGE_KEY = (id) => `nautical_checkpoints_${id}`;
+    const payload = buildMLPayload(s);
 
-function mergePersistedCheckpoints(s) {
-    if (!s.checkpoints?.length) return s;
-
-    // Load what we've previously saved
-    let saved = {};
+    let mlResult = null;
     try {
-        saved = JSON.parse(localStorage.getItem(CP_STORAGE_KEY(_currentShipmentId)) || "{}");
-    } catch (_) {}
+        const res = await fetch(ML_SERVICE_URL, {
+            method  : "POST",
+            headers : { "Content-Type": "application/json" },
+            body    : JSON.stringify(payload),
+        });
+        if (!res.ok) throw new Error(`ML service HTTP ${res.status}`);
+        mlResult = await res.json();
+    } catch (err) {
+        console.warn("[IE] Reasoning engine unreachable — using fallback", err.message);
+        mlResult = ruleBasedFallback(s, payload);
+    }
 
-    // Merge: if backend says reached, save it. If saved says reached, keep it.
-    const merged = s.checkpoints.map(cp => {
-        const key = cp._id?.toString() || cp.name;
+    _lastMLResult = mlResult;
 
-        // If backend marks it reached now, save that permanently
-        if (cp.status === "reached") {
-            saved[key] = {
-                status: "reached",
-                actual_arrival: cp.actual_arrival || new Date().toISOString()
-            };
-        }
+    const metrics = computeLocalMetrics(s, mlResult);
 
-        // If we have a saved "reached" state, override whatever backend says
-        if (saved[key]?.status === "reached") {
-            return {
-                ...cp,
-                status: "reached",
-                actual_arrival: cp.actual_arrival || saved[key].actual_arrival
-            };
-        }
+    // ── Override ML risk score based on real-world stationary state ──────────
+    mlResult = applyStationaryOverride(mlResult, metrics);
 
-        return cp;
-    });
+    const alerts  = runAlertEngine(s, metrics, mlResult);
 
-    // Persist updated state
-    try {
-        localStorage.setItem(CP_STORAGE_KEY(_currentShipmentId), JSON.stringify(saved));
-    } catch (_) {}
-
-    return { ...s, checkpoints: merged };
+    renderIntelligencePanel(s, metrics, alerts, mlResult);
+    attachActionHandlers(s, metrics, alerts, mlResult);
+    renderMLRouteMap(mlResult, s);
 }
-// ─────────────────────────────────────────────────────────────────────────────
-// 1. METRICS
-// ─────────────────────────────────────────────────────────────────────────────
-function computeMetrics(s) {
-    const snapshots   = s.weather_snapshots || [];
-    const checkpoints = s.checkpoints || [];
 
-    // Distance traveled
-    let totalDistanceKm = 0;
-    for (let i = 1; i < snapshots.length; i++) {
-        totalDistanceKm += haversineKm(
-            snapshots[i-1].lat, snapshots[i-1].lng,
-            snapshots[i].lat,   snapshots[i].lng
+// ─────────────────────────────────────────────────────────────────────────────
+// STATIONARY OVERRIDE
+// If the ship has been stationary beyond thresholds, override ML risk score
+// and recommendation. The ML engine can't know about elapsed real time.
+// ─────────────────────────────────────────────────────────────────────────────
+function applyStationaryOverride(ml, m) {
+    if (!m.isStationary) return ml;
+
+    const daysStat = m.stationaryDays;
+
+    // Risk score: scales from current ML score → 100 over CANCEL_THRESHOLD_DAYS
+    let overrideRisk = ml.risk_score;
+    if (daysStat >= CANCEL_THRESHOLD_DAYS) {
+        overrideRisk = 100;
+    } else if (daysStat >= CRITICAL_STATIONARY_DAYS) {
+        // Interpolate from 90 to 99 between 14d and 30d
+        overrideRisk = Math.round(90 + ((daysStat - CRITICAL_STATIONARY_DAYS) /
+            (CANCEL_THRESHOLD_DAYS - CRITICAL_STATIONARY_DAYS)) * 9);
+    } else if (daysStat >= STATIONARY_THRESHOLD_DAYS) {
+        // Interpolate from current score to 90 between 3d and 14d
+        overrideRisk = Math.max(
+            ml.risk_score,
+            Math.round(ml.risk_score + ((daysStat - STATIONARY_THRESHOLD_DAYS) /
+                (CRITICAL_STATIONARY_DAYS - STATIONARY_THRESHOLD_DAYS)) * (90 - ml.risk_score))
         );
     }
 
-    const isStationary = totalDistanceKm < 0.5 && snapshots.length > 0;
-    if (isStationary) {
-        const originCoords = geocodePortIE(s.cargo?.origin);
-        const livePos      = s.latest_weather;
-        if (originCoords && livePos?.lat && livePos?.lng) {
-            totalDistanceKm = haversineKm(
-                originCoords.lat, originCoords.lng,
-                livePos.lat, livePos.lng
-            );
-        }
+    overrideRisk = Math.min(100, overrideRisk);
+
+    const overrideTier = overrideRisk >= 90 ? "CRITICAL"
+                       : overrideRisk >= 76 ? "CRITICAL"
+                       : overrideRisk >= 51 ? "HIGH"
+                       : overrideRisk >= 26 ? "MEDIUM"
+                       : "LOW";
+
+    const daysStr = daysStat >= 1 ? `${Math.round(daysStat)} days` : `${Math.round(daysStat * 24)} hours`;
+
+    return {
+        ...ml,
+        risk_score             : overrideRisk,
+        risk_tier              : overrideTier,
+        recommendation_action  : daysStat >= CANCEL_THRESHOLD_DAYS
+            ? "CANCEL"
+            : daysStat >= CRITICAL_STATIONARY_DAYS
+                ? "ESCALATE"
+                : ml.recommendation_action,
+        situation              : daysStat >= CANCEL_THRESHOLD_DAYS
+            ? `⚠ CANCELLATION RECOMMENDED — Vessel has been stationary for ${daysStr} with zero checkpoint progress. ` +
+              `Risk score: ${overrideRisk}/100 CRITICAL. Shipment is ${Math.round(m.daysOverdue)} days overdue.`
+            : daysStat >= CRITICAL_STATIONARY_DAYS
+                ? `⚠ CRITICAL — Vessel stationary for ${daysStr}. No GPS movement detected, 0/${m.totalCPs} checkpoints reached. ` +
+                  `Overdue by ${Math.round(m.daysOverdue)} days. Escalation required.`
+                : `Vessel has not moved for ${daysStr}. ${ml.situation}`,
+        recommended_action     : daysStat >= CANCEL_THRESHOLD_DAYS
+            ? "Initiate shipment termination. Notify all stakeholders. File port authority incident report. Cargo handling assessment required."
+            : daysStat >= CRITICAL_STATIONARY_DAYS
+                ? "Escalate to port authority immediately. Contact captain. Consider re-routing or termination."
+                : ml.recommended_action,
+        _stationary_override   : true,
+        _stationary_days       : daysStat,
+        _should_cancel         : daysStat >= CANCEL_THRESHOLD_DAYS,
+    };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LOCAL METRICS — now includes proper stationary detection and overdue tracking
+// ─────────────────────────────────────────────────────────────────────────────
+function computeLocalMetrics(s, ml) {
+    const snaps    = s.weather_snapshots || [];
+    const cps      = s.checkpoints || [];
+    const schedule = s.schedule || {};
+
+    // ── Distance traveled (GPS snapshots) ────────────────────────────────────
+    let totalKm = 0;
+    for (let i = 1; i < snaps.length; i++) {
+        totalKm += haversineKm(snaps[i-1].lat, snaps[i-1].lng, snaps[i].lat, snaps[i].lng);
     }
 
-    // Elapsed time
-    let journeyStartMs;
-    if (snapshots.length > 0 && snapshots[0].timestamp) {
-        journeyStartMs = new Date(snapshots[0].timestamp).getTime();
-    } else {
-        journeyStartMs = new Date(s.schedule?.arrival || s.schedule?.departure).getTime();
-    }
-    const elapsedHours = Math.max((Date.now() - journeyStartMs) / 3_600_000, 1);
+    // ── Stationary detection — DO NOT rely on GPS coordinates alone ───────────
+    // Phone GPS drifts ±50-200m, so coordinate equality is unreliable.
+    // Instead: if no checkpoints reached AND days since scheduled departure
+    // exceeds threshold → ship is stationary/stuck.
+    const schedDeparture = schedule.arrival
+        ? new Date(schedule.arrival)
+        : schedule.departure ? new Date(schedule.departure) : null;
+    const schedArrival   = schedule.departure
+        ? new Date(schedule.departure)
+        : schedule.arrival ? new Date(schedule.arrival) : null;
 
-    // ── Checkpoints FIRST — needed for progress calculation ──────────────────
-    const totalCPs   = checkpoints.length;
-    const missedCPs  = checkpoints.filter(c => c.status === "missed").length;
-    const reachedCPs = checkpoints.filter(c => c.status === "reached").length;
-    const stormFlag  = s.latest_weather?.storm_flag || false;
+    const now = Date.now();
 
-    // Speed
-    const avgSpeedKmh   = isStationary ? 0 : totalDistanceKm / elapsedHours;
+    // Days since the vessel was SUPPOSED to depart
+    const daysSinceDeparture = schedDeparture
+        ? (now - schedDeparture.getTime()) / 86_400_000
+        : 0;
+
+    // Days the vessel is overdue (past expected arrival)
+    const daysOverdue = schedArrival
+        ? Math.max(0, (now - schedArrival.getTime()) / 86_400_000)
+        : 0;
+
+    // Total journey duration (scheduled)
+    const totalScheduledDays = schedDeparture && schedArrival
+        ? Math.max((schedArrival - schedDeparture) / 86_400_000, 1)
+        : 1;
+
+    const reachedCPs = cps.filter(c => c.status === "reached").length;
+    const missedCPs  = cps.filter(c => c.status === "missed").length;
+    const pendingCPs = cps.filter(c => c.status === "pending").length;
+    const totalCPs   = cps.length;
+
+    // A ship is stationary if:
+    // - No checkpoints reached (0 progress)
+    // - It's been more than STATIONARY_THRESHOLD_DAYS since departure
+    // GPS distance < 5km is secondary confirmation (accounts for drift)
+    const gpsStationary    = totalKm < 5 && snaps.length > 1;
+    const schedStationary  = reachedCPs === 0 && daysSinceDeparture > STATIONARY_THRESHOLD_DAYS;
+    const isStationary     = schedStationary || (gpsStationary && daysSinceDeparture > 1);
+
+    // How long has the ship been stationary?
+    // Best estimate: time since departure (since we have no real movement data)
+    const stationaryDays   = isStationary ? daysSinceDeparture : 0;
+
+    // Progress percentages
+    const actualPct   = totalCPs > 0 ? Math.round((reachedCPs / totalCPs) * 100) : 0;
+    const expectedPct = Math.min(Math.round((daysSinceDeparture / totalScheduledDays) * 100), 100);
+    const progressGap = expectedPct - actualPct;
+
+    // Speed (meaningful only if not stationary)
+    const elapsedHours  = Math.max(daysSinceDeparture * 24, 1);
+    const avgSpeedKmh   = (!isStationary && totalKm > 0) ? totalKm / elapsedHours : 0;
     const avgSpeedKnots = avgSpeedKmh * 0.539957;
 
     let instSpeedKnots = 0;
-    if (!isStationary && snapshots.length >= 2) {
-        const segHours = elapsedHours / Math.max(snapshots.length - 1, 1);
-        const last2Km  = haversineKm(
-            snapshots[snapshots.length-2].lat, snapshots[snapshots.length-2].lng,
-            snapshots[snapshots.length-1].lat, snapshots[snapshots.length-1].lng
+    if (!isStationary && snaps.length >= 2) {
+        const segH   = elapsedHours / Math.max(snaps.length - 1, 1);
+        const lastKm = haversineKm(
+            snaps.at(-2).lat, snaps.at(-2).lng,
+            snaps.at(-1).lat, snaps.at(-1).lng
         );
-        instSpeedKnots = (last2Km / segHours) * 0.539957;
+        instSpeedKnots = (lastKm / segH) * 0.539957;
     }
-
-    // Progress — purely checkpoint based
-    const actualPct   = totalCPs > 0 ? Math.round((reachedCPs / totalCPs) * 100) : 0;
-
-    // Expected benchmark — time based
-    const schedStart  = new Date(s.schedule?.arrival  || s.schedule?.departure);
-    const schedEnd    = new Date(s.schedule?.departure || s.schedule?.arrival);
-    const totalDays   = Math.max((schedEnd.getTime() - schedStart.getTime()) / 86_400_000, 1);
-    const elapsedDays = elapsedHours / 24;
-    const expectedPct = Math.min((elapsedDays / totalDays) * 100, 100);
-    const progressGap = expectedPct - actualPct;
-
-    // ML Risk Score
-   const gapScore    = Math.max(0, Math.min(progressGap / 50, 1)) * 30;
-const cpScore     = totalCPs > 0 ? (missedCPs / totalCPs) * 25 : 0;
-const stormScore  = stormFlag ? 20 : 0;
-const normalSpeed = 12;
-const speedDrop   = isStationary ? 1 : Math.max(0, (normalSpeed - avgSpeedKnots) / normalSpeed);
-const speedScore  = speedDrop > 0.8 ? 20 : speedDrop > 0.5 ? 12 : speedDrop > 0.3 ? 6 : 0;
-
-// Stationary score — scales with hours stopped, not a flat bonus
-// 0-2h: 10pts, 2-6h: 25pts, 6-12h: 45pts, 12-24h: 65pts, 24h+: 80pts
-const statScore = !isStationary ? 0
-    : elapsedHours < 2  ? 10
-    : elapsedHours < 6  ? 25
-    : elapsedHours < 12 ? 45
-    : elapsedHours < 24 ? 65
-    : 80;
-
-const riskScore = Math.min(Math.round(gapScore + cpScore + stormScore + speedScore + statScore), 100);
-const riskTier  = riskScore >= 76 ? "CRITICAL" : riskScore >= 51 ? "HIGH" : riskScore >= 26 ? "MEDIUM" : "LOW";
-    // Revised ETA
-    let revisedETA = null, etaDeltaHours = null;
-    if (avgSpeedKmh > 0.5) {
-        const originC = geocodePortIE(s.cargo?.origin);
-        const destC   = geocodePortIE(s.cargo?.destination);
-        if (originC && destC) {
-            const totalRouteKm = haversineKm(originC.lat, originC.lng, destC.lat, destC.lng);
-            const remainingKm  = Math.max(totalRouteKm - totalDistanceKm, 0);
-            revisedETA    = new Date(Date.now() + (remainingKm / avgSpeedKmh) * 3_600_000);
-            etaDeltaHours = (revisedETA.getTime() - schedEnd.getTime()) / 3_600_000;
-        }
-    }
-
-    const mlNarrative = generateMLNarrative({
-        isStationary, riskScore, riskTier, progressGap, actualPct, expectedPct,
-        avgSpeedKnots, instSpeedKnots, missedCPs, totalCPs, stormFlag,
-        etaDeltaHours, elapsedHours, totalDays, elapsedDays
-    });
 
     return {
-        avgSpeedKnots, instSpeedKnots, totalDistanceKm,
-        expectedPct, actualPct, progressGap,
-        totalCPs, missedCPs, reachedCPs,
-        stormFlag, riskScore, riskTier,
-        revisedETA, scheduledETA: schedEnd, etaDeltaHours,
-        elapsedHours, elapsedDays, totalDays,
-        isStationary, mlNarrative
+        avgSpeedKnots,
+        instSpeedKnots,
+        totalDistanceKm   : totalKm,
+        expectedPct,
+        actualPct,
+        progressGap,
+        totalCPs,
+        missedCPs,
+        reachedCPs,
+        pendingCPs,
+        stormFlag         : ml.storm_flag,
+        riskScore         : ml.risk_score,
+        riskTier          : ml.risk_tier,
+        isStationary,
+        stationaryDays,
+        elapsedHours,
+        daysOverdue,
+        daysSinceDeparture,
+        totalScheduledDays,
+        scheduledETA      : schedArrival || new Date(),
+        etaDeltaHours     : ml.predicted_delay_hours > 0 ? ml.predicted_delay_hours : null,
+        shouldCancel      : stationaryDays >= CANCEL_THRESHOLD_DAYS,
     };
 }
- 
+
 // ─────────────────────────────────────────────────────────────────────────────
-// 2. ML NARRATIVE
+// BUILD ML PAYLOAD
 // ─────────────────────────────────────────────────────────────────────────────
-function generateMLNarrative(f) {
-    const confidence = f.isStationary ? "MEDIUM"
-                     : f.elapsedHours < 2 ? "LOW"
-                     : f.elapsedHours > 12 ? "HIGH" : "MEDIUM";
+function buildMLPayload(s) {
+    const weather  = s.latest_weather || {};
+    const schedule = s.schedule       || {};
+    const cargo    = s.cargo          || {};
+    const vessel   = s.vessel         || {};
 
-    let situation = "";
-    if (f.isStationary) {
-        situation = `Vessel GPS shows no movement across all ${f.elapsedHours < 2 ? "recent" : Math.round(f.elapsedHours) + "h of"} tracking snapshots. The device is reporting identical coordinates, indicating the vessel is anchored, in a port hold, or the GPS unit is not transmitting position updates.`;
-    } else if (f.riskScore >= 76) {
-        situation = `Critical risk conditions detected. Vessel is ${f.progressGap.toFixed(1)}% behind expected schedule at ${f.avgSpeedKnots.toFixed(1)} kn avg — below the 12 kn baseline. Multiple delay factors are compounding simultaneously.`;
-    } else if (f.riskScore >= 51) {
-        situation = `Elevated risk detected. Progress at ${f.actualPct}% vs expected ${f.expectedPct.toFixed(0)}%. Speed and checkpoint deviations suggest schedule pressure is building and requires monitoring.`;
-    } else if (f.progressGap < -5) {
-        situation = `Vessel is ahead of schedule by ${Math.abs(f.progressGap).toFixed(1)}%. Current avg speed ${f.avgSpeedKnots.toFixed(1)} kn is performing above the 12 kn baseline. Conditions are nominal.`;
-    } else {
-        situation = `Shipment is tracking within normal parameters. Progress at ${f.actualPct}% against expected ${f.expectedPct.toFixed(0)}%. ML risk score ${f.riskScore}/100 — ${f.riskTier} tier. No critical issues detected.`;
-    }
+    const originKey  = geocodeToPortKey(cargo.origin);
+    const destKey    = geocodeToPortKey(cargo.destination);
+    const vesselType = mapVesselType(vessel.type || vessel.vessel_type || "Container Ship");
+    const cargoType  = mapCargoType(cargo.type   || cargo.cargo_type   || "Containers");
 
-    let predictedDelayHours = 0;
-    if (f.isStationary) {
-        predictedDelayHours = Math.round(f.elapsedHours * 1.2);
-    } else if (f.etaDeltaHours !== null) {
-        predictedDelayHours = Math.max(0, Math.round(f.etaDeltaHours));
-    } else if (f.progressGap > 0) {
-        predictedDelayHours = Math.round((f.progressGap / 100) * f.totalDays * 24);
-    }
+    const hoursUntilStorm  = parseFloat(weather.hours_until_storm  || weather.storm_eta_hours  || 999);
+    const stormDuration    = parseFloat(weather.storm_duration_hours || weather.cyclone_duration ||
+        (weather.storm_flag ? 6 : 0));
 
-    let recommendedAction = "", reasoning = "";
-    if (f.isStationary && f.elapsedHours > 10) {
-        recommendedAction = "Consider terminating or rescheduling this shipment immediately.";
-        reasoning = `Vessel stationary for ${Math.round(f.elapsedHours)}h — likely mechanical failure, port hold, or GPS device fault.`;
-    } else if (f.isStationary) {
-        recommendedAction = "Contact captain to confirm vessel status and GPS device functionality.";
-        reasoning = "Stationary GPS with active in-transit status requires immediate ops verification.";
-    } else if (f.stormFlag) {
-        recommendedAction = "Initiate reroute assessment to bypass active storm zone.";
-        reasoning = "Storm at vessel position is the primary risk driver — rerouting reduces delay accumulation.";
-    } else if (f.missedCPs > 0) {
-        recommendedAction = `Investigate ${f.missedCPs} missed checkpoint${f.missedCPs > 1 ? "s" : ""} and adjust ETA accordingly.`;
-        reasoning = "Checkpoint misses indicate route deviation or speed inconsistency needing ops review.";
-    } else if (f.progressGap > 25) {
-        recommendedAction = "Escalate to port authority and revise ETA for all stakeholders.";
-        reasoning = `${f.progressGap.toFixed(0)}% schedule gap exceeds critical threshold — port coordination required.`;
-    } else if (f.progressGap > 10) {
-        recommendedAction = "Monitor closely. Contact captain to request speed recovery.";
-        reasoning = "Current trajectory will result in late arrival without corrective action.";
-    } else {
-        recommendedAction = "Continue monitoring. No immediate action required.";
-        reasoning = "All ML model factors within acceptable thresholds.";
-    }
-
-    const factors = [
-        { label: "Progress deviation", value: f.progressGap > 0 ? f.progressGap.toFixed(1) + "% BEHIND" : f.progressGap < 0 ? Math.abs(f.progressGap).toFixed(1) + "% AHEAD" : "ON SCHEDULE", weight: 30, active: Math.abs(f.progressGap) > 5 },
-        { label: "Checkpoint compliance", value: `${f.totalCPs - f.missedCPs}/${f.totalCPs} passed`, weight: 25, active: f.missedCPs > 0 },
-        { label: "Storm risk", value: f.stormFlag ? "ACTIVE" : "CLEAR", weight: 20, active: f.stormFlag },
-        { label: "Speed deviation", value: f.isStationary ? "STATIONARY" : f.avgSpeedKnots.toFixed(1) + " kn", weight: 20, active: f.isStationary || f.avgSpeedKnots < 8 },
-       { label: "Stationary penalty", value: f.isStationary ? `+${f.elapsedHours < 2 ? 10 : f.elapsedHours < 6 ? 25 : f.elapsedHours < 12 ? 45 : f.elapsedHours < 24 ? 65 : 80} pts` : "NONE", weight: f.isStationary ? (f.elapsedHours < 2 ? 10 : f.elapsedHours < 6 ? 25 : f.elapsedHours < 12 ? 45 : f.elapsedHours < 24 ? 65 : 80) : 5, active: f.isStationary },
-    ];
-
-    return { situation, predictedDelayHours, confidence, recommendedAction, reasoning, factors };
+    return {
+        origin_port            : originKey  || "JNPT",
+        destination_port       : destKey    || "CHENNAI",
+        vessel_type            : vesselType,
+        cargo_type             : cargoType,
+        wave_height            : parseFloat(weather.wave_height || weather.waves || 2.0),
+        wind_speed             : parseFloat(weather.wind_speed  || weather.wind  || 15),
+        cyclone_probability    : weather.storm_flag
+                                    ? Math.max(0.75, parseFloat(weather.cyclone_probability || 0.75))
+                                    : parseFloat(weather.cyclone_probability || 0.1),
+        origin_congestion      : parseFloat(weather.origin_congestion      || 50),
+        destination_congestion : parseFloat(weather.destination_congestion  || 55),
+        fuel_cost              : parseFloat(weather.fuel_cost || 88),
+        carrier_reliability    : parseFloat(vessel.reliability || 0.8),
+        hours_until_storm      : hoursUntilStorm,
+        storm_duration_hours   : stormDuration,
+    };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 3. ALERT ENGINE
+// PORT / VESSEL / CARGO MAPPING
 // ─────────────────────────────────────────────────────────────────────────────
-function runAlertEngine(s, m) {
+const PORT_ALIASES = {
+    "mumbai":        "JNPT", "jnpt":          "JNPT", "nhava sheva": "JNPT",
+    "mundra":        "MUNDRA",
+    "kandla":        "KANDLA",
+    "mormugao":      "MORMUGAO", "goa":        "MORMUGAO",
+    "kochi":         "KOCHI",    "cochin":     "KOCHI",
+    "chennai":       "CHENNAI",  "madras":     "CHENNAI",
+    "vizag":         "VIZAG",    "visakhapatnam": "VIZAG",
+    "paradip":       "PARADIP",
+    "kolkata":       "KOLKATA",  "calcutta":   "KOLKATA", "haldia": "KOLKATA",
+    "ennore":        "ENNORE",   "kamarajar":  "ENNORE",
+};
+
+const VESSEL_ALIASES = {
+    "container":     "Container Ship", "container ship": "Container Ship",
+    "bulk":          "Bulk Carrier",   "bulk carrier":   "Bulk Carrier",
+    "tanker":        "Tanker",         "vlcc":           "Tanker",
+    "ro-ro":         "RoRo Vessel",    "roro":           "RoRo Vessel",
+    "general":       "General Cargo",  "general cargo":  "General Cargo",
+};
+
+const CARGO_ALIASES = {
+    "container":     "Containers",  "containers":   "Containers",
+    "crude":         "Crude Oil",   "crude oil":    "Crude Oil", "oil": "Crude Oil",
+    "coal":          "Coal",
+    "iron":          "Iron Ore",    "iron ore":     "Iron Ore",
+    "electronics":   "Electronics",
+    "auto":          "Automobiles", "automobiles":  "Automobiles", "cars": "Automobiles",
+    "fertilizer":    "Fertilizers", "fertilizers":  "Fertilizers",
+    "food":          "Food Grains", "grain":        "Food Grains", "food grains": "Food Grains",
+    "textile":       "Textiles",    "textiles":     "Textiles",
+    "chemical":      "Chemicals",   "chemicals":    "Chemicals",
+};
+
+function geocodeToPortKey(name) {
+    if (!name) return null;
+    const k = name.toLowerCase().split(",")[0].trim();
+    for (const [alias, key] of Object.entries(PORT_ALIASES)) {
+        if (k.includes(alias) || alias.includes(k)) return key;
+    }
+    return null;
+}
+function mapVesselType(v) {
+    const k = (v || "").toLowerCase();
+    for (const [alias, type] of Object.entries(VESSEL_ALIASES)) {
+        if (k.includes(alias)) return type;
+    }
+    return "Container Ship";
+}
+function mapCargoType(c) {
+    const k = (c || "").toLowerCase();
+    for (const [alias, type] of Object.entries(CARGO_ALIASES)) {
+        if (k.includes(alias)) return type;
+    }
+    return "Containers";
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RULE-BASED FALLBACK
+// ─────────────────────────────────────────────────────────────────────────────
+function ruleBasedFallback(s, payload) {
+    const c    = payload.cyclone_probability;
+    const w    = payload.wave_height;
+    const cong = payload.destination_congestion;
+    const rel  = payload.carrier_reliability;
+    const hStorm = payload.hours_until_storm || 999;
+    const dur    = payload.storm_duration_hours || 0;
+
+    const CARGO_RISK = {
+        "Containers":1.0,"Crude Oil":1.3,"Coal":0.7,"Iron Ore":0.75,
+        "Electronics":1.4,"Automobiles":1.2,"Fertilizers":1.0,
+        "Food Grains":1.1,"Textiles":0.85,"Chemicals":1.35
+    };
+    const crisk = CARGO_RISK[payload.cargo_type] || 1.0;
+
+    const estVoyageH = 20;
+    const stormContrib = (hStorm < estVoyageH && dur > 0)
+        ? c * Math.min(dur, estVoyageH - hStorm) * 1.2
+        : c * 3;
+    const congContrib = cong > 70 ? (cong - 70) * 0.2 + 2 : cong > 50 ? (cong - 50) * 0.1 : 0.3;
+
+    const delay = Math.max(0, (stormContrib + w * 0.4 + congContrib + (1 - rel) * 2) * crisk);
+    const risk  = Math.min(100, Math.round(delay * 1.5 + c * 20 + cong * 0.15));
+    const tier  = risk >= 76 ? "CRITICAL" : risk >= 51 ? "HIGH" : risk >= 26 ? "MEDIUM" : "LOW";
+
+    return {
+        success: true,
+        predicted_delay_hours : Math.round(delay * 10) / 10,
+        risk_score            : risk,
+        risk_tier             : tier,
+        best_route            : risk > 50 ? "B" : "A",
+        recommendation_action : risk > 75 ? "REROUTE" : risk > 50 ? "MONITOR" : "ON TRACK",
+        storm_flag            : c > 0.5 || w > 5 || (hStorm < estVoyageH && dur > 0),
+        situation             : `Rule-based fallback (reasoning engine offline). Risk ${risk}/100.`,
+        recommended_action    : "Check reasoning engine connection.",
+        reasoning             : "Service unreachable — using simplified fallback.",
+        time_saved_hours      : 0,
+        routes                : {},
+        delay_breakdown       : {},
+        reasoning_chain       : ["Reasoning engine offline — fallback active."],
+        origin_coords         : null,
+        dest_coords           : null,
+        model                 : { framework: "Rule-based fallback" },
+        _fallback             : true,
+    };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CHECKPOINT PERSISTENCE
+// ─────────────────────────────────────────────────────────────────────────────
+function mergePersistedCheckpoints(s) {
+    if (!s.checkpoints?.length) return s;
+    let saved = {};
+    try { saved = JSON.parse(localStorage.getItem(CP_STORAGE_KEY(_currentShipmentId)) || "{}"); } catch (_) {}
+    const merged = s.checkpoints.map(cp => {
+        const key = cp._id?.toString() || cp.name;
+        if (cp.status === "reached") saved[key] = { status:"reached", actual_arrival: cp.actual_arrival || new Date().toISOString() };
+        if (saved[key]?.status === "reached") return { ...cp, status:"reached", actual_arrival: cp.actual_arrival || saved[key].actual_arrival };
+        return cp;
+    });
+    try { localStorage.setItem(CP_STORAGE_KEY(_currentShipmentId), JSON.stringify(saved)); } catch (_) {}
+    return { ...s, checkpoints: merged };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ALERT ENGINE — now includes stationary-specific alerts
+// ─────────────────────────────────────────────────────────────────────────────
+function runAlertEngine(s, m, ml) {
     const stored   = loadAlerts();
     const existing = new Map(stored.map(a => [a.id, a]));
     const now      = new Date().toISOString();
+    const reroute  = ml.recommendation_action;
+
+    const daysStr  = m.stationaryDays >= 1
+        ? `${Math.round(m.stationaryDays)} days`
+        : `${Math.round(m.stationaryDays * 24)} hours`;
+    const overdueStr = `${Math.round(m.daysOverdue)} days overdue`;
 
     const rules = [
-        {
-            id: "STORM_ACTIVE", condition: m.stormFlag, severity: "CRITICAL",
-            title: "Storm Detected on Route",
-            body: `Active storm at vessel position (${s.latest_weather?.lat?.toFixed(2)}°N). Reroute required.`
-        },
-        {
-            id: "VESSEL_STATIONARY_CRIT",
-            condition: m.isStationary && m.elapsedHours > 10, severity: "CRITICAL",
-            title: `Vessel Stationary — ${Math.round(m.elapsedHours)}h No Movement`,
-            body: `No GPS movement for over ${Math.round(m.elapsedHours)} hours. Termination or rescheduling should be considered.`
-        },
-        {
-            id: "VESSEL_STATIONARY_WARN",
-            condition: m.isStationary && m.elapsedHours <= 10, severity: "WARNING",
-            title: "Vessel Appears Stationary",
-            body: `All GPS snapshots at identical coordinates. Vessel may be anchored or GPS device not updating. Contact captain.`
-        },
-        {
-            id: "PROGRESS_LAG_CRIT",
-            condition: !m.isStationary && m.progressGap > 25, severity: "CRITICAL",
-            title: "Severe Schedule Deviation",
-            body: `Vessel is ${m.progressGap.toFixed(1)}% behind expected benchmark. Estimated ${m.etaDeltaHours ? Math.abs(m.etaDeltaHours).toFixed(0) + "h" : "unknown"} delay.`
-        },
-        {
-            id: "PROGRESS_LAG_WARN",
-            condition: !m.isStationary && m.progressGap > 15 && m.progressGap <= 25, severity: "WARNING",
-            title: "Vessel Falling Behind Schedule",
-            body: `Progress gap ${m.progressGap.toFixed(1)}%. Expected ${m.expectedPct.toFixed(0)}% complete, actual ${m.actualPct}%.`
-        },
-        {
-            id: "MISSED_CP", condition: m.missedCPs > 0, severity: "WARNING",
-            title: `${m.missedCPs} Checkpoint${m.missedCPs > 1 ? "s" : ""} Missed`,
-            body: `Vessel missed ${m.missedCPs} of ${m.totalCPs} planned checkpoints.`
-        },
-        {
-            id: "SPEED_LOW",
-            condition: !m.isStationary && m.avgSpeedKnots < 5 && m.totalDistanceKm > 10, severity: "WARNING",
-            title: "Abnormally Low Speed",
-            body: `Avg speed ${m.avgSpeedKnots.toFixed(1)} kn critically below 12 kn baseline. Possible mechanical issue.`
-        },
-        {
-            id: "RISK_CRITICAL", condition: m.riskScore > 75, severity: "CRITICAL",
-            title: "Critical ML Risk Score",
-            body: `ML risk model score ${m.riskScore}/100 — multiple delay factors compounding. Immediate action required.`
-        },
-        {
-            id: "RISK_HIGH", condition: m.riskScore > 50 && m.riskScore <= 75, severity: "WARNING",
-            title: "Elevated ML Risk Score",
-            body: `ML risk score ${m.riskScore}/100. Combination of factors indicate elevated delay probability.`
-        },
-        {
-            id: "ON_TRACK",
-            condition: m.riskScore <= 25 && m.progressGap <= 5 && !m.stormFlag && m.missedCPs === 0 && !m.isStationary,
-            severity: "INFO",
-            title: "Shipment Progressing Normally",
-            body: `All systems nominal. ML risk score ${m.riskScore}/100. No active delay factors.`
-        },
+        // Cancellation — highest priority
+        { id:"CANCEL_RECOMMENDED",
+          condition: ml._should_cancel || reroute === "CANCEL",
+          severity:"CRITICAL",
+          title:"⛔ Shipment Cancellation Recommended",
+          body:`Vessel stationary for ${daysStr} with 0/${m.totalCPs} checkpoints reached. ${overdueStr}. Initiate termination process.` },
+
+        // Escalation — stationary beyond critical threshold
+        { id:"ESCALATE_STATIONARY",
+          condition: m.stationaryDays >= CRITICAL_STATIONARY_DAYS && !ml._should_cancel,
+          severity:"CRITICAL",
+          title:`🚨 Vessel Stationary ${daysStr} — Escalate Now`,
+          body:`No movement since scheduled departure. ${overdueStr}. Risk score: ${ml.risk_score}/100. Port authority escalation required.` },
+
+        // Early stationary warning
+        { id:"STATIONARY_WARN",
+          condition: m.isStationary && m.stationaryDays < CRITICAL_STATIONARY_DAYS && m.stationaryDays >= STATIONARY_THRESHOLD_DAYS,
+          severity:"WARNING",
+          title:`⚠ Vessel Stationary — ${daysStr}`,
+          body:`No checkpoint progress since scheduled departure. Contact captain and verify vessel status.` },
+
+        // ML-driven reroute
+        { id:"ML_REROUTE",
+          condition: reroute === "REROUTE",
+          severity:"CRITICAL",
+          title:"Reasoning Engine Recommends Reroute",
+          body:`Route ${ml.best_route} preferred. Predicted delay: +${ml.predicted_delay_hours}h. Confidence: ${ml.route_confidence_pct || "—"}%.` },
+
+        { id:"ML_SHIFT_PORT",
+          condition: reroute === "SHIFT PORT",
+          severity:"CRITICAL",
+          title:"Reasoning Engine Recommends Port Shift",
+          body:`Shift destination to ${ml.alternate_port_name || "alternate port"}. Time saved: ${ml.time_saved_hours}h.` },
+
+        { id:"STORM_ACTIVE",
+          condition: m.stormFlag,
+          severity:"CRITICAL",
+          title:"Storm Detected on Route",
+          body:"Storm conditions active on transit path. Reroute assessment required." },
+
+        { id:"RISK_CRITICAL",
+          condition: ml.risk_score >= 76 && !m.isStationary,
+          severity:"CRITICAL",
+          title:`Critical Risk Score: ${ml.risk_score}/100`,
+          body:`Risk engine: ${ml.risk_score}/100 CRITICAL. Predicted delay +${ml.predicted_delay_hours}h.` },
+
+        { id:"RISK_HIGH",
+          condition: ml.risk_score >= 51 && ml.risk_score < 76 && !m.isStationary,
+          severity:"WARNING",
+          title:`Elevated Risk: ${ml.risk_score}/100`,
+          body:`Route ${ml.best_route} recommended. Monitor closely.` },
+
+        { id:"MISSED_CP",
+          condition: m.missedCPs > 0,
+          severity:"WARNING",
+          title:`${m.missedCPs} Checkpoint${m.missedCPs > 1 ? "s" : ""} Missed`,
+          body:`Vessel missed ${m.missedCPs} of ${m.totalCPs} planned checkpoints.` },
+
+        { id:"ON_TRACK",
+          condition: ml.risk_score < 26 && !m.stormFlag && m.missedCPs === 0 && !m.isStationary && reroute === "ON TRACK",
+          severity:"INFO",
+          title:"Shipment Progressing Normally",
+          body:`Risk ${ml.risk_score}/100 — LOW. No action required.` },
     ];
 
     const newAlerts = [];
-    rules.forEach(rule => {
-        if (!rule.condition) return;
-        if (existing.has(rule.id) && existing.get(rule.id).dismissed) {
-            newAlerts.push(existing.get(rule.id));
-        } else if (existing.has(rule.id)) {
-            newAlerts.push({ ...existing.get(rule.id), body: rule.body, title: rule.title });
-        } else {
-            newAlerts.push({ id: rule.id, severity: rule.severity, title: rule.title, body: rule.body, timestamp: now, dismissed: false });
-        }
+    rules.forEach(r => {
+        if (!r.condition) return;
+        if (existing.has(r.id) && existing.get(r.id).dismissed) { newAlerts.push(existing.get(r.id)); return; }
+        if (existing.has(r.id)) { newAlerts.push({ ...existing.get(r.id), body: r.body, title: r.title }); return; }
+        newAlerts.push({ id:r.id, severity:r.severity, title:r.title, body:r.body, timestamp:now, dismissed:false });
     });
-
     saveAlerts(newAlerts);
     return newAlerts;
 }
 
-function loadAlerts() {
-    try { return JSON.parse(localStorage.getItem(ALERT_STORAGE_KEY(_currentShipmentId)) || "[]"); }
-    catch { return []; }
-}
-function saveAlerts(a) {
-    localStorage.setItem(ALERT_STORAGE_KEY(_currentShipmentId), JSON.stringify(a));
-}
-function dismissAlert(alertId) {
-    const alerts   = loadAlerts().map(a => a.id === alertId ? { ...a, dismissed: true } : a);
+function loadAlerts()  { try { return JSON.parse(localStorage.getItem(ALERT_STORAGE_KEY(_currentShipmentId)) || "[]"); } catch { return []; } }
+function saveAlerts(a) { localStorage.setItem(ALERT_STORAGE_KEY(_currentShipmentId), JSON.stringify(a)); }
+function dismissAlert(id) {
+    const alerts = loadAlerts().map(a => a.id === id ? { ...a, dismissed:true } : a);
     saveAlerts(alerts);
-    document.getElementById(`alert-${alertId}`)?.remove();
-    const remaining = alerts.filter(a => !a.dismissed).length;
+    document.getElementById(`alert-${a.id}`)?.remove();
+    const rem   = alerts.filter(a => !a.dismissed).length;
     const badge = document.getElementById("ie-alert-badge");
-    if (badge) { badge.textContent = remaining; badge.style.display = remaining > 0 ? "inline-flex" : "none"; }
+    if (badge) { badge.textContent = rem; badge.style.display = rem > 0 ? "inline-flex" : "none"; }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 4. RENDER PANEL
+// LOADING SKELETON
 // ─────────────────────────────────────────────────────────────────────────────
-function renderIntelligencePanel(s, m, alerts) {
+function renderLoadingState() {
+    const panel = document.getElementById("intelligence-panel");
+    if (!panel) return;
+    panel.innerHTML = `
+    <style>
+        @keyframes ie-shimmer { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
+        .ie-skel { background:linear-gradient(90deg,rgba(255,255,255,0.03) 0%,rgba(255,255,255,0.07) 50%,rgba(255,255,255,0.03) 100%);
+            background-size:400px 100%; animation:ie-shimmer 1.4s infinite; border-radius:4px; }
+    </style>
+    <div style="font-size:9px;color:#60a5fa;font-family:Inter,sans-serif;margin-bottom:12px;display:flex;align-items:center;gap:6px;">
+        <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#60a5fa;animation:ie-shimmer 1s infinite;"></span>
+        Running reasoning engine…
+    </div>
+    ${[64,48,80,56,40].map(w => `<div class="ie-skel" style="height:10px;width:${w}%;margin-bottom:8px;"></div>`).join("")}
+    `;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RENDER INTELLIGENCE PANEL
+// ─────────────────────────────────────────────────────────────────────────────
+function renderIntelligencePanel(s, m, alerts, ml) {
     const panel = document.getElementById("intelligence-panel");
     if (!panel) return;
     const activeAlerts  = alerts.filter(a => !a.dismissed);
     const criticalCount = activeAlerts.filter(a => a.severity === "CRITICAL").length;
-    const n             = m.mlNarrative;
+
+    const recColor = {
+        "CANCEL"     : "#dc2626",
+        "ESCALATE"   : "#f87171",
+        "SHIFT PORT" : "#fb923c",
+        "REROUTE"    : "#f87171",
+        "ON TRACK"   : "#4ADE80",
+        "MONITOR"    : "#60a5fa",
+    }[ml.recommendation_action] || "#94a3b8";
+
+    const breakdown = ml.delay_breakdown || {};
+    const breakdownFactors = [
+        { label:"Storm / Weather",        val: breakdown.storm_weather       || 0, color:"#f87171" },
+        { label:"Destination Congestion", val: breakdown.destination_cong    || 0, color:"#fb923c" },
+        { label:"Coast Crossing",         val: breakdown.coast_crossing      || 0, color:"#a78bfa" },
+        { label:"Carrier Reliability",    val: breakdown.carrier_reliability || 0, color:"#fbbf24" },
+        { label:"Origin Congestion",      val: breakdown.origin_congestion   || 0, color:"#60a5fa" },
+    ].filter(f => f.val > 0);
+
+    const maxBreakdown = Math.max(...breakdownFactors.map(f => f.val), 1);
+
+    // ── Stationary summary card (shown only when stationary) ─────────────────
+    const stationaryBanner = m.isStationary ? `
+    <div style="margin-bottom:14px;padding:12px 14px;border-radius:8px;
+        background:rgba(220,38,38,.10);border:1px solid rgba(220,38,38,.35);font-family:Inter,sans-serif;">
+        <div style="font-size:11px;font-weight:700;color:#f87171;margin-bottom:6px;">
+            ${ml._should_cancel ? "⛔ CANCELLATION RECOMMENDED" : "🚨 VESSEL STATIONARY — ACTION REQUIRED"}
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div>
+                <div style="font-size:8px;text-transform:uppercase;letter-spacing:.09em;color:#8e9196;margin-bottom:2px;">Stationary for</div>
+                <div style="font-size:18px;font-weight:800;font-family:Manrope,sans-serif;color:#f87171;line-height:1;">
+                    ${Math.round(m.stationaryDays)} <span style="font-size:10px;font-weight:400;color:#8e9196;">days</span>
+                </div>
+            </div>
+            <div>
+                <div style="font-size:8px;text-transform:uppercase;letter-spacing:.09em;color:#8e9196;margin-bottom:2px;">Overdue by</div>
+                <div style="font-size:18px;font-weight:800;font-family:Manrope,sans-serif;color:#fb923c;line-height:1;">
+                    ${Math.round(m.daysOverdue)} <span style="font-size:10px;font-weight:400;color:#8e9196;">days</span>
+                </div>
+            </div>
+            <div>
+                <div style="font-size:8px;text-transform:uppercase;letter-spacing:.09em;color:#8e9196;margin-bottom:2px;">Checkpoints reached</div>
+                <div style="font-size:18px;font-weight:800;font-family:Manrope,sans-serif;color:#f87171;line-height:1;">
+                    ${m.reachedCPs}<span style="font-size:10px;color:#8e9196;">/${m.totalCPs}</span>
+                </div>
+            </div>
+            <div>
+                <div style="font-size:8px;text-transform:uppercase;letter-spacing:.09em;color:#8e9196;margin-bottom:2px;">Risk score</div>
+                <div style="font-size:18px;font-weight:800;font-family:Manrope,sans-serif;color:#f87171;line-height:1;">
+                    ${ml.risk_score}<span style="font-size:10px;color:#8e9196;">/100</span>
+                </div>
+            </div>
+        </div>
+        <div style="margin-top:10px;font-size:9px;color:#d0e5f9;line-height:1.6;">
+            ${ml.situation}
+        </div>
+    </div>` : "";
 
     panel.innerHTML = `
     <style>
         #intelligence-panel * { box-sizing:border-box; }
-        .ie-sec { margin-bottom:14px; }
-        .ie-lbl { font-size:9px; text-transform:uppercase; letter-spacing:0.1em; color:#8e9196;
-            font-family:Inter,sans-serif; margin-bottom:7px; display:flex; align-items:center; gap:6px; }
-        .ie-alert { padding:9px 10px; border-radius:6px; margin-bottom:5px; display:flex; gap:8px;
-            align-items:flex-start; border-left:2px solid; font-family:Inter,sans-serif; }
-        .ie-alert.CRITICAL { background:rgba(248,113,113,0.07); border-color:#f87171; }
-        .ie-alert.WARNING  { background:rgba(251,146,60,0.07);  border-color:#fb923c; }
-        .ie-alert.INFO     { background:rgba(96,165,250,0.07);  border-color:#60a5fa; }
-        .ie-atitle { font-size:10px; font-weight:700; color:#d0e5f9; }
-        .ie-abody  { font-size:9px; color:#8e9196; margin-top:2px; line-height:1.4; }
-        .ie-dismiss { margin-left:auto; flex-shrink:0; cursor:pointer; color:#44474c; font-size:11px;
-            padding:2px 4px; border-radius:3px; background:transparent; border:none; }
-        .ie-dismiss:hover { color:#d0e5f9; background:rgba(255,255,255,0.06); }
-        .ie-btn { width:100%; padding:8px 10px; border-radius:6px; border:1px solid; font-size:9px;
-            font-weight:700; letter-spacing:0.06em; text-transform:uppercase; cursor:pointer;
-            text-align:left; display:flex; align-items:center; gap:7px; font-family:Inter,sans-serif;
-            transition:all 0.15s; margin-bottom:5px; background:none; }
-        .ie-btn:disabled { opacity:0.3; cursor:default; }
-        .ie-btn:not(:disabled):hover { filter:brightness(1.2); transform:translateX(2px); }
-        .ie-sbox { flex:1; background:rgba(255,255,255,0.03); border:1px solid rgba(186,200,220,0.08);
-            border-radius:6px; padding:8px; }
-        .ie-sval { font-size:17px; font-weight:800; font-family:Manrope,sans-serif; color:#d0e5f9; line-height:1; }
-        .ie-ssub { font-size:8px; color:#8e9196; text-transform:uppercase; letter-spacing:0.06em; margin-top:3px; }
-        .ie-ai { background:rgba(96,165,250,0.05); border:1px solid rgba(96,165,250,0.18); border-radius:8px; padding:12px; }
-        .ie-fbar { height:3px; border-radius:2px; margin-top:3px; background:rgba(255,255,255,0.06); overflow:hidden; }
-        .ie-ffill { height:100%; border-radius:2px; transition:width 0.6s ease; }
-        .ie-modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:9999;
-            display:flex; align-items:center; justify-content:center; }
-        .ie-modal { background:#0c2230; border:1px solid rgba(186,200,220,0.15); border-radius:12px;
-            padding:24px; max-width:480px; width:90%; max-height:80vh; overflow-y:auto;
-            font-family:Inter,sans-serif; position:relative; }
-        .ie-modal h3 { font-family:Manrope,sans-serif; font-size:16px; font-weight:800; color:#d0e5f9; margin:0 0 12px; }
-        .ie-mclose { position:absolute; top:14px; right:14px; background:none; border:none;
-            color:#8e9196; cursor:pointer; font-size:18px; }
-        .ie-modal textarea, .ie-modal input { width:100%; background:rgba(255,255,255,0.04);
-            border:1px solid rgba(186,200,220,0.15); border-radius:6px; padding:8px 10px;
-            color:#d0e5f9; font-size:12px; font-family:Inter,sans-serif; resize:vertical; margin-top:6px; outline:none; }
-        .ie-msub { margin-top:12px; padding:8px 16px; border-radius:6px; border:none; color:white;
-            font-weight:700; font-size:11px; cursor:pointer; letter-spacing:0.05em;
-            text-transform:uppercase; font-family:Inter,sans-serif; }
+        .ie-sec  { margin-bottom:14px; }
+        .ie-lbl  { font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:#8e9196;
+            font-family:Inter,sans-serif;margin-bottom:7px;display:flex;align-items:center;gap:6px; }
+        .ie-sbox { flex:1;background:rgba(255,255,255,.03);border:1px solid rgba(186,200,220,.08);border-radius:6px;padding:8px; }
+        .ie-sval { font-size:17px;font-weight:800;font-family:Manrope,sans-serif;color:#d0e5f9;line-height:1; }
+        .ie-ssub { font-size:8px;color:#8e9196;text-transform:uppercase;letter-spacing:.06em;margin-top:3px; }
+        .ie-ai   { background:rgba(96,165,250,.05);border:1px solid rgba(96,165,250,.18);border-radius:8px;padding:12px; }
+        .ie-fbar { height:3px;border-radius:2px;margin-top:3px;background:rgba(255,255,255,.06);overflow:hidden; }
+        .ie-ffill{ height:100%;border-radius:2px;transition:width .6s ease; }
+        .ie-alert{ padding:9px 10px;border-radius:6px;margin-bottom:5px;display:flex;gap:8px;
+            align-items:flex-start;border-left:2px solid;font-family:Inter,sans-serif; }
+        .ie-alert.CRITICAL{background:rgba(248,113,113,.07);border-color:#f87171;}
+        .ie-alert.WARNING {background:rgba(251,146,60,.07); border-color:#fb923c;}
+        .ie-alert.INFO    {background:rgba(96,165,250,.07); border-color:#60a5fa;}
+        .ie-atitle{font-size:10px;font-weight:700;color:#d0e5f9;}
+        .ie-abody {font-size:9px;color:#8e9196;margin-top:2px;line-height:1.4;}
+        .ie-dismiss{margin-left:auto;flex-shrink:0;cursor:pointer;color:#44474c;font-size:11px;
+            padding:2px 4px;border-radius:3px;background:transparent;border:none;}
+        .ie-dismiss:hover{color:#d0e5f9;background:rgba(255,255,255,.06);}
+        .ie-btn{width:100%;padding:8px 10px;border-radius:6px;border:1px solid;font-size:9px;
+            font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;
+            text-align:left;display:flex;align-items:center;gap:7px;font-family:Inter,sans-serif;
+            transition:all .15s;margin-bottom:5px;background:none;}
+        .ie-btn:disabled{opacity:.3;cursor:default;}
+        .ie-btn:not(:disabled):hover{filter:brightness(1.2);transform:translateX(2px);}
+        .ie-modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;
+            display:flex;align-items:center;justify-content:center;}
+        .ie-modal{background:#0c2230;border:1px solid rgba(186,200,220,.15);border-radius:12px;
+            padding:24px;max-width:520px;width:90%;max-height:80vh;overflow-y:auto;
+            font-family:Inter,sans-serif;position:relative;}
+        .ie-modal h3{font-family:Manrope,sans-serif;font-size:16px;font-weight:800;color:#d0e5f9;margin:0 0 12px;}
+        .ie-mclose{position:absolute;top:14px;right:14px;background:none;border:none;
+            color:#8e9196;cursor:pointer;font-size:18px;}
+        .ie-modal textarea,.ie-modal input{width:100%;background:rgba(255,255,255,.04);
+            border:1px solid rgba(186,200,220,.15);border-radius:6px;padding:8px 10px;
+            color:#d0e5f9;font-size:12px;font-family:Inter,sans-serif;resize:vertical;margin-top:6px;outline:none;}
+        .ie-msub{margin-top:12px;padding:8px 16px;border-radius:6px;border:none;color:white;
+            font-weight:700;font-size:11px;cursor:pointer;letter-spacing:.05em;
+            text-transform:uppercase;font-family:Inter,sans-serif;}
+        .ie-route-card{border-radius:6px;border:1px solid rgba(186,200,220,.1);padding:9px 10px;
+            margin-bottom:6px;cursor:pointer;transition:border-color .15s;position:relative;}
+        .ie-route-card.best{border-color:rgba(96,165,250,.5);background:rgba(96,165,250,.04);}
+        .ie-route-card:hover{border-color:rgba(186,200,220,.25);}
+        .ie-rc-badge{font-size:8px;font-weight:700;padding:1px 6px;border-radius:8px;
+            background:rgba(96,165,250,.15);color:#60a5fa;margin-left:5px;}
+        .ie-chain-item{font-size:9px;color:#8e9196;line-height:1.5;padding:4px 0;
+            border-bottom:1px solid rgba(255,255,255,.04);font-family:Inter,sans-serif;}
+        .ie-chain-item:last-child{border-bottom:none;}
+        .ie-chain-item.has-delay{color:#d0e5f9;}
     </style>
 
-    <!-- SPEED -->
+    ${stationaryBanner}
+
+    <!-- ENGINE BADGE -->
+    ${ml._fallback ? `
+    <div style="font-size:8px;background:rgba(251,146,60,.1);border:1px solid rgba(251,146,60,.3);border-radius:4px;padding:4px 8px;color:#fb923c;font-family:Inter,sans-serif;margin-bottom:10px;">
+        ⚠ Reasoning engine offline — fallback active
+    </div>` : `
+    <div style="font-size:8px;background:rgba(96,165,250,.07);border:1px solid rgba(96,165,250,.15);border-radius:4px;padding:4px 8px;color:#60a5fa;font-family:Inter,sans-serif;margin-bottom:10px;display:flex;gap:6px;flex-wrap:wrap;">
+        <span>⚙ Reasoning Engine v4</span>
+        <span style="color:#44474c;">|</span>
+        <span>Storm trajectory · Congestion compounding · Tidal windows</span>
+        ${ml._stationary_override ? '<span style="color:#44474c;">|</span><span style="color:#f87171;">Stationary override applied</span>' : ""}
+    </div>`}
+
+    <!-- SPEED TELEMETRY -->
     <div class="ie-sec">
         <div class="ie-lbl">⚡ Speed Telemetry</div>
         <div style="display:flex;gap:8px;">
@@ -431,68 +676,122 @@ function renderIntelligencePanel(s, m, alerts) {
             </div>
             <div class="ie-sbox">
                 <div class="ie-sval">${m.totalDistanceKm.toFixed(0)}<span style="font-size:9px;color:#8e9196;margin-left:3px;">km</span></div>
-                <div class="ie-ssub">Traveled</div>
+                <div class="ie-ssub">GPS traveled</div>
             </div>
         </div>
-        ${m.isStationary ? `<div style="margin-top:6px;font-size:9px;color:#fb923c;font-weight:600;font-family:Inter,sans-serif;">⚠ Vessel stationary — GPS not updating</div>` : ""}
+        ${m.isStationary ? `
+        <div style="margin-top:6px;font-size:9px;color:#f87171;font-weight:700;font-family:Inter,sans-serif;
+            padding:6px 8px;background:rgba(248,113,113,.07);border-radius:4px;">
+            ⚠ No checkpoint progress for ${Math.round(m.stationaryDays)} days — vessel classified as stationary
+            ${m.totalDistanceKm > 5 ? `<span style="color:#8e9196;font-weight:400;"> (GPS shows ${m.totalDistanceKm.toFixed(0)} km — likely phone GPS drift, not actual ship movement)</span>` : ""}
+        </div>` : ""}
     </div>
 
-    <!-- RISK -->
+    <!-- DELAY RISK MODEL -->
     <div class="ie-sec">
-        <div class="ie-lbl">🧠 ML Delay Risk Model</div>
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
-            ${buildRiskGaugeSVG(m.riskScore, m.riskTier)}
-            <div style="flex:1;font-size:11px;color:#8e9196;line-height:1.7;font-family:Inter,sans-serif;">
-                <div>Progress gap: <span style="color:${m.progressGap > 5 ? IE_COLORS.warning : m.progressGap < -5 ? IE_COLORS.success : "#d0e5f9"};font-weight:600;">
-    ${m.progressGap > 0 ? `${m.progressGap.toFixed(1)}% BEHIND` : m.progressGap < 0 ? `${Math.abs(m.progressGap).toFixed(1)}% AHEAD` : "ON SCHEDULE"}
-</span></div>
-                <div>Missed CPs: <span style="color:#d0e5f9;font-weight:600;">${m.missedCPs}/${m.totalCPs}</span></div>
-                <div>Storm: <span style="color:${m.stormFlag ? IE_COLORS.critical : IE_COLORS.success};font-weight:600;">${m.stormFlag ? "ACTIVE" : "CLEAR"}</span></div>
-                <div>Stationary: <span style="color:${m.isStationary ? IE_COLORS.warning : IE_COLORS.success};font-weight:600;">${m.isStationary ? "YES" : "NO"}</span></div>
+        <div class="ie-lbl">🧠 Delay Risk Model</div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+            ${buildRiskGaugeSVG(ml.risk_score, ml.risk_tier)}
+            <div style="flex:1;">
+                <div style="font-size:18px;font-weight:800;font-family:Manrope,sans-serif;color:#f87171;line-height:1;">
+                    ${m.isStationary
+                        ? `${Math.round(m.daysOverdue)}d OVERDUE`
+                        : `+${ml.predicted_delay_hours}h`}
+                    <span style="font-size:9px;font-weight:400;color:#8e9196;margin-left:4px;">
+                        ${m.isStationary ? "past scheduled arrival" : "predicted delay"}
+                    </span>
+                </div>
+                <div style="font-size:11px;color:#8e9196;line-height:1.8;margin-top:4px;font-family:Inter,sans-serif;">
+                    <span style="color:${m.progressGap > 5 ? IE_COLORS.warning : m.progressGap < -5 ? IE_COLORS.success : "#d0e5f9"};font-weight:600;">
+                        ${m.progressGap > 0 ? m.progressGap.toFixed(1)+"% BEHIND" : m.progressGap < 0 ? Math.abs(m.progressGap).toFixed(1)+"% AHEAD" : "ON SCHEDULE"}
+                    </span><br>
+                    CPs: <span style="color:#d0e5f9;font-weight:600;">${m.reachedCPs}/${m.totalCPs}</span>
+                    &nbsp;|&nbsp; Storm: <span style="color:${m.stormFlag ? IE_COLORS.critical : IE_COLORS.success};font-weight:600;">${m.stormFlag ? "ACTIVE" : "CLEAR"}</span>
+                </div>
             </div>
         </div>
-        <div style="display:flex;flex-direction:column;gap:5px;">
-            ${n.factors.map(f => `
-            <div>
-                <div style="display:flex;justify-content:space-between;font-size:8px;color:${f.active ? "#d0e5f9" : "#44474c"};font-family:Inter,sans-serif;">
-                    <span>${f.label}</span>
-                    <span style="color:${f.active ? IE_COLORS.warning : "#44474c"}">${f.value}</span>
+
+        ${breakdownFactors.length > 0 ? `
+        <div style="margin-bottom:10px;">
+            <div style="font-size:8px;color:#8e9196;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;font-family:Inter,sans-serif;">Delay Breakdown</div>
+            ${breakdownFactors.map(f => `
+            <div style="margin-bottom:5px;">
+                <div style="display:flex;justify-content:space-between;font-size:8px;font-family:Inter,sans-serif;">
+                    <span style="color:#8e9196;">${f.label}</span>
+                    <span style="color:${f.color};font-weight:700;">+${f.val}h</span>
                 </div>
-                <div class="ie-fbar"><div class="ie-ffill" style="width:${f.weight}%;background:${f.active ? IE_COLORS.warning : "rgba(255,255,255,0.04)"};"></div></div>
+                <div class="ie-fbar">
+                    <div class="ie-ffill" style="width:${(f.val/maxBreakdown*100).toFixed(0)}%;background:${f.color};"></div>
+                </div>
+            </div>`).join("")}
+        </div>` : ""}
+
+        <div style="display:flex;flex-direction:column;gap:5px;">
+            ${[
+                {label:"Total predicted delay",  pct: m.isStationary ? 100 : Math.min(100,(ml.predicted_delay_hours/30)*100), color:"#f87171", val: m.isStationary ? `${Math.round(m.daysOverdue)}d overdue` : `+${ml.predicted_delay_hours}h`},
+                {label:"Risk score",              pct: ml.risk_score,                                                           color:ml.risk_score>=76?"#f87171":ml.risk_score>=51?"#fb923c":"#fbbf24", val:`${ml.risk_score}/100`},
+                {label:"Progress deviation",      pct: Math.min(100,Math.abs(m.progressGap)*2),                                 color:"#fb923c", val:`${m.progressGap.toFixed(1)}%`},
+                {label:"Checkpoint compliance",   pct: m.totalCPs > 0 ? (m.reachedCPs/m.totalCPs)*100 : 100,                   color:"#4ADE80", val:`${m.reachedCPs}/${m.totalCPs}`},
+            ].map(f => `
+            <div>
+                <div style="display:flex;justify-content:space-between;font-size:8px;color:#d0e5f9;font-family:Inter,sans-serif;">
+                    <span>${f.label}</span><span style="color:${f.color}">${f.val}</span>
+                </div>
+                <div class="ie-fbar"><div class="ie-ffill" style="width:${f.pct.toFixed(0)}%;background:${f.color}"></div></div>
             </div>`).join("")}
         </div>
     </div>
 
-    <!-- ML ANALYSIS -->
+    <!-- ROUTE RECOMMENDATION (hide if cancellation is recommended) -->
+    ${!ml._should_cancel ? `
     <div class="ie-sec">
-        <div class="ie-lbl">🤖 ML Situation Analysis</div>
-        <div class="ie-ai">
-            <div style="font-size:11px;color:#d0e5f9;line-height:1.6;font-family:Inter,sans-serif;margin-bottom:10px;">${n.situation}</div>
-            <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px;">
-                <span style="font-size:9px;padding:2px 9px;border-radius:10px;background:rgba(248,113,113,0.1);color:#f87171;font-weight:700;font-family:Inter,sans-serif;">
-                    Delay: ${n.predictedDelayHours > 0 ? "+" + n.predictedDelayHours + "h" : "On time"}
-                </span>
-                <span style="font-size:9px;padding:2px 9px;border-radius:10px;font-weight:700;font-family:Inter,sans-serif;
-                    background:${n.confidence === "HIGH" ? "rgba(74,222,128,0.1)" : n.confidence === "MEDIUM" ? "rgba(251,146,60,0.1)" : "rgba(248,113,113,0.1)"};
-                    color:${n.confidence === "HIGH" ? "#4ADE80" : n.confidence === "MEDIUM" ? "#fb923c" : "#f87171"};">
-                    Confidence: ${n.confidence}
-                </span>
+        <div class="ie-lbl">🗺 Route Model</div>
+        <div style="margin-bottom:8px;padding:8px 10px;border-radius:6px;background:${recColor}18;border:1px solid ${recColor}44;display:flex;align-items:center;gap:8px;">
+            <span style="font-size:16px;">${ml.recommendation_action==="SHIFT PORT"?"⚓":ml.recommendation_action==="REROUTE"?"🔁":ml.recommendation_action==="ON TRACK"?"✓":ml.recommendation_action==="ESCALATE"?"🚨":"◎"}</span>
+            <div style="flex:1;">
+                <div style="font-size:11px;font-weight:700;color:${recColor};font-family:Manrope,sans-serif;">${ml.recommendation_action}</div>
+                <div style="font-size:9px;color:#8e9196;font-family:Inter,sans-serif;margin-top:1px;">${ml.reasoning?.split("|")[0] || ""}</div>
             </div>
-            <div style="font-size:9px;color:#fb6b00;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;font-family:Inter,sans-serif;">Recommended Action</div>
-            <div style="font-size:10px;color:#d0e5f9;margin-bottom:4px;font-family:Inter,sans-serif;">${n.recommendedAction}</div>
-            <div style="font-size:9px;color:#8e9196;font-style:italic;font-family:Inter,sans-serif;">${n.reasoning}</div>
+            ${ml.time_saved_hours > 0 ? `<div style="text-align:right;flex-shrink:0;">
+                <div style="font-size:13px;font-weight:800;color:#4ADE80;font-family:Manrope,sans-serif;">-${ml.time_saved_hours}h</div>
+                <div style="font-size:8px;color:#8e9196;">time saved</div>
+            </div>` : ""}
+        </div>
+        ${buildRouteCards(ml)}
+    </div>` : ""}
+
+    <!-- REASONING CHAIN -->
+    ${ml.reasoning_chain?.length > 0 ? `
+    <div class="ie-sec">
+        <div class="ie-lbl">🔍 Reasoning Chain
+            <span style="font-size:8px;color:#44474c;font-weight:400;text-transform:none;letter-spacing:0;">${ml.reasoning_chain.length} factors evaluated</span>
+        </div>
+        <div style="background:rgba(255,255,255,.02);border:1px solid rgba(186,200,220,.07);border-radius:6px;padding:8px;">
+            ${ml.reasoning_chain.map((r) => {
+                const hasDelay = r.includes("+") && r.includes("h");
+                const isGood   = r.includes("no") || r.includes("calm") || r.includes("negligible") || r.includes("clears") || r.includes("fast");
+                const dotColor = isGood ? "#4ADE80" : hasDelay ? "#fb923c" : "#44474c";
+                return `<div class="ie-chain-item ${hasDelay ? "has-delay" : ""}">
+                    <span style="color:${dotColor};margin-right:5px;">●</span>${r}
+                </div>`;
+            }).join("")}
+        </div>
+    </div>` : ""}
+
+    <!-- SITUATION ANALYSIS -->
+    <div class="ie-sec">
+        <div class="ie-lbl">📋 Situation Analysis</div>
+        <div class="ie-ai">
+            <div style="font-size:11px;color:#d0e5f9;line-height:1.6;font-family:Inter,sans-serif;margin-bottom:10px;">${ml.situation}</div>
+            <div style="font-size:9px;color:#fb6b00;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px;font-family:Inter,sans-serif;">Recommended Action</div>
+            <div style="font-size:10px;color:#d0e5f9;font-family:Inter,sans-serif;">${ml.recommended_action}</div>
         </div>
     </div>
 
-    <!-- ALERTS -->
+    <!-- ACTIVE ALERTS -->
     <div class="ie-sec">
-        <div class="ie-lbl">
-            🔔 Active Alerts
-            <span id="ie-alert-badge" style="background:${criticalCount > 0 ? IE_COLORS.critical : IE_COLORS.warning};
-                color:white;font-size:8px;font-weight:800;padding:1px 6px;border-radius:10px;
-                display:${activeAlerts.length > 0 ? "inline-flex" : "none"};font-family:Inter,sans-serif;">
-                ${activeAlerts.length}
-            </span>
+        <div class="ie-lbl">🔔 Active Alerts
+            <span id="ie-alert-badge" style="background:${criticalCount>0?IE_COLORS.critical:IE_COLORS.warning};color:white;font-size:8px;font-weight:800;padding:1px 6px;border-radius:10px;display:${activeAlerts.length>0?"inline-flex":"none"};font-family:Inter,sans-serif;">${activeAlerts.length}</span>
         </div>
         <div id="ie-alert-feed">
             ${activeAlerts.length === 0
@@ -501,45 +800,169 @@ function renderIntelligencePanel(s, m, alerts) {
         </div>
     </div>
 
-    <!-- DECISIONS -->
+    <!-- OPS DECISION ENGINE -->
     <div class="ie-sec">
         <div class="ie-lbl">⚙️ Ops Decision Engine</div>
-        ${buildDecisionButtons(s, m, alerts)}
+        ${buildDecisionButtons(s, m, alerts, ml)}
     </div>`;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 5. ATTACH HANDLERS
+// ROUTE CARDS
 // ─────────────────────────────────────────────────────────────────────────────
-function attachActionHandlers(s, m, alerts) {
-    alerts.filter(a => !a.dismissed).forEach(a => {
-        document.getElementById(`dismiss-${a.id}`)
-            ?.addEventListener("click", () => dismissAlert(a.id));
-    });
+function buildRouteCards(ml) {
+    if (!ml.routes || Object.keys(ml.routes).length === 0) {
+        return `<div style="font-size:10px;color:#8e9196;font-family:Inter,sans-serif;">Route data unavailable</div>`;
+    }
+    const routeColors = { A:"#60a5fa", B:"#fb923c", C:"#4ADE80" };
 
-    const handlers = {
-        reroute:   () => openRerouteModal(s, m),
-        captain:   () => openCaptainModal(s, m),
-        escalate:  () => openEscalateModal(s, m, alerts),
-        flag:      () => openFlagCargoModal(s, m),
-        eta:       () => openReviseETAModal(s, m),
-        terminate: () => openTerminateModal(s, m),
-    };
-
-    document.querySelectorAll("[data-ie-action]").forEach(btn => {
-        btn.addEventListener("click", () => handlers[btn.getAttribute("data-ie-action")]?.());
-    });
+    return Object.values(ml.routes).map(r => {
+        const color    = routeColors[r.id] || "#94a3b8";
+        const costLakh = r.fuel_cost_inr ? (r.fuel_cost_inr / 100000).toFixed(2) : "—";
+        const extraLakh = r.extra_cost_inr > 0 ? `+₹${(r.extra_cost_inr/100000).toFixed(2)}L` : "—";
+        return `
+        <div class="ie-route-card${r.recommended ? " best" : ""}" onclick="focusMapRoute('${r.id}')" data-route-id="${r.id}">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+                <div style="display:flex;align-items:center;gap:6px;">
+                    <span style="width:20px;height:3px;border-radius:2px;background:${color};display:inline-block;"></span>
+                    <span style="font-size:10px;font-weight:700;color:#d0e5f9;font-family:Inter,sans-serif;">Route ${r.id}: ${r.label}</span>
+                    ${r.recommended ? `<span class="ie-rc-badge">✓ Best</span>` : ""}
+                </div>
+                <span style="font-size:9px;color:${r.delay_hours > 8 ? "#f87171" : r.delay_hours > 3 ? "#fb923c" : "#4ADE80"};font-weight:700;font-family:Manrope,sans-serif;">${r.delay_hours}h delay</span>
+            </div>
+            <div style="font-size:9px;color:#8e9196;font-family:Inter,sans-serif;margin-bottom:5px;">${(r.waypoint_coords||[]).map(w=>w.name).join(" → ")}</div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;font-size:9px;font-family:Inter,sans-serif;">
+                <div><span style="color:#44474c;">Distance</span><br><strong style="color:#d0e5f9;">${r.distance_nm} nm</strong></div>
+                <div><span style="color:#44474c;">Fuel cost</span><br><strong style="color:#d0e5f9;">₹${costLakh}L</strong></div>
+                <div><span style="color:#44474c;">Congestion</span><br><strong style="color:${r.congestion_pct>70?"#f87171":r.congestion_pct>50?"#fb923c":"#4ADE80"}">${r.congestion_pct}%</strong></div>
+                <div><span style="color:#44474c;">Extra cost</span><br><strong style="color:${r.extra_cost_inr>0?"#fb923c":"#4ADE80"}">${extraLakh}</strong></div>
+            </div>
+        </div>`;
+    }).join("");
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 6. ALERT HTML
+// MAP ROUTE RENDERING
+// ─────────────────────────────────────────────────────────────────────────────
+function renderMLRouteMap(ml, s) {
+    // Skip if detail page has set this flag
+    if (window._ieSkipMapRoutes) return;
+
+    const tryRender = (attempts = 0) => {
+        const map = window._leafletMap || window.leafletMapInstance;
+        if (!map && attempts < 20) { setTimeout(() => tryRender(attempts + 1), 500); return; }
+        if (!map) return;
+
+        _routeLayers.forEach(l => { try { map.removeLayer(l); } catch(_) {} });
+        _routeLayers = [];
+
+        const routes = ml.routes;
+        if (!routes || Object.keys(routes).length === 0) return;
+
+        const ROUTE_STYLE = {
+            A: { color:"#60a5fa", weight:3, dashArray:"8,5",  opacity:0.85 },
+            B: { color:"#fb923c", weight:3, dashArray:"4,4",  opacity:0.85 },
+            C: { color:"#4ADE80", weight:3, dashArray:null,    opacity:0.85 },
+        };
+
+        Object.values(routes).forEach(route => {
+            const coords = (route.waypoint_coords || []).map(w => [w.lat, w.lng]);
+            if (coords.length < 2) return;
+
+            const style = ROUTE_STYLE[route.id] || { color:"#94a3b8", weight:2, opacity:0.7 };
+            const isHit = route.recommended;
+
+            if (isHit) {
+                const glow = L.polyline(coords, { color: style.color, weight: 8, opacity: 0.12 });
+                glow.addTo(map);
+                _routeLayers.push(glow);
+            }
+
+            const line = L.polyline(coords, {
+                color    : style.color,
+                weight   : isHit ? 4 : 2.5,
+                opacity  : isHit ? 1 : 0.55,
+                dashArray: style.dashArray,
+            });
+
+            const costLakh = route.fuel_cost_inr ? (route.fuel_cost_inr / 100000).toFixed(2) : "—";
+            const extra    = route.extra_cost_inr > 0 ? ` (+₹${(route.extra_cost_inr/100000).toFixed(2)}L)` : "";
+            line.bindPopup(`
+                <div style="min-width:180px;">
+                    <b>Route ${route.id}: ${route.label}</b><br>
+                    ${(route.waypoint_coords||[]).map(w=>w.name).join(" → ")}<br><br>
+                    <b>Distance:</b> ${route.distance_nm} nm<br>
+                    <b>Delay:</b> ${route.delay_hours}h<br>
+                    <b>Fuel cost:</b> ₹${costLakh}L${extra}<br>
+                    <b>Congestion:</b> ${route.congestion_pct}%<br>
+                    ${route.recommended ? "<br><b style='color:#4ADE80'>✓ Recommended</b>" : ""}
+                </div>
+            `, { maxWidth: 240 });
+
+            line.addTo(map);
+            _routeLayers.push(line);
+
+            if (coords.length >= 2) {
+                const mid  = coords[Math.floor(coords.length / 2)];
+                const icon = L.divIcon({
+                    className : "",
+                    html      : `<div style="background:${style.color}22;border:1px solid ${style.color}99;
+                        color:${style.color};font-size:9px;font-weight:700;padding:2px 7px;
+                        border-radius:10px;white-space:nowrap;font-family:Inter,sans-serif;backdrop-filter:blur(4px);">
+                        ${route.id} · ₹${costLakh}L · ${route.delay_hours}h${route.recommended ? " ✓" : ""}
+                    </div>`,
+                    iconAnchor: [40, 10],
+                });
+                const marker = L.marker(mid, { icon, interactive: false });
+                marker.addTo(map);
+                _routeLayers.push(marker);
+            }
+        });
+
+        const allWaypoints = new Map();
+        Object.values(routes).forEach(r => {
+            (r.waypoint_coords || []).forEach(w => allWaypoints.set(w.key, w));
+        });
+        allWaypoints.forEach(w => {
+            const icon = L.divIcon({
+                className : "",
+                html      : `<div style="width:12px;height:12px;border-radius:50%;
+                    background:#bac8dc;border:2px solid #8e9196;
+                    box-shadow:0 0 0 3px rgba(186,200,220,.1);"></div>`,
+                iconAnchor: [6, 6],
+            });
+            const mk = L.marker([w.lat, w.lng], { icon }).bindPopup(`<b>${w.name}</b>`);
+            mk.addTo(map);
+            _routeLayers.push(mk);
+        });
+    };
+    tryRender();
+}
+
+window.focusMapRoute = function(routeId) {
+    if (!_lastMLResult?.routes) return;
+    const route = _lastMLResult.routes[routeId];
+    if (!route?.waypoint_coords?.length) return;
+    const map = window._leafletMap || window.leafletMapInstance;
+    if (!map) return;
+    const bounds = L.latLngBounds(route.waypoint_coords.map(w => [w.lat, w.lng]));
+    map.fitBounds(bounds, { padding: [60, 60] });
+    document.querySelectorAll(".ie-route-card").forEach(el => {
+        el.style.borderColor = el.dataset.routeId === routeId
+            ? (routeId === "A" ? "#60a5fa" : routeId === "B" ? "#fb923c" : "#4ADE80")
+            : "rgba(186,200,220,0.1)";
+    });
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ALERT HTML
 // ─────────────────────────────────────────────────────────────────────────────
 function buildAlertHTML(a) {
     const icons = { CRITICAL:"🔴", WARNING:"🟠", INFO:"🔵" };
     const ts    = new Date(a.timestamp).toLocaleString("en-IN", { day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit" });
     return `
         <div class="ie-alert ${a.severity}" id="alert-${a.id}">
-            <span style="font-size:11px;margin-top:1px;">${icons[a.severity] || "⚪"}</span>
+            <span style="font-size:11px;margin-top:1px;">${icons[a.severity]||"⚪"}</span>
             <div style="flex:1;">
                 <div class="ie-atitle">${a.title}</div>
                 <div class="ie-abody">${a.body}</div>
@@ -550,35 +973,37 @@ function buildAlertHTML(a) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 7. DECISION BUTTONS
+// DECISION BUTTONS — terminate is always enabled for stationary ships
 // ─────────────────────────────────────────────────────────────────────────────
-function buildDecisionButtons(s, m, alerts) {
+function buildDecisionButtons(s, m, alerts, ml) {
     const hasCritical = alerts.some(a => a.severity === "CRITICAL" && !a.dismissed);
-    const hasWarning  = alerts.some(a => !a.dismissed && (a.severity === "WARNING" || a.severity === "CRITICAL"));
-    const hasDelay    = m.etaDeltaHours !== null && m.etaDeltaHours > 0;
+    const hasWarning  = alerts.some(a => !a.dismissed && a.severity !== "INFO");
+    const hasDelay    = ml.predicted_delay_hours > 0 || m.daysOverdue > 0;
 
     const actions = [
-        { key:"reroute",   emoji:"🔁", label:"Reroute Vessel",            color:IE_COLORS.critical, enabled: m.stormFlag || m.riskScore > 50,           reason:"Active when storm or risk > 50" },
-        { key:"captain",   emoji:"📞", label:"Contact Captain",            color:IE_COLORS.warning,  enabled: hasWarning || m.isStationary,               reason:"Active when WARNING alert exists" },
-        { key:"escalate",  emoji:"📢", label:"Escalate to Port Authority", color:"#a78bfa",          enabled: hasCritical,                                reason:"Active when CRITICAL alert exists" },
-        { key:"flag",      emoji:"📦", label:"Flag Cargo At Risk",         color:IE_COLORS.warning,  enabled: m.stormFlag && hasDelay,                    reason:"Active when storm + delay detected" },
-        { key:"eta",       emoji:"⏱",  label:"Revise ETA",                color:IE_COLORS.info,     enabled: hasDelay || m.progressGap > 5 || m.isStationary, reason:"Active when delay detected" },
-        { key:"terminate", emoji:"🛑", label:"Terminate Shipment",         color:"#dc2626",          enabled: m.isStationary && m.elapsedHours > 10,      reason:"Active when stationary > 10h" },
+        { key:"terminate", emoji:"🛑",
+          label: ml._should_cancel ? "Terminate Shipment (RECOMMENDED)" : "Terminate Shipment",
+          color: ml._should_cancel ? "#dc2626" : "#dc2626",
+          enabled: m.isStationary || ml._should_cancel },
+        { key:"reroute",   emoji:"🔁", label:"Open Reroute Decision Center", color:IE_COLORS.critical, enabled: (ml.stormFlag || m.riskScore > 50) && !ml._should_cancel },
+        { key:"captain",   emoji:"📞", label:"Contact Captain",              color:IE_COLORS.warning,  enabled: hasWarning || m.isStationary },
+        { key:"escalate",  emoji:"📢", label:"Escalate to Port Authority",   color:"#a78bfa",          enabled: hasCritical || m.isStationary },
+        { key:"flag",      emoji:"📦", label:"Flag Cargo At Risk",           color:IE_COLORS.warning,  enabled: (ml.stormFlag || m.isStationary) && hasDelay },
+        { key:"eta",       emoji:"⏱",  label:"Revise ETA",                  color:IE_COLORS.info,     enabled: hasDelay || m.progressGap > 5 || m.isStationary },
     ];
 
     return actions.map(a => `
         <button class="ie-btn" data-ie-action="${a.key}" ${a.enabled ? "" : "disabled"}
-            style="border-color:${a.color}${a.enabled ? "55" : "22"};
+            style="border-color:${a.color}${a.enabled?"55":"22"};
                    color:${a.enabled ? a.color : "#44474c"};
-                   background:${a.color}${a.enabled ? "11" : "06"};">
+                   background:${a.color}${a.enabled?"11":"06"};">
             <span style="font-size:13px;">${a.emoji}</span>
             <span>${a.label}</span>
-            ${!a.enabled ? `<span style="margin-left:auto;font-size:8px;color:#44474c;font-weight:400;text-transform:none;letter-spacing:0;">${a.reason}</span>` : ""}
         </button>`).join("");
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 8. RISK GAUGE SVG
+// RISK GAUGE SVG
 // ─────────────────────────────────────────────────────────────────────────────
 function buildRiskGaugeSVG(score, tier) {
     const s     = Math.max(0, Math.min(score, 100));
@@ -588,7 +1013,7 @@ function buildRiskGaugeSVG(score, tier) {
         <svg width="76" height="48" viewBox="0 0 76 48" style="flex-shrink:0;">
             <path d="M 10 38 A 28 28 0 0 1 66 38" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="5" stroke-linecap="round"/>
             <path d="M 10 38 A 28 28 0 0 1 66 38" fill="none" stroke="${color}" stroke-width="5"
-                stroke-linecap="round" stroke-dasharray="${circ}" stroke-dashoffset="${circ * (1 - s / 100)}"/>
+                stroke-linecap="round" stroke-dasharray="${circ}" stroke-dashoffset="${circ*(1-s/100)}"/>
             <text x="38" y="35" text-anchor="middle" font-size="13" font-weight="800"
                 fill="${color}" font-family="Manrope,sans-serif">${s}</text>
             <text x="38" y="45" text-anchor="middle" font-size="6.5" fill="#8e9196"
@@ -597,8 +1022,25 @@ function buildRiskGaugeSVG(score, tier) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 9. MODALS
+// ACTION HANDLERS + MODALS
 // ─────────────────────────────────────────────────────────────────────────────
+function attachActionHandlers(s, m, alerts, ml) {
+    alerts.filter(a => !a.dismissed).forEach(a => {
+        document.getElementById(`dismiss-${a.id}`)?.addEventListener("click", () => dismissAlert(a.id));
+    });
+    const handlers = {
+        reroute  : () => openRerouteModal(s, m, ml),
+        captain  : () => openCaptainModal(s, m, ml),
+        escalate : () => openEscalateModal(s, m, alerts, ml),
+        flag     : () => openFlagCargoModal(s, m, ml),
+        eta      : () => openReviseETAModal(s, m, ml),
+        terminate: () => openTerminateModal(s, m, ml),
+    };
+    document.querySelectorAll("[data-ie-action]").forEach(btn => {
+        btn.addEventListener("click", () => handlers[btn.getAttribute("data-ie-action")]?.());
+    });
+}
+
 function openModal(html) {
     document.querySelector(".ie-modal-backdrop")?.remove();
     const b = document.createElement("div");
@@ -610,38 +1052,34 @@ function openModal(html) {
     return b;
 }
 
-function openRerouteModal(s, m) {
-    openModal(`
-        <button class="ie-mclose">✕</button>
-        <h3>🔁 Reroute Vessel</h3>
-        <p style="font-size:12px;color:#8e9196;margin-bottom:12px;">
-            Route: <strong style="color:#d0e5f9;">${s.cargo?.origin} → ${s.cargo?.destination}</strong><br>
-            Risk: <strong style="color:#f87171;">${m.riskScore}/100</strong> &nbsp;|&nbsp;
-            Storm: <strong style="color:${m.stormFlag ? "#f87171" : "#4ADE80"};">${m.stormFlag ? "ACTIVE" : "CLEAR"}</strong>
-        </p>
-        <div style="background:rgba(251,107,0,0.07);border:1px solid rgba(251,107,0,0.2);border-radius:8px;padding:12px;margin-bottom:12px;">
-            <div style="font-size:10px;font-weight:700;color:#fb6b00;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Suggested Alternate Waypoints</div>
-            <div style="font-size:11px;color:#d0e5f9;line-height:1.9;">
-                ${m.stormFlag
-                    ? "1. Divert 40km south of current heading<br>2. Bypass storm zone via coastal corridor<br>3. Re-enter planned route at next checkpoint"
-                    : "1. Maintain current heading<br>2. Increase speed to 14 kn to recover schedule<br>3. Request priority docking clearance"}
-            </div>
-        </div>
-        <label style="font-size:10px;color:#8e9196;text-transform:uppercase;letter-spacing:0.08em;">Ops Notes</label>
-        <textarea rows="3" placeholder="Add reroute justification..."></textarea>
-        <button class="ie-msub" style="background:#fb6b00;"
-            onclick="this.textContent='✓ Reroute Order Filed';this.disabled=true;setTimeout(()=>document.querySelector('.ie-modal-backdrop')?.remove(),1500)">
-            File Reroute Order
-        </button>`);
+function openRerouteModal(s, m, ml) {
+    const win = window.open(`reroute_decision.html?id=${_currentShipmentId}`, '_blank');
+    if (!win) return;
+    const payload = { type: 'nautical_ml_data', ml, shipment: s };
+    const interval = setInterval(() => win.postMessage(payload, window.location.origin), 300);
+    setTimeout(() => clearInterval(interval), 5000);
+    window.addEventListener('message', (e) => {
+        if (e.data?.type === 'nautical_ml_ack') clearInterval(interval);
+    }, { once: true });
 }
 
-function openCaptainModal(s, m) {
-    const msg = `Captain,\n\nOps alert — Vessel: ${s.vessel?.name} | #${s._id?.toString().slice(-8).toUpperCase()}\n\nStatus:\n- Progress: ${m.actualPct}% (expected ${m.expectedPct.toFixed(0)}%)\n- Avg speed: ${m.isStationary ? "STATIONARY — No GPS movement" : m.avgSpeedKnots.toFixed(1) + " kn"}\n- ML Risk score: ${m.riskScore}/100 (${m.riskTier})\n${m.stormFlag ? "- ⚠ Storm conditions active\n" : ""}${m.isStationary ? "- ⚠ GPS showing no movement — please confirm vessel status and device\n" : ""}\nPlease confirm current situation and provide ETA update.\n\nNAUTICAL.OS Operations`;
+function openCaptainModal(s, m, ml) {
+    const daysStr = `${Math.round(m.stationaryDays)} days`;
+    const breakdown = ml.delay_breakdown || {};
+    const bdLines = Object.entries(breakdown)
+        .filter(([,v]) => v > 0)
+        .map(([k,v]) => `  - ${k.replace(/_/g," ")}: +${v}h`)
+        .join("\n");
+
+    const stationaryNote = m.isStationary
+        ? `\n⚠ URGENT: Vessel has been stationary for ${daysStr}.\nNo checkpoint progress. ${Math.round(m.daysOverdue)} days overdue.\n${ml._should_cancel ? "CANCELLATION IS RECOMMENDED.\n" : ""}`
+        : "";
+
+    const msg = `Captain,\n\nOps alert — Vessel: ${s.vessel?.name} | #${s._id?.toString().slice(-8).toUpperCase()}\n${stationaryNote}\nReasoning Engine Report:\n- Predicted delay: +${ml.predicted_delay_hours}h\n- Risk score: ${ml.risk_score}/100 (${ml.risk_tier})\n- Recommended route: ${ml.best_route_id || "—"} (${ml.recommendation_action})\n\nDelay breakdown:\n${bdLines}\n\n${ml.storm_flag ? "⚠ Storm conditions active on route\n" : ""}Progress: ${m.actualPct}% (expected ${m.expectedPct.toFixed(0)}%)\nAvg speed: ${m.isStationary ? "STATIONARY — NO MOVEMENT DETECTED" : m.avgSpeedKnots.toFixed(1) + " kn"}\n\nPlease confirm current situation and ETA immediately.\n\nNAUTICAL.OS Operations`;
     openModal(`
         <button class="ie-mclose">✕</button>
         <h3>📞 Contact Captain</h3>
-        <p style="font-size:12px;color:#8e9196;margin-bottom:8px;">Auto-filled from current shipment state:</p>
-        <textarea rows="11">${msg}</textarea>
+        <textarea rows="14">${msg}</textarea>
         <div style="display:flex;gap:8px;margin-top:12px;">
             <button class="ie-msub" style="background:#fb6b00;"
                 onclick="navigator.clipboard?.writeText(this.closest('.ie-modal').querySelector('textarea').value);this.textContent='✓ Copied!'">Copy</button>
@@ -650,99 +1088,104 @@ function openCaptainModal(s, m) {
         </div>`);
 }
 
-function openEscalateModal(s, m, alerts) {
-    const crits = (alerts || loadAlerts()).filter(a => !a.dismissed && a.severity === "CRITICAL");
+function openEscalateModal(s, m, alerts, ml) {
+    const crits = alerts.filter(a => !a.dismissed && a.severity === "CRITICAL");
+    const stationaryNote = m.isStationary
+        ? `\nCRITICAL: Vessel stationary for ${Math.round(m.stationaryDays)} days.\n${Math.round(m.daysOverdue)} days past scheduled arrival.\n` : "";
     openModal(`
         <button class="ie-mclose">✕</button>
         <h3>📢 Escalate to Port Authority</h3>
-        <div style="background:rgba(248,113,113,0.07);border:1px solid rgba(248,113,113,0.2);border-radius:8px;padding:10px;margin-bottom:12px;">
+        <div style="background:rgba(248,113,113,.07);border:1px solid rgba(248,113,113,.2);border-radius:8px;padding:10px;margin-bottom:12px;">
             <div style="font-size:10px;font-weight:700;color:#f87171;margin-bottom:6px;">CRITICAL INCIDENTS (${crits.length})</div>
-            ${crits.map(a => `<div style="font-size:10px;color:#d0e5f9;margin-bottom:3px;">• ${a.title}</div>`).join("") || '<div style="font-size:10px;color:#8e9196;">None</div>'}
+            ${crits.map(a => `<div style="font-size:10px;color:#d0e5f9;margin-bottom:3px;">• ${a.title}</div>`).join("")||'<div style="font-size:10px;color:#8e9196;">None</div>'}
         </div>
-        <label style="font-size:10px;color:#8e9196;text-transform:uppercase;letter-spacing:0.08em;">Incident Report</label>
-        <textarea rows="5" style="margin-top:6px;">Vessel: ${s.vessel?.name}
+        <textarea rows="8">Vessel: ${s.vessel?.name}
 Route: ${s.cargo?.origin} → ${s.cargo?.destination}
-Incidents: ${crits.map(a => a.title).join("; ") || "None"}
-ML Risk Score: ${m.riskScore}/100
-Requesting port authority assessment and coordination.</textarea>
+Risk Score: ${ml.risk_score}/100 (${ml.risk_tier})
+Predicted Delay: +${ml.predicted_delay_hours}h${stationaryNote}
+Recommended Action: ${ml.recommendation_action}
+Incidents: ${crits.map(a=>a.title).join("; ")||"None"}
+Requesting port authority assessment and intervention.</textarea>
         <button class="ie-msub" style="background:#7c3aed;"
             onclick="this.textContent='✓ Escalation Filed';this.disabled=true;setTimeout(()=>document.querySelector('.ie-modal-backdrop')?.remove(),1500)">
             Submit Escalation Report
         </button>`);
 }
 
-function openFlagCargoModal(s, m) {
+function openFlagCargoModal(s, m, ml) {
     openModal(`
         <button class="ie-mclose">✕</button>
         <h3>📦 Flag Cargo At Risk</h3>
-        <div style="background:rgba(251,146,60,0.07);border:1px solid rgba(251,146,60,0.2);border-radius:8px;padding:10px;margin-bottom:12px;font-size:11px;color:#d0e5f9;line-height:1.8;">
-            <strong style="color:#fb923c;">Risk Factors:</strong><br>
-            ${m.stormFlag ? "• Active storm at vessel position<br>" : ""}
-            ${m.etaDeltaHours > 0 ? `• Delay: +${m.etaDeltaHours.toFixed(0)}h<br>` : ""}
-            • ${s.vessel?.container_count} TEU containers affected<br>
-            • ML Risk score: ${m.riskScore}/100
+        <div style="background:rgba(251,146,60,.07);border:1px solid rgba(251,146,60,.2);border-radius:8px;padding:10px;margin-bottom:12px;font-size:11px;color:#d0e5f9;line-height:1.8;">
+            ${ml.storm_flag ? "• Active storm on route<br>" : ""}
+            ${m.isStationary ? `• Vessel stationary ${Math.round(m.stationaryDays)} days<br>` : ""}
+            ${m.daysOverdue > 0 ? `• Shipment ${Math.round(m.daysOverdue)} days overdue<br>` : ""}
+            • ${s.vessel?.container_count || "—"} TEU containers affected<br>
+            • Risk score: ${ml.risk_score}/100
         </div>
-        <label style="font-size:10px;color:#8e9196;text-transform:uppercase;letter-spacing:0.08em;">Risk Notes</label>
         <textarea rows="3" placeholder="Cargo sensitivity, handling requirements..."></textarea>
         <button class="ie-msub" style="background:#d97706;"
-            onclick="this.textContent='✓ Cargo Flagged';this.disabled=true;setTimeout(()=>document.querySelector('.ie-modal-backdrop')?.remove(),1500)">
-            Confirm Flag
-        </button>`);
+            onclick="this.textContent='✓ Cargo Flagged';this.disabled=true;setTimeout(()=>document.querySelector('.ie-modal-backdrop')?.remove(),1500)">Confirm Flag</button>`);
 }
 
-function openReviseETAModal(s, m) {
+function openReviseETAModal(s, m, ml) {
     const schedStr   = m.scheduledETA.toLocaleString("en-IN", { day:"2-digit", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" });
-    const revisedStr = m.revisedETA ? m.revisedETA.toLocaleString("en-IN", { day:"2-digit", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" }) : m.isStationary ? "Indeterminate" : "Insufficient data";
-    const deltaStr   = m.etaDeltaHours !== null ? `${m.etaDeltaHours > 0 ? "+" : ""}${m.etaDeltaHours.toFixed(0)}h ${m.etaDeltaHours > 0 ? "DELAY" : "AHEAD"}` : m.isStationary ? "Unknown" : "—";
+    const deltaHours = ml.predicted_delay_hours || 0;
+    const revisedStr = new Date(m.scheduledETA.getTime() + deltaHours * 3_600_000)
+        .toLocaleString("en-IN", { day:"2-digit", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" });
+    const overdueLabel = m.daysOverdue > 0
+        ? `<div style="text-align:center;font-size:13px;color:#f87171;font-family:Inter,sans-serif;margin-bottom:8px;">${Math.round(m.daysOverdue)} days past scheduled arrival</div>`
+        : "";
     openModal(`
         <button class="ie-mclose">✕</button>
         <h3>⏱ Revise ETA</h3>
+        ${overdueLabel}
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
-            <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px;">
+            <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:10px;">
                 <div style="font-size:9px;color:#8e9196;text-transform:uppercase;margin-bottom:4px;">Scheduled ETA</div>
                 <div style="font-size:12px;font-weight:700;color:#d0e5f9;">${schedStr}</div>
             </div>
-            <div style="background:rgba(248,113,113,0.07);border:1px solid rgba(248,113,113,0.2);border-radius:8px;padding:10px;">
+            <div style="background:rgba(248,113,113,.07);border:1px solid rgba(248,113,113,.2);border-radius:8px;padding:10px;">
                 <div style="font-size:9px;color:#8e9196;text-transform:uppercase;margin-bottom:4px;">Revised ETA</div>
-                <div style="font-size:11px;font-weight:700;color:#f87171;">${revisedStr}</div>
+                <div style="font-size:11px;font-weight:700;color:#f87171;">${m.daysOverdue > 0 ? "UNKNOWN — vessel not moving" : revisedStr}</div>
             </div>
         </div>
-        <div style="text-align:center;font-size:20px;font-weight:800;font-family:Manrope,sans-serif;color:${m.etaDeltaHours > 0 ? "#f87171" : "#4ADE80"};margin-bottom:12px;">${deltaStr}</div>
-        <div style="font-size:10px;color:#8e9196;margin-bottom:10px;">
-            ${m.isStationary ? "Cannot project ETA — vessel is stationary. Resume movement to enable calculation." : `Based on avg speed ${m.avgSpeedKnots.toFixed(1)} kn over ${m.totalDistanceKm.toFixed(0)} km traveled.`}
+        <div style="text-align:center;font-size:22px;font-weight:800;font-family:Manrope,sans-serif;color:${deltaHours>0?"#f87171":"#4ADE80"};margin-bottom:12px;">
+            ${m.daysOverdue > 0 ? `${Math.round(m.daysOverdue)} DAYS OVERDUE` : deltaHours > 0 ? `+${deltaHours}h DELAY` : "On Schedule"}
         </div>
-        <label style="font-size:10px;color:#8e9196;text-transform:uppercase;letter-spacing:0.08em;">Notify Stakeholders</label>
-        <input type="text" placeholder="Email addresses (comma separated)..." style="margin-top:6px;">
+        <input type="text" placeholder="Notify stakeholders — email addresses (comma separated)...">
         <button class="ie-msub" style="background:#fb6b00;"
             onclick="this.textContent='✓ ETA Revision Sent';this.disabled=true;setTimeout(()=>document.querySelector('.ie-modal-backdrop')?.remove(),1500)">
             Confirm & Notify
         </button>`);
 }
 
-function openTerminateModal(s, m) {
-    openModal(`
-        <button class="ie-mclose">✕</button>
-        <h3 style="color:#f87171;">🛑 Terminate Shipment</h3>
-        <div style="background:rgba(220,38,38,0.08);border:1px solid rgba(220,38,38,0.3);border-radius:8px;padding:12px;margin-bottom:14px;">
+function openTerminateModal(s, m, ml) {
+    const urgency = ml._should_cancel
+        ? `<div style="background:rgba(220,38,38,.12);border:1px solid rgba(220,38,38,.4);border-radius:8px;padding:12px;margin-bottom:14px;">
+            <div style="font-size:11px;color:#f87171;font-weight:700;margin-bottom:6px;">⛔ CANCELLATION RECOMMENDED BY INTELLIGENCE ENGINE</div>
+            <div style="font-size:11px;color:#d0e5f9;line-height:1.8;">
+                Vessel stationary for <strong>${Math.round(m.stationaryDays)} days</strong> — ${Math.round(m.daysOverdue)} days overdue.<br>
+                Zero checkpoints reached out of ${m.totalCPs}.<br>
+                Risk score: ${ml.risk_score}/100 CRITICAL.
+            </div>
+          </div>`
+        : `<div style="background:rgba(220,38,38,.08);border:1px solid rgba(220,38,38,.3);border-radius:8px;padding:12px;margin-bottom:14px;">
             <div style="font-size:11px;color:#f87171;font-weight:700;margin-bottom:6px;">⚠ This action cannot be undone</div>
             <div style="font-size:11px;color:#d0e5f9;line-height:1.8;">
                 Vessel: <strong>${s.vessel?.name}</strong><br>
-                Route: ${s.cargo?.origin} → ${s.cargo?.destination}<br>
-                Stationary for: ~${Math.round(m.elapsedHours)}h<br>
+                Stationary: ~${Math.round(m.stationaryDays)} days<br>
                 ${s.vessel?.container_count} TEU containers affected
             </div>
-        </div>
-        <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:10px;margin-bottom:12px;font-size:11px;color:#d0e5f9;line-height:1.7;">
-            <strong style="color:#fb923c;">Consider alternatives:</strong><br>
-            • Wait — vessel may resume movement<br>
-            • Reroute — redirect to nearest port<br>
-            • Reschedule — defer to next slot
-        </div>
-        <label style="font-size:10px;color:#8e9196;text-transform:uppercase;letter-spacing:0.08em;">Termination Reason (required)</label>
+          </div>`;
+
+    openModal(`
+        <button class="ie-mclose">✕</button>
+        <h3 style="color:#f87171;">🛑 Terminate Shipment</h3>
+        ${urgency}
         <textarea rows="3" placeholder="State reason for audit trail..."></textarea>
         <div style="display:flex;gap:8px;margin-top:12px;">
-            <button class="ie-msub" style="background:#374151;flex:1;"
-                onclick="document.querySelector('.ie-modal-backdrop')?.remove()">Cancel</button>
+            <button class="ie-msub" style="background:#374151;flex:1;" onclick="document.querySelector('.ie-modal-backdrop')?.remove()">Cancel</button>
             <button class="ie-msub" style="background:#dc2626;flex:1;"
                 onclick="this.textContent='✓ Termination Filed';this.disabled=true;setTimeout(()=>document.querySelector('.ie-modal-backdrop')?.remove(),2000)">
                 Confirm Terminate
@@ -751,35 +1194,12 @@ function openTerminateModal(s, m) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 10. UTILITIES
+// UTILITIES
 // ─────────────────────────────────────────────────────────────────────────────
 function haversineKm(lat1, lon1, lat2, lon2) {
-    const R = 6371, dLat = (lat2-lat1)*Math.PI/180, dLon = (lon2-lon1)*Math.PI/180;
-    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+    const R = 6371, dL = (lat2-lat1)*Math.PI/180, dN = (lon2-lon1)*Math.PI/180;
+    const a = Math.sin(dL/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dN/2)**2;
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
-const IE_KNOWN_PORTS = {
-    "mumbai":{ lat:18.9322,lng:72.8375 }, "jnpt":{ lat:18.9480,lng:72.9500 },
-    "nhava sheva":{ lat:18.9480,lng:72.9500 }, "kochi":{ lat:9.9312,lng:76.2673 },
-    "cochin":{ lat:9.9312,lng:76.2673 }, "goa":{ lat:15.4909,lng:73.8278 },
-    "mangalore":{ lat:12.8703,lng:74.8423 }, "chennai":{ lat:13.0827,lng:80.2707 },
-    "vizag":{ lat:17.6868,lng:83.2185 }, "visakhapatnam":{ lat:17.6868,lng:83.2185 },
-    "kolkata":{ lat:22.5726,lng:88.3639 }, "haldia":{ lat:22.0667,lng:88.0833 },
-    "kandla":{ lat:23.0333,lng:70.2167 }, "mundra":{ lat:22.8390,lng:69.7183 },
-    "tuticorin":{ lat:8.7642,lng:78.1348 }, "thoothukudi":{ lat:8.7642,lng:78.1348 },
-    "kozhikode":{ lat:11.2588,lng:75.7804 }, "calicut":{ lat:11.2588,lng:75.7804 },
-    "pipavav":{ lat:20.9167,lng:71.5167 }, "hazira":{ lat:21.1167,lng:72.6500 },
-    "mormugao":{ lat:15.4139,lng:73.7993 },
-};
-
-function geocodePortIE(name) {
-    if (!name) return null;
-    const key = name.toLowerCase().split(",")[0].trim();
-    for (const [port, coords] of Object.entries(IE_KNOWN_PORTS)) {
-        if (key.includes(port) || port.includes(key)) return coords;
-    }
-    return null;
-}
-
-window.runIntelligenceEngine = runIntelligenceEngine; 
+window.runIntelligenceEngine = runIntelligenceEngine;

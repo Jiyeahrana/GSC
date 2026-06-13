@@ -1,0 +1,1430 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>NAUTICAL.OS | Reroute Decision Center</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:           #001523;
+  --surface:      #0c2230;
+  --surface-hi:   #172c3b;
+  --border:       rgba(186,200,220,0.10);
+  --border-hi:    rgba(186,200,220,0.20);
+  --text:         #d0e5f9;
+  --text-sub:     #8e9196;
+  --text-dim:     #44474c;
+  --accent:       #fb6b00;
+  --blue:         #60a5fa;
+  --green:        #4ADE80;
+  --red:          #f87171;
+  --orange:       #fb923c;
+  --yellow:       #fbbf24;
+  --purple:       #a78bfa;
+  --route-a:      #60a5fa;
+  --route-b:      #fb923c;
+  --route-c:      #4ADE80;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── TOPBAR ── */
+.topbar {
+  position: sticky; top: 0; z-index: 200;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px; height: 52px;
+  background: rgba(0,13,22,0.92);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+.topbar-left { display: flex; align-items: center; gap: 16px; }
+.back-btn {
+  display: flex; align-items: center; gap: 6px;
+  background: none; border: none; cursor: pointer;
+  color: var(--text-sub); font-size: 12px; font-weight: 600;
+  letter-spacing: .06em; text-transform: uppercase;
+  transition: color .15s;
+}
+.back-btn:hover { color: var(--text); }
+.back-btn svg { width: 16px; height: 16px; fill: currentColor; }
+.topbar-title {
+  font-family: 'Manrope', sans-serif;
+  font-size: 13px; font-weight: 800;
+  color: var(--text); letter-spacing: .04em; text-transform: uppercase;
+}
+.topbar-badge {
+  font-size: 10px; font-weight: 700; padding: 3px 10px;
+  border-radius: 20px; letter-spacing: .06em; text-transform: uppercase;
+}
+.badge-critical { background: rgba(248,113,113,.12); color: var(--red); border: 1px solid rgba(248,113,113,.3); }
+.badge-warning  { background: rgba(251,146,60,.10);  color: var(--orange); border: 1px solid rgba(251,146,60,.3); }
+.badge-ok       { background: rgba(74,222,128,.10);  color: var(--green); border: 1px solid rgba(74,222,128,.3); }
+
+.topbar-meta { display: flex; align-items: center; gap: 12px; }
+.meta-pill {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; color: var(--text-sub);
+  background: var(--surface); border: 1px solid var(--border);
+  padding: 3px 10px; border-radius: 20px;
+}
+
+/* ── ALERT BANNER ── */
+.alert-banner {
+  display: flex; align-items: center; gap: 14px;
+  margin: 16px 24px 0;
+  padding: 14px 20px;
+  background: rgba(248,113,113,.07);
+  border: 1px solid rgba(248,113,113,.25);
+  border-radius: 10px;
+  animation: slideIn .4s ease;
+}
+@keyframes slideIn { from { opacity:0; transform: translateY(-8px); } to { opacity:1; transform: translateY(0); } }
+.alert-icon { font-size: 20px; flex-shrink: 0; }
+.alert-text { flex: 1; }
+.alert-title { font-size: 13px; font-weight: 700; color: var(--red); }
+.alert-body  { font-size: 11px; color: var(--text-sub); margin-top: 2px; line-height: 1.5; }
+.alert-timer {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 20px; font-weight: 600; color: var(--red);
+  background: rgba(248,113,113,.08);
+  border: 1px solid rgba(248,113,113,.2);
+  padding: 8px 16px; border-radius: 8px; flex-shrink: 0;
+}
+
+/* ── MAIN LAYOUT ── */
+.main { padding: 20px 24px 40px; display: flex; flex-direction: column; gap: 20px; }
+
+/* ── SECTION HEADER ── */
+.section-hdr {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 14px;
+}
+.section-hdr-icon { font-size: 16px; }
+.section-hdr-title {
+  font-size: 10px; font-weight: 700; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--text-sub);
+}
+.section-hdr-line { flex: 1; height: 1px; background: var(--border); }
+
+/* ── SHIPMENT CONTEXT STRIP ── */
+.context-strip {
+  display: flex; gap: 12px; flex-wrap: wrap; align-items: stretch;
+  padding: 16px 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.ctx-block { display: flex; flex-direction: column; gap: 3px; padding-right: 16px; border-right: 1px solid var(--border); }
+.ctx-block:last-child { border-right: none; padding-right: 0; }
+.ctx-label { font-size: 9px; text-transform: uppercase; letter-spacing: .1em; color: var(--text-dim); }
+.ctx-value { font-size: 13px; font-weight: 700; color: var(--text); font-family: 'Manrope', sans-serif; }
+.ctx-value.danger { color: var(--red); }
+.ctx-value.warn   { color: var(--orange); }
+.ctx-value.ok     { color: var(--green); }
+
+/* ── ROUTE CARDS GRID ── */
+.routes-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+@media (max-width: 1100px) { .routes-grid { grid-template-columns: 1fr; } }
+
+/* ── ROUTE CARD ── */
+.route-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color .2s, transform .2s, box-shadow .2s;
+  position: relative;
+}
+.route-card:hover { transform: translateY(-2px); }
+.route-card.selected { border-color: currentColor !important; box-shadow: 0 0 0 1px currentColor, 0 8px 32px rgba(0,0,0,.3); }
+.route-card.route-a { --card-color: var(--route-a); }
+.route-card.route-b { --card-color: var(--route-b); }
+.route-card.route-c { --card-color: var(--route-c); }
+.route-card:hover  { border-color: rgba(186,200,220,0.2); }
+
+.route-card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--border);
+}
+.route-label-row { display: flex; align-items: center; gap: 8px; }
+.route-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.route-title { font-family: 'Manrope', sans-serif; font-size: 14px; font-weight: 800; color: var(--text); }
+.route-sub   { font-size: 9px; color: var(--text-sub); margin-top: 1px; }
+.best-badge {
+  font-size: 9px; font-weight: 800; padding: 2px 8px; border-radius: 10px;
+  letter-spacing: .06em; text-transform: uppercase; flex-shrink: 0;
+}
+
+/* ── MAP CONTAINER ── */
+.map-container {
+  position: relative;
+  height: 240px;
+  background: #001c2d;
+  border-bottom: 1px solid var(--border);
+}
+.map-container .leaflet-container { background: #001c2d; }
+.map-loading-overlay {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: #001c2d; z-index: 10; transition: opacity .4s;
+}
+.map-loading-overlay.hidden { opacity: 0; pointer-events: none; }
+.map-loading-spinner {
+  width: 28px; height: 28px; border: 2px solid rgba(255,255,255,.08);
+  border-top-color: var(--blue); border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── ROUTE METRICS ── */
+.route-metrics { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+
+.metric-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.metric-item {
+  background: rgba(255,255,255,.03);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+.metric-item.full { grid-column: 1 / -1; }
+.metric-label { font-size: 8px; text-transform: uppercase; letter-spacing: .1em; color: var(--text-dim); margin-bottom: 3px; }
+.metric-value { font-family: 'Manrope', sans-serif; font-size: 16px; font-weight: 800; line-height: 1; }
+.metric-unit  { font-size: 9px; color: var(--text-sub); font-weight: 400; margin-left: 2px; }
+
+/* ── RISK FACTOR BAR ── */
+.risk-factors { padding: 0 16px 14px; display: flex; flex-direction: column; gap: 6px; }
+.risk-factor-row {
+  display: flex; align-items: center; gap: 8px;
+}
+.risk-factor-label { font-size: 9px; color: var(--text-sub); width: 100px; flex-shrink: 0; }
+.risk-factor-bar-wrap {
+  flex: 1; height: 4px; background: rgba(255,255,255,.06); border-radius: 2px; overflow: hidden;
+}
+.risk-factor-bar { height: 100%; border-radius: 2px; transition: width .8s cubic-bezier(.4,0,.2,1); }
+.risk-factor-val { font-size: 9px; font-weight: 700; width: 36px; text-align: right; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; }
+
+/* ── DELAY BREAKDOWN ── */
+.delay-breakdown { padding: 0 16px 14px; }
+.breakdown-header { font-size: 9px; text-transform: uppercase; letter-spacing: .1em; color: var(--text-dim); margin-bottom: 8px; }
+.breakdown-grid { display: flex; flex-direction: column; gap: 5px; }
+.breakdown-row {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 9px; color: var(--text-sub); padding: 4px 0;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+}
+.breakdown-row:last-child { border-bottom: none; }
+.breakdown-row .bval { font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+
+/* ── WAYPOINTS ── */
+.waypoints { padding: 0 16px 14px; }
+.waypoint-chain {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+}
+.waypoint-node {
+  font-size: 9px; font-weight: 700; padding: 3px 8px; border-radius: 6px;
+  background: rgba(255,255,255,.04); border: 1px solid var(--border);
+  color: var(--text);
+}
+.waypoint-arrow { color: var(--text-dim); font-size: 10px; }
+
+/* ── CARD FOOTER ── */
+.route-card-footer {
+  padding: 10px 16px;
+  background: rgba(255,255,255,.02);
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.select-btn {
+  font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  padding: 7px 16px; border-radius: 8px; border: 1px solid;
+  cursor: pointer; transition: all .15s; background: none;
+}
+.select-btn:hover { transform: translateX(2px); }
+
+/* ── SCORE GAUGE ── */
+.score-display {
+  display: flex; align-items: center; gap: 10px;
+}
+.score-ring-wrap { position: relative; width: 48px; height: 48px; }
+.score-ring-wrap svg { position: absolute; inset: 0; }
+.score-num {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-family: 'Manrope', sans-serif; font-size: 13px; font-weight: 800;
+}
+.score-tier { font-size: 8px; text-transform: uppercase; letter-spacing: .08em; color: var(--text-sub); margin-top: 2px; }
+
+/* ── COMPARISON TABLE ── */
+.comparison-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.comparison-table { width: 100%; border-collapse: collapse; }
+.comparison-table th {
+  font-size: 9px; text-transform: uppercase; letter-spacing: .1em; color: var(--text-dim);
+  padding: 12px 16px; text-align: left; background: rgba(255,255,255,.02);
+  border-bottom: 1px solid var(--border); font-weight: 600;
+}
+.comparison-table td {
+  font-size: 11px; padding: 10px 16px; border-bottom: 1px solid rgba(255,255,255,.04);
+  vertical-align: middle;
+}
+.comparison-table tr:last-child td { border-bottom: none; }
+.comparison-table tr:hover td { background: rgba(255,255,255,.02); }
+.comparison-table .row-label { color: var(--text-sub); font-size: 10px; font-weight: 600; }
+.comparison-table .winner { font-weight: 700; }
+
+/* ── REASONING PANEL ── */
+.reasoning-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+}
+.reasoning-chain { display: flex; flex-direction: column; gap: 0; }
+.rc-item {
+  display: flex; gap: 12px; padding: 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+  font-size: 11px; color: var(--text-sub); line-height: 1.5;
+}
+.rc-item:last-child { border-bottom: none; }
+.rc-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+.rc-item.delay-factor { color: var(--text); }
+
+/* ── DECISION PANEL ── */
+.decision-panel {
+  background: linear-gradient(135deg, rgba(12,34,48,1) 0%, rgba(23,44,59,.8) 100%);
+  border: 1px solid var(--border);
+  border-radius: 14px; padding: 24px;
+  position: relative; overflow: hidden;
+}
+.decision-panel::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at top right, rgba(251,107,0,.06) 0%, transparent 60%);
+  pointer-events: none;
+}
+.decision-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+.action-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 18px; border-radius: 8px; border: 1px solid;
+  font-size: 11px; font-weight: 700; letter-spacing: .05em;
+  text-transform: uppercase; cursor: pointer; background: none;
+  transition: all .15s; font-family: 'Inter', sans-serif;
+}
+.action-btn:hover { transform: translateY(-1px); filter: brightness(1.15); }
+.action-btn:disabled { opacity: .3; cursor: not-allowed; transform: none; }
+
+/* ── SCENARIO SIMULATOR ── */
+.simulator-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px; padding: 20px;
+}
+.sim-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-top: 14px; }
+.sim-control label {
+  display: block; font-size: 9px; text-transform: uppercase;
+  letter-spacing: .1em; color: var(--text-dim); margin-bottom: 6px;
+}
+.sim-control input[type=range] {
+  width: 100%; accent-color: var(--accent);
+  cursor: pointer; margin-bottom: 4px;
+}
+.sim-control .sim-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; font-weight: 600; color: var(--text);
+}
+.sim-result-bar {
+  display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 14px;
+}
+.sim-route-result {
+  background: rgba(255,255,255,.03); border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px; text-align: center;
+}
+.sim-route-result .sim-label { font-size: 9px; color: var(--text-sub); text-transform: uppercase; letter-spacing: .08em; }
+.sim-route-result .sim-delay { font-family: 'Manrope', sans-serif; font-size: 20px; font-weight: 800; margin-top: 3px; }
+.sim-route-result .sim-risk  { font-size: 9px; margin-top: 2px; }
+
+/* ── CONFIRM MODAL ── */
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,.75);
+  z-index: 9999; display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity .2s;
+}
+.modal-backdrop.open { opacity: 1; pointer-events: all; }
+.modal {
+  background: #0c2230; border: 1px solid rgba(186,200,220,.15);
+  border-radius: 14px; padding: 28px; max-width: 480px; width: 90%;
+  transform: scale(.95) translateY(8px); transition: transform .25s;
+}
+.modal-backdrop.open .modal { transform: scale(1) translateY(0); }
+.modal h3 {
+  font-family: 'Manrope', sans-serif; font-size: 18px; font-weight: 800;
+  color: var(--text); margin-bottom: 6px;
+}
+.modal-sub { font-size: 12px; color: var(--text-sub); margin-bottom: 16px; line-height: 1.5; }
+.modal-detail-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px;
+}
+.modal-detail {
+  background: rgba(255,255,255,.03); border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px;
+}
+.modal-detail-label { font-size: 8px; text-transform: uppercase; letter-spacing: .1em; color: var(--text-dim); }
+.modal-detail-val   { font-size: 13px; font-weight: 700; color: var(--text); margin-top: 2px; font-family: 'Manrope', sans-serif; }
+.modal textarea {
+  width: 100%; background: rgba(255,255,255,.04);
+  border: 1px solid rgba(186,200,220,.15);
+  border-radius: 8px; padding: 10px 12px;
+  color: var(--text); font-size: 12px; font-family: 'Inter', sans-serif;
+  resize: vertical; outline: none; margin-bottom: 12px; min-height: 70px;
+}
+.modal-actions { display: flex; gap: 8px; }
+.modal-btn {
+  flex: 1; padding: 10px; border-radius: 8px; border: none;
+  font-weight: 700; font-size: 12px; letter-spacing: .05em;
+  text-transform: uppercase; cursor: pointer; font-family: 'Inter', sans-serif;
+  transition: opacity .15s;
+}
+.modal-btn:hover { opacity: .85; }
+.modal-close {
+  position: absolute; top: 14px; right: 14px;
+  background: none; border: none; color: var(--text-sub);
+  cursor: pointer; font-size: 18px; line-height: 1;
+}
+
+/* ── PULSE ANIMATION ── */
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+.pulse { animation: pulse 2s infinite; }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-thumb { background: rgba(186,200,220,.12); border-radius: 4px; }
+
+.leaflet-popup-content-wrapper {
+  background: rgba(12,34,48,.96) !important; color: var(--text) !important;
+  border: 1px solid rgba(68,71,76,.5) !important; border-radius: 8px !important;
+  font-family: Inter, sans-serif !important; font-size: 12px !important;
+}
+.leaflet-popup-tip { background: rgba(12,34,48,.96) !important; }
+</style>
+</head>
+<body>
+
+<!-- ── TOPBAR ── -->
+<header class="topbar">
+  <div class="topbar-left">
+    <button class="back-btn" onclick="history.back()">
+      <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+      Back
+    </button>
+    <div class="topbar-title">🔁 Reroute Decision Center</div>
+    <span class="topbar-badge badge-critical pulse" id="hdr-risk-badge">CRITICAL · RISK 81/100</span>
+  </div>
+  <div class="topbar-meta">
+    <span class="meta-pill" id="hdr-vessel">MV OCEAN PRIDE</span>
+    <span class="meta-pill" id="hdr-route">JNPT → CHENNAI</span>
+    <span class="meta-pill" id="hdr-time">⏱ +14.2h predicted delay</span>
+  </div>
+</header>
+
+<!-- ── ALERT BANNER ── -->
+<div class="alert-banner">
+  <span class="alert-icon">🌀</span>
+  <div class="alert-text">
+    <div class="alert-title">Storm Cyclone Detected — Immediate Reroute Assessment Required</div>
+    <div class="alert-body" id="alert-detail">
+      Cyclone probability 82% · Wave height 6.8m · Storm arrives in 4.2h · Duration 8h · Voyage time 22.1h — storm overlaps 100% of transit window. Route A is compromised.
+    </div>
+  </div>
+  <div class="alert-timer" id="storm-countdown" title="Time until storm hits route">04:12:30</div>
+</div>
+
+<!-- ── MAIN ── -->
+<div class="main">
+
+  <!-- SHIPMENT CONTEXT STRIP -->
+  <div>
+    <div class="section-hdr">
+      <span class="section-hdr-icon">📋</span>
+      <span class="section-hdr-title">Shipment Context</span>
+      <div class="section-hdr-line"></div>
+    </div>
+    <div class="context-strip">
+      <div class="ctx-block">
+        <span class="ctx-label">Vessel</span>
+        <span class="ctx-value" id="ctx-vessel">MV Ocean Pride</span>
+      </div>
+      <div class="ctx-block">
+        <span class="ctx-label">Route</span>
+        <span class="ctx-value" id="ctx-route">JNPT → Chennai</span>
+      </div>
+      <div class="ctx-block">
+        <span class="ctx-label">Cargo Type</span>
+        <span class="ctx-value" id="ctx-cargo">Electronics</span>
+      </div>
+      <div class="ctx-block">
+        <span class="ctx-label">Containers</span>
+        <span class="ctx-value" id="ctx-teu">1,240 TEU</span>
+      </div>
+      <div class="ctx-block">
+        <span class="ctx-label">Risk Score</span>
+        <span class="ctx-value danger" id="ctx-risk">81 / 100</span>
+      </div>
+      <div class="ctx-block">
+        <span class="ctx-label">Predicted Delay</span>
+        <span class="ctx-value warn" id="ctx-delay">+14.2h</span>
+      </div>
+      <div class="ctx-block">
+        <span class="ctx-label">Storm Window</span>
+        <span class="ctx-value danger" id="ctx-storm">4.2h → 12.2h</span>
+      </div>
+      <div class="ctx-block">
+        <span class="ctx-label">Vessel Type</span>
+        <span class="ctx-value" id="ctx-vtype">Container Ship</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3 ROUTE CARDS -->
+  <div>
+    <div class="section-hdr">
+      <span class="section-hdr-icon">🗺️</span>
+      <span class="section-hdr-title">Route Options — Select to Evaluate</span>
+      <div class="section-hdr-line"></div>
+    </div>
+    <div class="routes-grid" id="routes-grid">
+
+      <!-- ROUTE A -->
+      <div class="route-card route-a" id="card-A" onclick="selectRoute('A')" style="color:var(--route-a)">
+        <div class="route-card-header">
+          <div>
+            <div class="route-label-row">
+              <div class="route-dot" style="background:var(--route-a)"></div>
+              <span class="route-title">Route A</span>
+            </div>
+            <div class="route-sub">Direct Route · High Risk</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+            <span class="best-badge" style="background:rgba(248,113,113,.1);color:var(--red);border:1px solid rgba(248,113,113,.3);">⚠ COMPROMISED</span>
+            <div class="score-display">
+              <div>
+                <div style="font-size:18px;font-weight:800;color:var(--red);font-family:'Manrope',sans-serif;">+14.2h</div>
+                <div class="score-tier" style="color:var(--red);">CRITICAL DELAY</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="map-container" id="map-A">
+          <div class="map-loading-overlay" id="loader-A">
+            <div class="map-loading-spinner"></div>
+          </div>
+        </div>
+
+        <div class="route-metrics">
+          <div class="metric-row">
+            <div class="metric-item">
+              <div class="metric-label">Distance</div>
+              <div class="metric-value" style="color:var(--route-a)">742<span class="metric-unit">nm</span></div>
+            </div>
+            <div class="metric-item">
+              <div class="metric-label">Fuel Cost</div>
+              <div class="metric-value" style="color:var(--route-a)">₹55.6<span class="metric-unit">L</span></div>
+            </div>
+          </div>
+          <div class="metric-row">
+            <div class="metric-item">
+              <div class="metric-label">Dest. Congestion</div>
+              <div class="metric-value" style="color:var(--red)">82<span class="metric-unit">%</span></div>
+            </div>
+            <div class="metric-item">
+              <div class="metric-label">Extra Cost</div>
+              <div class="metric-value" style="color:var(--green)">₹0<span class="metric-unit">L</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Risk Factors -->
+        <div class="risk-factors">
+          <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);margin-bottom:6px;">Risk Factors</div>
+          <div class="risk-factor-row">
+            <span class="risk-factor-label">Storm / Weather</span>
+            <div class="risk-factor-bar-wrap"><div class="risk-factor-bar" style="width:92%;background:var(--red)"></div></div>
+            <span class="risk-factor-val" style="color:var(--red)">+9.2h</span>
+          </div>
+          <div class="risk-factor-row">
+            <span class="risk-factor-label">Dest Congestion</span>
+            <div class="risk-factor-bar-wrap"><div class="risk-factor-bar" style="width:78%;background:var(--orange)"></div></div>
+            <span class="risk-factor-val" style="color:var(--orange)">+3.6h</span>
+          </div>
+          <div class="risk-factor-row">
+            <span class="risk-factor-label">Carrier Reliability</span>
+            <div class="risk-factor-bar-wrap"><div class="risk-factor-bar" style="width:18%;background:var(--yellow)"></div></div>
+            <span class="risk-factor-val" style="color:var(--yellow)">+0.9h</span>
+          </div>
+          <div class="risk-factor-row">
+            <span class="risk-factor-label">Origin Congestion</span>
+            <div class="risk-factor-bar-wrap"><div class="risk-factor-bar" style="width:10%;background:var(--blue)"></div></div>
+            <span class="risk-factor-val" style="color:var(--blue)">+0.5h</span>
+          </div>
+          <div class="risk-factor-row">
+            <span class="risk-factor-label">Coast Crossing</span>
+            <div class="risk-factor-bar-wrap"><div class="risk-factor-bar" style="width:0%;background:var(--text-dim)"></div></div>
+            <span class="risk-factor-val" style="color:var(--text-dim)">—</span>
+          </div>
+        </div>
+
+        <!-- Waypoints -->
+        <div class="waypoints">
+          <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);margin-bottom:6px;">Route Path</div>
+          <div class="waypoint-chain">
+            <span class="waypoint-node">⚓ JNPT</span>
+            <span class="waypoint-arrow">→</span>
+            <span class="waypoint-node">🏁 Chennai</span>
+          </div>
+        </div>
+
+        <div class="route-card-footer">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div style="width:8px;height:8px;border-radius:50%;background:var(--red)"></div>
+            <span style="font-size:9px;color:var(--red);font-weight:700;">STORM INTERSECTION HIGH</span>
+          </div>
+          <button class="select-btn" style="color:var(--red);border-color:rgba(248,113,113,.3);" onclick="event.stopPropagation();openConfirmModal('A')">
+            Select A
+          </button>
+        </div>
+      </div>
+
+      <!-- ROUTE B -->
+      <div class="route-card route-b selected" id="card-B" onclick="selectRoute('B')" style="color:var(--route-b)">
+        <div class="route-card-header">
+          <div>
+            <div class="route-label-row">
+              <div class="route-dot" style="background:var(--route-b)"></div>
+              <span class="route-title">Route B</span>
+            </div>
+            <div class="route-sub">Via Kochi · Storm Avoidance</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+            <span class="best-badge" style="background:rgba(251,107,0,.12);color:var(--accent);border:1px solid rgba(251,107,0,.3);">✓ RECOMMENDED</span>
+            <div class="score-display">
+              <div>
+                <div style="font-size:18px;font-weight:800;color:var(--green);font-family:'Manrope',sans-serif;">+5.8h</div>
+                <div class="score-tier" style="color:var(--green);">MEDIUM DELAY · SAVES 8.4h</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="map-container" id="map-B">
+          <div class="map-loading-overlay" id="loader-B">
+            <div class="map-loading-spinner"></div>
+          </div>
+        </div>
+
+        <div class="route-metrics">
+          <div class="metric-row">
+            <div class="metric-item">
+              <div class="metric-label">Distance</div>
+              <div class="metric-value" style="color:var(--route-b)">986<span class="metric-unit">nm</span></div>
+            </div>
+            <div class="metric-item">
+              <div class="metric-label">Fuel Cost</div>
+              <div class="metric-value" style="color:var(--route-b)">₹73.9<span class="metric-unit">L</span></div>
+            </div>
+          </div>
+          <div class="metric-row">
+            <div class="metric-item">
+              <div class="metric-label">Waypoint Cong.</div>
+              <div class="metric-value" style="color:var(--yellow)">46<span class="metric-unit">%</span></div>
+            </div>
+            <div class="metric-item">
+              <div class="metric-label">Extra Cost</div>
+              <div class="metric-value" style="color:var(--orange)">+₹18.3<span class="metric-unit">L</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Risk Factors -->
+        <div class="risk-factors">
+          <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);margin-bottom:6px;">Risk Factors</div>
+          <div class="risk-factor-row">
+            <span class="risk-factor-label">Storm / Weather</span>
+            <div class="risk-factor-bar-wrap"><div class="risk-factor-bar" style="width:28%;background:var(--yellow)"></div></div>
+            <span class="risk-factor-val" style="color:var(--yellow)">+2.1h</span>
+          </div>
+          <div class="risk-factor-row">
+            <span class="risk-factor-label">Dest Congestion</span>
+            <div class="risk-factor-bar-wrap"><div class="risk-factor-bar" style="width:32%;background:var(--orange)"></div></div>
+            <span class="risk-factor-val" style="color:var(--orange)">+2.4h</span>
+          </div>
+          <div class="risk-factor-row">
+            <span class="risk-factor-label">Coast Crossing</span>
+            <div class="risk-factor-bar-wrap"><div class="risk-factor-bar" style="width:14%;background:var(--purple)"></div></div>
+            <span class="risk-factor-val" style="color:var(--purple)">+0.8h</span>
+          </div>
+          <div class="risk-factor-row">
+            <span class="risk-factor-label">Carrier Reliability</span>
+            <div class="risk-factor-bar-wrap"><div class="risk-factor-bar" style="width:6%;background:var(--yellow)"></div></div>
+            <span class="risk-factor-val" style="color:var(--yellow)">+0.5h</span>
+          </div>
+          <div class="risk-factor-row">
+            <span class="risk-factor-label">Origin Congestion</span>
+            <div class="risk-factor-bar-wrap"><div class="risk-factor-bar" style="width:0%;background:var(--text-dim)"></div></div>
+            <span class="risk-factor-val" style="color:var(--text-dim)">—</span>
+          </div>
+        </div>
+
+        <!-- Waypoints -->
+        <div class="waypoints">
+          <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);margin-bottom:6px;">Route Path</div>
+          <div class="waypoint-chain">
+            <span class="waypoint-node">⚓ JNPT</span>
+            <span class="waypoint-arrow">→</span>
+            <span class="waypoint-node">🔁 Kochi</span>
+            <span class="waypoint-arrow">→</span>
+            <span class="waypoint-node">🏁 Chennai</span>
+          </div>
+        </div>
+
+        <div class="route-card-footer">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div style="width:8px;height:8px;border-radius:50%;background:var(--green)"></div>
+            <span style="font-size:9px;color:var(--green);font-weight:700;">70% CYCLONE AVOIDANCE</span>
+          </div>
+          <button class="select-btn" style="color:var(--accent);border-color:rgba(251,107,0,.4);background:rgba(251,107,0,.08);" onclick="event.stopPropagation();openConfirmModal('B')">
+            ✓ File Route B
+          </button>
+        </div>
+      </div>
+
+      <!-- ROUTE C -->
+      <div class="route-card route-c" id="card-C" onclick="selectRoute('C')" style="color:var(--route-c)">
+        <div class="route-card-header">
+          <div>
+            <div class="route-label-row">
+              <div class="route-dot" style="background:var(--route-c)"></div>
+              <span class="route-title">Route C</span>
+            </div>
+            <div class="route-sub">Port Shift → Ennore · Fastest Clear</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+            <span class="best-badge" style="background:rgba(74,222,128,.08);color:var(--green);border:1px solid rgba(74,222,128,.2);">LOWEST DELAY</span>
+            <div class="score-display">
+              <div>
+                <div style="font-size:18px;font-weight:800;color:var(--green);font-family:'Manrope',sans-serif;">+3.1h</div>
+                <div class="score-tier" style="color:var(--green);">LOW DELAY · +₹8.7L EXTRA</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="map-container" id="map-C">
+          <div class="map-loading-overlay" id="loader-C">
+            <div class="map-loading-spinner"></div>
+          </div>
+        </div>
+
+        <div class="route-metrics">
+          <div class="metric-row">
+            <div class="metric-item">
+              <div class="metric-label">Distance</div>
+              <div class="metric-value" style="color:var(--route-c)">816<span class="metric-unit">nm</span></div>
+            </div>
+            <div class="metric-item">
+              <div class="metric-label">Fuel Cost</div>
+              <div class="metric-value" style="color:var(--route-c)">₹64.3<span class="metric-unit">L</span></div>
+            </div>
+          </div>
+          <div class="metric-row">
+            <div class="metric-item">
+              <div class="metric-label">Port Congestion</div>
+              <div class="metric-value" style="color:var(--green)">34<span class="metric-unit">%</span></div>
+            </div>
+            <div class="metric-item">
+              <div class="metric-label">Extra Cost</div>
+              <div class="metric-value" style="color:var(--orange)">+₹8.7<span class="metric-unit">L</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Risk Factors -->
+        <div class="risk-factors">
+          <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);margin-bottom:6px;">Risk Factors</div>
+          <div class="risk-factor-row">
+            <span class="risk-factor-label">Storm / Weather</span>
+            <div class="risk-factor-bar-wrap"><div class="risk-factor-bar" style="width:16%;background:var(--green)"></div></div>
+            <span class="risk-factor-val" style="color:var(--green)">+1.2h</span>
+          </div>
+          <div class="risk-factor-row">
+            <span class="risk-factor-label">Dest Congestion</span>
+            <div class="risk-factor-bar-wrap"><div class="risk-factor-bar" style="width:12%;background:var(--green)"></div></div>
+            <span class="risk-factor-val" style="color:var(--green)">+0.8h</span>
+          </div>
+          <div class="risk-factor-row">
+            <span class="risk-factor-label">Coast Crossing</span>
+            <div class="risk-factor-bar-wrap"><div class="risk-factor-bar" style="width:14%;background:var(--purple)"></div></div>
+            <span class="risk-factor-val" style="color:var(--purple)">+0.8h</span>
+          </div>
+          <div class="risk-factor-row">
+            <span class="risk-factor-label">Carrier Reliability</span>
+            <div class="risk-factor-bar-wrap"><div class="risk-factor-bar" style="width:4%;background:var(--yellow)"></div></div>
+            <span class="risk-factor-val" style="color:var(--yellow)">+0.3h</span>
+          </div>
+          <div class="risk-factor-row">
+            <span class="risk-factor-label">Port Logistics</span>
+            <div class="risk-factor-bar-wrap"><div class="risk-factor-bar" style="width:0%;background:var(--text-dim)"></div></div>
+            <span class="risk-factor-val" style="color:var(--text-dim)">—</span>
+          </div>
+        </div>
+
+        <!-- Waypoints -->
+        <div class="waypoints">
+          <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);margin-bottom:6px;">Route Path</div>
+          <div class="waypoint-chain">
+            <span class="waypoint-node">⚓ JNPT</span>
+            <span class="waypoint-arrow">→</span>
+            <span class="waypoint-node">⚓ Ennore Port</span>
+            <span style="font-size:8px;color:var(--text-dim);margin:0 2px;">(port shift)</span>
+          </div>
+        </div>
+
+        <div class="route-card-footer">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div style="width:8px;height:8px;border-radius:50%;background:var(--green)"></div>
+            <span style="font-size:9px;color:var(--green);font-weight:700;">80% STORM CLEARANCE</span>
+          </div>
+          <button class="select-btn" style="color:var(--green);border-color:rgba(74,222,128,.3);" onclick="event.stopPropagation();openConfirmModal('C')">
+            Select C
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- COMPARISON TABLE -->
+  <div class="comparison-section">
+    <div style="padding:16px 20px 10px;border-bottom:1px solid var(--border);">
+      <div class="section-hdr" style="margin-bottom:0;">
+        <span class="section-hdr-icon">📊</span>
+        <span class="section-hdr-title">Side-by-Side Comparison</span>
+        <div class="section-hdr-line"></div>
+      </div>
+    </div>
+    <table class="comparison-table">
+      <thead>
+        <tr>
+          <th>Factor</th>
+          <th style="color:var(--route-a)">Route A — Direct</th>
+          <th style="color:var(--route-b)">Route B — Via Kochi</th>
+          <th style="color:var(--route-c)">Route C — Port Shift</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="row-label">Predicted Delay</td>
+          <td><span class="winner" style="color:var(--red)">+14.2h</span></td>
+          <td><span class="winner" style="color:var(--orange)">+5.8h</span></td>
+          <td><span class="winner" style="color:var(--green)">+3.1h ✓</span></td>
+        </tr>
+        <tr>
+          <td class="row-label">Distance</td>
+          <td style="color:var(--green)">742 nm ✓</td>
+          <td style="color:var(--orange)">986 nm</td>
+          <td style="color:var(--yellow)">816 nm</td>
+        </tr>
+        <tr>
+          <td class="row-label">Fuel Cost</td>
+          <td style="color:var(--green)">₹55.6L ✓</td>
+          <td style="color:var(--red)">₹73.9L</td>
+          <td style="color:var(--yellow)">₹64.3L</td>
+        </tr>
+        <tr>
+          <td class="row-label">Extra Cost</td>
+          <td style="color:var(--green)">₹0 ✓</td>
+          <td style="color:var(--orange)">+₹18.3L</td>
+          <td style="color:var(--yellow)">+₹8.7L</td>
+        </tr>
+        <tr>
+          <td class="row-label">Port Congestion</td>
+          <td style="color:var(--red)">82% (Chennai)</td>
+          <td style="color:var(--yellow)">46% (Kochi)</td>
+          <td style="color:var(--green)">34% (Ennore) ✓</td>
+        </tr>
+        <tr>
+          <td class="row-label">Storm Exposure</td>
+          <td style="color:var(--red)">FULL — 100% overlap</td>
+          <td style="color:var(--yellow)">PARTIAL — 30% cyclone factor</td>
+          <td style="color:var(--green)">MINIMAL — 20% factor ✓</td>
+        </tr>
+        <tr>
+          <td class="row-label">Wave Delay</td>
+          <td style="color:var(--red)">+5.1h (6.8m → limit exceeded)</td>
+          <td style="color:var(--yellow)">+1.4h (est 4.2m)</td>
+          <td style="color:var(--green)">+0.6h (est 3.1m) ✓</td>
+        </tr>
+        <tr>
+          <td class="row-label">Cargo Risk (Electronics)</td>
+          <td style="color:var(--red)">CRITICAL — 1.5× weather sens.</td>
+          <td style="color:var(--orange)">MODERATE</td>
+          <td style="color:var(--green)">LOW ✓</td>
+        </tr>
+        <tr>
+          <td class="row-label">Overall Score</td>
+          <td><span style="color:var(--red);font-weight:700;font-family:'Manrope',sans-serif;font-size:14px;">24 / 100</span></td>
+          <td><span style="color:var(--orange);font-weight:700;font-family:'Manrope',sans-serif;font-size:14px;">61 / 100</span></td>
+          <td><span style="color:var(--green);font-weight:700;font-family:'Manrope',sans-serif;font-size:14px;">78 / 100 ✓</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- REASONING CHAIN + SIMULATOR SIDE BY SIDE -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+
+    <!-- REASONING CHAIN -->
+    <div class="reasoning-panel">
+      <div class="section-hdr" style="margin-bottom:12px;">
+        <span class="section-hdr-icon">🔍</span>
+        <span class="section-hdr-title">Reasoning Chain — Route B (Recommended)</span>
+        <div class="section-hdr-line"></div>
+      </div>
+      <div class="reasoning-chain" id="reasoning-chain">
+        <div class="rc-item delay-factor">
+          <div class="rc-dot" style="background:var(--red)"></div>
+          <div>Cyclone (82% prob) arrives in 4.2h, voyage duration 22.1h — storm window 4.2h→12.2h overlaps 36% of transit on Route A → speed reduces to 9.9kn → +9.2h delay.</div>
+        </div>
+        <div class="rc-item">
+          <div class="rc-dot" style="background:var(--green)"></div>
+          <div>Route B via Kochi detours south-west — ship exits primary storm corridor 3.1h earlier. Effective cyclone factor reduced to 30% → storm component cut to +2.1h.</div>
+        </div>
+        <div class="rc-item delay-factor">
+          <div class="rc-dot" style="background:var(--orange)"></div>
+          <div>Chennai destination congestion 82% → berth wait 4.0h base. Storm arrival shift of 8h causes berth slot miss → additional +1.2h at 82% congestion. Total destination delay +3.6h on Route A.</div>
+        </div>
+        <div class="rc-item">
+          <div class="rc-dot" style="background:var(--yellow)"></div>
+          <div>Route B waypoint Kochi congestion only 46% — berth wait 1.0h. No slot miss since ship arrives before storm peak. Destination congestion delay +2.4h.</div>
+        </div>
+        <div class="rc-item">
+          <div class="rc-dot" style="background:var(--purple)"></div>
+          <div>Coast crossing West→East (JNPT→Kochi→Chennai) requires Cape Comorin rounding. +310nm (17.2h at 18kn) partially offset by congestion savings. Net coast penalty +0.8h on Route B.</div>
+        </div>
+        <div class="rc-item">
+          <div class="rc-dot" style="background:var(--yellow)"></div>
+          <div>Electronics cargo: weather sensitivity 1.5×, customs risk 0.9. Every additional delay hour amplifies cargo value loss. Route B reduces exposure window by 8.4h.</div>
+        </div>
+        <div class="rc-item delay-factor">
+          <div class="rc-dot" style="background:var(--orange)"></div>
+          <div>Wave height 6.8m exceeds Container Ship limit (6.0m) on direct route — vessel must heave-to during peak storm. Storm delay amplified ×1.4 on Route A. Route B wave exposure estimated 4.2m — within vessel limits.</div>
+        </div>
+        <div class="rc-item">
+          <div class="rc-dot" style="background:var(--green)"></div>
+          <div>Route B scores 61/100 vs Route A 24/100. Route C scores 78/100 but requires port shift authorization and stakeholder notification for alternate delivery logistics at Ennore.</div>
+        </div>
+        <div class="rc-item">
+          <div class="rc-dot" style="background:var(--blue)"></div>
+          <div>Carrier reliability 0.72 — below average. Schedule deviation risk contributes +0.5h across all routes. Route B longer voyage (54.8h vs 41.2h) slightly elevates reliability penalty.</div>
+        </div>
+        <div class="rc-item">
+          <div class="rc-dot" style="background:var(--accent)"></div>
+          <div><strong style="color:var(--accent)">Decision: Route B recommended.</strong> Saves 8.4h vs Route A. Extra cost ₹18.3L offset by avoided cargo damage/insurance exposure on Electronics shipment. Route C saves 11.1h but port shift logistics add 2–4h ground handling — net advantage marginal.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCENARIO SIMULATOR -->
+    <div class="simulator-section">
+      <div class="section-hdr" style="margin-bottom:0;">
+        <span class="section-hdr-icon">⚙️</span>
+        <span class="section-hdr-title">Scenario Simulator — Adjust Conditions</span>
+        <div class="section-hdr-line"></div>
+      </div>
+      <div class="sim-grid">
+        <div class="sim-control">
+          <label>Cyclone Probability</label>
+          <input type="range" min="0" max="100" value="82" id="sim-cyclone" oninput="runSim()">
+          <div class="sim-val"><span id="sim-cyclone-val">82</span>%</div>
+        </div>
+        <div class="sim-control">
+          <label>Wave Height (m)</label>
+          <input type="range" min="0" max="12" step="0.5" value="6.8" id="sim-wave" oninput="runSim()">
+          <div class="sim-val"><span id="sim-wave-val">6.8</span>m</div>
+        </div>
+        <div class="sim-control">
+          <label>Hours Until Storm</label>
+          <input type="range" min="0" max="48" step="0.5" value="4.2" id="sim-hstorm" oninput="runSim()">
+          <div class="sim-val"><span id="sim-hstorm-val">4.2</span>h</div>
+        </div>
+        <div class="sim-control">
+          <label>Storm Duration (h)</label>
+          <input type="range" min="0" max="24" step="0.5" value="8" id="sim-sdur" oninput="runSim()">
+          <div class="sim-val"><span id="sim-sdur-val">8.0</span>h</div>
+        </div>
+        <div class="sim-control">
+          <label>Dest. Congestion</label>
+          <input type="range" min="0" max="100" value="82" id="sim-cong" oninput="runSim()">
+          <div class="sim-val"><span id="sim-cong-val">82</span>%</div>
+        </div>
+        <div class="sim-control">
+          <label>Carrier Reliability</label>
+          <input type="range" min="0" max="100" value="72" id="sim-rel" oninput="runSim()">
+          <div class="sim-val"><span id="sim-rel-val">72</span>%</div>
+        </div>
+      </div>
+
+      <div style="margin-top:14px;">
+        <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-dim);margin-bottom:8px;">Simulated Delay by Route</div>
+        <div class="sim-result-bar">
+          <div class="sim-route-result" id="sim-result-A">
+            <div class="sim-label" style="color:var(--route-a)">Route A</div>
+            <div class="sim-delay" id="sim-delay-A" style="color:var(--red)">+14.2h</div>
+            <div class="sim-risk" id="sim-risk-A" style="color:var(--red)">CRITICAL</div>
+          </div>
+          <div class="sim-route-result" style="border-color:rgba(251,107,0,.3);background:rgba(251,107,0,.04);" id="sim-result-B">
+            <div class="sim-label" style="color:var(--route-b)">Route B ✓</div>
+            <div class="sim-delay" id="sim-delay-B" style="color:var(--orange)">+5.8h</div>
+            <div class="sim-risk" id="sim-risk-B" style="color:var(--orange)">MEDIUM</div>
+          </div>
+          <div class="sim-route-result" id="sim-result-C">
+            <div class="sim-label" style="color:var(--route-c)">Route C</div>
+            <div class="sim-delay" id="sim-delay-C" style="color:var(--green)">+3.1h</div>
+            <div class="sim-risk" id="sim-risk-C" style="color:var(--green)">LOW</div>
+          </div>
+        </div>
+        <div id="sim-best-msg" style="margin-top:10px;font-size:10px;color:var(--text-sub);padding:8px 10px;background:rgba(255,255,255,.03);border-radius:6px;border:1px solid var(--border);">
+          💡 Under current conditions, <strong style="color:var(--accent)">Route B</strong> is the optimal balance of delay reduction, cost, and operational feasibility.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DECISION ACTION PANEL -->
+  <div class="decision-panel">
+    <div class="section-hdr" style="margin-bottom:14px;">
+      <span class="section-hdr-icon">⚡</span>
+      <span class="section-hdr-title">Ops Decision Center</span>
+      <div class="section-hdr-line"></div>
+      <span class="topbar-badge badge-critical" style="margin-left:auto;">Action Required</span>
+    </div>
+    <div style="font-size:12px;color:var(--text-sub);line-height:1.7;max-width:800px;">
+      Intelligence Engine recommends <strong style="color:var(--accent)">Route B via Kochi</strong> with 61% route confidence.
+      Filing a reroute order will notify the captain, update ETA across all stakeholders, and log this decision for audit.
+      Storm window closes at <strong style="color:var(--red)">~12:30 UTC</strong> — vessel must deviate before the 4.2h mark.
+    </div>
+    <div class="decision-actions">
+      <button class="action-btn" style="color:var(--accent);border-color:rgba(251,107,0,.4);background:rgba(251,107,0,.08);" onclick="openConfirmModal('B')">
+        🔁 File Route B Order
+      </button>
+      <button class="action-btn" style="color:var(--green);border-color:rgba(74,222,128,.3);" onclick="openConfirmModal('C')">
+        ⚓ Initiate Port Shift (C)
+      </button>
+      <button class="action-btn" style="color:var(--blue);border-color:rgba(96,165,250,.3);" onclick="openCaptainModal()">
+        📞 Alert Captain
+      </button>
+      <button class="action-btn" style="color:var(--yellow);border-color:rgba(251,191,36,.3);" onclick="openEscalateModal()">
+        📢 Escalate to Port Authority
+      </button>
+      <button class="action-btn" style="color:var(--orange);border-color:rgba(251,146,60,.3);" onclick="openReviseETAModal()">
+        ⏱ Revise ETA
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── MODALS ── -->
+
+<!-- CONFIRM REROUTE MODAL -->
+<div class="modal-backdrop" id="modal-confirm" onclick="closeModal('modal-confirm')">
+  <div class="modal" onclick="event.stopPropagation()" style="position:relative;">
+    <button class="modal-close" onclick="closeModal('modal-confirm')">✕</button>
+    <h3 id="modal-confirm-title">🔁 File Reroute Order</h3>
+    <p class="modal-sub" id="modal-confirm-sub">Confirm route selection and file the reroute order. This will be logged for audit.</p>
+    <div class="modal-detail-grid" id="modal-confirm-details">
+      <div class="modal-detail">
+        <div class="modal-detail-label">Selected Route</div>
+        <div class="modal-detail-val" id="modal-route-label">Route B — Via Kochi</div>
+      </div>
+      <div class="modal-detail">
+        <div class="modal-detail-label">Delay Reduction</div>
+        <div class="modal-detail-val" style="color:var(--green)" id="modal-delay-save">-8.4h vs Route A</div>
+      </div>
+      <div class="modal-detail">
+        <div class="modal-detail-label">Extra Fuel Cost</div>
+        <div class="modal-detail-val" style="color:var(--orange)" id="modal-extra-cost">+₹18.3L</div>
+      </div>
+      <div class="modal-detail">
+        <div class="modal-detail-label">Risk Reduction</div>
+        <div class="modal-detail-val" style="color:var(--green)" id="modal-risk-red">81 → 42 /100</div>
+      </div>
+    </div>
+    <textarea id="modal-confirm-notes" placeholder="Add justification or ops notes for audit trail..." rows="3"></textarea>
+    <div class="modal-actions">
+      <button class="modal-btn" style="background:rgba(255,255,255,.06);color:var(--text);" onclick="closeModal('modal-confirm')">Cancel</button>
+      <button class="modal-btn" id="modal-confirm-btn" style="background:var(--accent);color:white;"
+        onclick="confirmReroute()">Confirm & File Order</button>
+    </div>
+  </div>
+</div>
+
+<!-- CAPTAIN ALERT MODAL -->
+<div class="modal-backdrop" id="modal-captain" onclick="closeModal('modal-captain')">
+  <div class="modal" onclick="event.stopPropagation()" style="position:relative;">
+    <button class="modal-close" onclick="closeModal('modal-captain')">✕</button>
+    <h3>📞 Alert Captain — Reroute Instruction</h3>
+    <p class="modal-sub">Send immediate reroute instruction via GMDSS to vessel master.</p>
+    <textarea rows="10" style="font-size:11px;line-height:1.7;">NAUTICAL.OS REROUTE ALERT — PRIORITY URGENT
+
+Vessel: MV Ocean Pride | Route: JNPT → Chennai
+Storm cyclone 82% probability, ETA route intersection 4.2h, duration 8h.
+Wave height 6.8m — exceeds vessel limit 6.0m.
+
+RECOMMENDED ACTION: Deviate to Route B via Kochi.
+Waypoints: JNPT → Kochi (Cochin Port, 9.93°N 76.27°E) → Chennai
+
+Storm window: 4.2h–12.2h UTC. Must deviate within 4 hours.
+Delay on Route B: +5.8h vs +14.2h on current course.
+Risk score on Route B: 42/100 vs 81/100 current.
+
+Please acknowledge receipt and confirm deviation.
+
+NAUTICAL.OS Operations — Reroute Decision Center</textarea>
+    <div class="modal-actions" style="margin-top:12px;">
+      <button class="modal-btn" style="background:rgba(255,255,255,.06);color:var(--text);" onclick="navigator.clipboard?.writeText(document.querySelector('#modal-captain textarea').value);this.textContent='✓ Copied'">Copy</button>
+      <button class="modal-btn" style="background:#1d4ed8;color:white;"
+        onclick="this.textContent='✓ Sent via GMDSS';this.disabled=true;setTimeout(()=>closeModal('modal-captain'),1500)">Send via GMDSS</button>
+    </div>
+  </div>
+</div>
+
+<!-- ESCALATE MODAL -->
+<div class="modal-backdrop" id="modal-escalate" onclick="closeModal('modal-escalate')">
+  <div class="modal" onclick="event.stopPropagation()" style="position:relative;">
+    <button class="modal-close" onclick="closeModal('modal-escalate')">✕</button>
+    <h3>📢 Escalate to Port Authority</h3>
+    <p class="modal-sub">File an official incident report with the destination port authority.</p>
+    <textarea rows="8" style="font-size:11px;line-height:1.7;">PORT AUTHORITY NOTIFICATION
+
+Vessel: MV Ocean Pride
+Original Route: JNPT → Chennai Port (CQP-2024-48271)
+Incident: Cyclone interception — storm probability 82%, ETA 4.2h
+Action: Initiating reroute to Route B via Kochi
+
+Risk Score: 81/100 CRITICAL
+Predicted delay on direct route: +14.2h
+Post-reroute delay: +5.8h
+
+Cargo: Electronics (1,240 TEU) — Weather sensitivity HIGH
+Requesting berth slot reservation at Kochi for waypoint stop.
+
+NAUTICAL.OS Port Operations Management System</textarea>
+    <div class="modal-actions" style="margin-top:12px;">
+      <button class="modal-btn" style="background:var(--purple);color:white;"
+        onclick="this.textContent='✓ Escalation Filed';this.disabled=true;setTimeout(()=>closeModal('modal-escalate'),1500)">Submit Escalation</button>
+    </div>
+  </div>
+</div>
+
+<!-- REVISE ETA MODAL -->
+<div class="modal-backdrop" id="modal-eta" onclick="closeModal('modal-eta')">
+  <div class="modal" onclick="event.stopPropagation()" style="position:relative;max-width:420px;">
+    <button class="modal-close" onclick="closeModal('modal-eta')">✕</button>
+    <h3>⏱ Revise ETA</h3>
+    <div class="modal-detail-grid">
+      <div class="modal-detail">
+        <div class="modal-detail-label">Original ETA</div>
+        <div class="modal-detail-val">14 Jun · 08:40</div>
+      </div>
+      <div class="modal-detail">
+        <div class="modal-detail-label">Revised ETA (Route B)</div>
+        <div class="modal-detail-val" style="color:var(--orange)">14 Jun · 14:28</div>
+      </div>
+    </div>
+    <div style="text-align:center;font-size:24px;font-weight:800;color:var(--orange);font-family:'Manrope',sans-serif;margin-bottom:14px;">+5.8h DELAY</div>
+    <textarea rows="2" placeholder="Stakeholder emails (comma separated)..."></textarea>
+    <div class="modal-actions">
+      <button class="modal-btn" style="background:var(--accent);color:white;"
+        onclick="this.textContent='✓ ETA Revision Sent';this.disabled=true;setTimeout(()=>closeModal('modal-eta'),1500)">Confirm & Notify</button>
+    </div>
+  </div>
+</div>
+
+<script>
+    // Receive ML payload posted from the shipment detail page
+    window.addEventListener('message', (e) => {
+        if (e.origin !== window.location.origin) return;
+        if (e.data?.type === 'nautical_ml_data') {
+            window.nauticalReroute?.loadFromMLResult(e.data.ml, e.data.shipment);
+            e.source?.postMessage({ type: 'nautical_ml_ack' }, e.origin);
+        }
+    });
+// ── PORT COORDS ────────────────────────────────────────────────────
+const PORTS = {
+  JNPT:     { lat: 18.948,  lng: 72.950,  name: "JNPT" },
+  KOCHI:    { lat:  9.931,  lng: 76.267,  name: "Kochi" },
+  CHENNAI:  { lat: 13.083,  lng: 80.271,  name: "Chennai" },
+  ENNORE:   { lat: 13.283,  lng: 80.331,  name: "Ennore" },
+  MORMUGAO: { lat: 15.414,  lng: 73.799,  name: "Mormugao" },
+};
+
+const STORM_CENTER = { lat: 14.5, lng: 74.8 };
+
+// ── MAPS INIT ─────────────────────────────────────────────────────
+const TILE = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+const maps = {};
+
+function initMap(id, routeCoords, color, options = {}) {
+  const el = document.getElementById("map-" + id);
+  if (!el || el._leafletMap) return;
+
+  const center = options.center || [12, 76];
+  const m = L.map(el, { center, zoom: 5, zoomControl: false, attributionControl: false, dragging: true, scrollWheelZoom: false });
+  el._leafletMap = m;
+  maps[id] = m;
+
+  L.tileLayer(TILE, { maxZoom: 18 }).addTo(m);
+
+  // Glow + main line
+  L.polyline(routeCoords, { color, weight: 9, opacity: .1 }).addTo(m);
+  const line = L.polyline(routeCoords, { color, weight: 3, opacity: .9, dashArray: id === "A" ? null : "10 5" });
+  line.addTo(m);
+
+  // Port markers
+  routeCoords.forEach((pt, i) => {
+    const isStart = i === 0, isEnd = i === routeCoords.length - 1;
+    const pColor = isStart ? "#4ADE80" : (isEnd ? "#bac8dc" : color);
+    const icon = L.divIcon({
+      className: "",
+      html: `<div style="width:12px;height:12px;border-radius:50%;background:${pColor};border:2px solid rgba(255,255,255,.4);box-shadow:0 0 0 4px ${pColor}33;"></div>`,
+      iconAnchor: [6,6]
+    });
+    L.marker(pt, { icon }).addTo(m);
+  });
+
+  // Storm zone overlay for Route A only
+  if (id === "A") {
+    L.circle([STORM_CENTER.lat, STORM_CENTER.lng], {
+      radius: 280000, color: "#f87171", weight: 1.5,
+      opacity: .7, fillColor: "#f87171", fillOpacity: .06,
+      dashArray: "6 4"
+    }).addTo(m).bindPopup("⚠ Storm Zone — Cyclone 82%");
+  }
+
+  // Fit bounds
+  const bounds = L.latLngBounds(routeCoords);
+  m.fitBounds(bounds, { padding: [28, 28] });
+
+  // Hide loader
+  setTimeout(() => {
+    const loader = document.getElementById("loader-" + id);
+    if (loader) loader.classList.add("hidden");
+  }, 600);
+}
+
+const ROUTE_COORDS = {
+  A: [[PORTS.JNPT.lat, PORTS.JNPT.lng], [16, 74.5], [14.5, 74.8], [13.083, 80.271]],
+  B: [[PORTS.JNPT.lat, PORTS.JNPT.lng], [15.5, 73.0], [9.931, 76.267], [11.5, 78.5], [13.083, 80.271]],
+  C: [[PORTS.JNPT.lat, PORTS.JNPT.lng], [16, 74.0], [14, 75.5], [13.283, 80.331]],
+};
+
+window.addEventListener("load", () => {
+  setTimeout(() => {
+    initMap("A", ROUTE_COORDS.A, "#60a5fa");
+    initMap("B", ROUTE_COORDS.B, "#fb923c");
+    initMap("C", ROUTE_COORDS.C, "#4ADE80");
+  }, 300);
+});
+
+// ── ROUTE SELECTION ───────────────────────────────────────────────
+function selectRoute(r) {
+  ["A","B","C"].forEach(id => {
+    const card = document.getElementById("card-" + id);
+    if (card) {
+      card.classList.toggle("selected", id === r);
+    }
+  });
+}
+
+// ── STORM COUNTDOWN ───────────────────────────────────────────────
+let stormSeconds = 4 * 3600 + 12 * 60 + 30;
+setInterval(() => {
+  if (stormSeconds <= 0) return;
+  stormSeconds--;
+  const h = String(Math.floor(stormSeconds / 3600)).padStart(2,"0");
+  const m = String(Math.floor((stormSeconds % 3600) / 60)).padStart(2,"0");
+  const s = String(stormSeconds % 60).padStart(2,"0");
+  document.getElementById("storm-countdown").textContent = `${h}:${m}:${s}`;
+}, 1000);
+
+// ── SCENARIO SIMULATOR ────────────────────────────────────────────
+function runSim() {
+  const cyc  = parseFloat(document.getElementById("sim-cyclone").value) / 100;
+  const wave = parseFloat(document.getElementById("sim-wave").value);
+  const hst  = parseFloat(document.getElementById("sim-hstorm").value);
+  const dur  = parseFloat(document.getElementById("sim-sdur").value);
+  const cong = parseFloat(document.getElementById("sim-cong").value);
+  const rel  = parseFloat(document.getElementById("sim-rel").value) / 100;
+
+  document.getElementById("sim-cyclone-val").textContent = Math.round(cyc*100);
+  document.getElementById("sim-wave-val").textContent    = wave.toFixed(1);
+  document.getElementById("sim-hstorm-val").textContent  = hst.toFixed(1);
+  document.getElementById("sim-sdur-val").textContent    = dur.toFixed(1);
+  document.getElementById("sim-cong-val").textContent    = Math.round(cong);
+  document.getElementById("sim-rel-val").textContent     = Math.round(rel*100);
+
+  const VOY_A = 41.2, VOY_B = 54.8, VOY_C = 45.4;
+  const SPEED = 18;
+
+  function stormDelay(voyH, cyc_mult, wave) {
+    const overlapH = Math.max(0, Math.min(hst + dur, voyH) - hst);
+    const frac = overlapH / voyH;
+    const stormSpd = SPEED * 0.55;
+    let d = overlapH * (SPEED / stormSpd - 1) * cyc_mult;
+    if (wave > 6.0) d *= 1.4;
+    d += wave > 2 ? Math.min(3, (wave - 2) * 0.6) : 0;
+    return d;
+  }
+
+  function congDelay(c) {
+    if (c < 50) return c * 0.02;
+    if (c < 70) return 1.0 + (c - 50) * 0.15;
+    return 4.0 + (c - 70) * 0.35;
+  }
+
+  function relDelay(r, h) {
+    if (r >= 0.9) return 0;
+    if (r >= 0.75) return (0.9-r) * h * 0.08;
+    return 1.5 + (0.75-r) * h * 0.15;
+  }
+
+  const dA = stormDelay(VOY_A, cyc, wave) + congDelay(cong) + relDelay(rel, VOY_A);
+  const dB = stormDelay(VOY_B, cyc * 0.3, wave * 0.7) + congDelay(cong * 0.56) + relDelay(rel, VOY_B) + 0.8;
+  const dC = stormDelay(VOY_C, cyc * 0.2, wave * 0.5) + congDelay(34) + relDelay(rel, VOY_C) + 0.8;
+
+  function riskTier(d) {
+    const score = Math.min(100, d * 3 + cyc * 20 + cong * 0.1);
+    if (score >= 76) return ["CRITICAL", "#f87171"];
+    if (score >= 51) return ["HIGH", "#fb923c"];
+    if (score >= 26) return ["MEDIUM", "#fbbf24"];
+    return ["LOW", "#4ADE80"];
+  }
+
+  const [tA, cA] = riskTier(dA);
+  const [tB, cB] = riskTier(dB);
+  const [tC, cC] = riskTier(dC);
+
+  document.getElementById("sim-delay-A").textContent = "+" + dA.toFixed(1) + "h";
+  document.getElementById("sim-delay-B").textContent = "+" + dB.toFixed(1) + "h";
+  document.getElementById("sim-delay-C").textContent = "+" + dC.toFixed(1) + "h";
+  document.getElementById("sim-risk-A").textContent = tA;
+  document.getElementById("sim-risk-B").textContent = tB;
+  document.getElementById("sim-risk-C").textContent = tC;
+  document.getElementById("sim-delay-A").style.color = cA;
+  document.getElementById("sim-delay-B").style.color = cB;
+  document.getElementById("sim-delay-C").style.color = cC;
+  document.getElementById("sim-risk-A").style.color  = cA;
+  document.getElementById("sim-risk-B").style.color  = cB;
+  document.getElementById("sim-risk-C").style.color  = cC;
+
+  const best = dC < dB && dC < dA ? "C" : dB < dA ? "B" : "A";
+  const bestNames = { A:"Route A (Direct)", B:"Route B (Via Kochi)", C:"Route C (Port Shift)" };
+  const bestColors = { A:"var(--route-a)", B:"var(--accent)", C:"var(--route-c)" };
+  document.getElementById("sim-best-msg").innerHTML =
+    `💡 Under current simulated conditions, <strong style="color:${bestColors[best]}">${bestNames[best]}</strong> is optimal.`;
+}
+
+// ── MODAL HELPERS ─────────────────────────────────────────────────
+const ROUTE_MODAL_DATA = {
+  A: { label:"Route A — Direct", save:"+0h (not recommended)", extra:"₹0", risk:"81 → 81 /100" },
+  B: { label:"Route B — Via Kochi", save:"-8.4h vs Route A", extra:"+₹18.3L", risk:"81 → 42 /100" },
+  C: { label:"Route C — Port Shift (Ennore)", save:"-11.1h vs Route A", extra:"+₹8.7L", risk:"81 → 28 /100" },
+};
+
+function openConfirmModal(route) {
+  const d = ROUTE_MODAL_DATA[route];
+  document.getElementById("modal-route-label").textContent = d.label;
+  document.getElementById("modal-delay-save").textContent  = d.save;
+  document.getElementById("modal-extra-cost").textContent  = d.extra;
+  document.getElementById("modal-risk-red").textContent    = d.risk;
+  document.getElementById("modal-confirm-title").textContent = route === "C" ? "⚓ Initiate Port Shift — Route C" : "🔁 File Reroute Order — Route " + route;
+  document.getElementById("modal-confirm-sub").textContent = route === "C"
+    ? "Port shift to Ennore requires cargo delivery coordination with consignee. All stakeholders will be notified."
+    : "Reroute order will be transmitted to vessel master and logged for full audit trail.";
+  document.getElementById("modal-confirm-btn").textContent = route === "C" ? "Confirm Port Shift" : "Confirm & File Order";
+  openModal("modal-confirm");
+}
+
+function openCaptainModal()  { openModal("modal-captain"); }
+function openEscalateModal() { openModal("modal-escalate"); }
+function openReviseETAModal(){ openModal("modal-eta"); }
+
+function openModal(id) {
+  document.getElementById(id).classList.add("open");
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove("open");
+}
+
+function confirmReroute() {
+  const btn = document.getElementById("modal-confirm-btn");
+  btn.textContent = "✓ Reroute Order Filed";
+  btn.disabled = true;
+  btn.style.background = "#4ADE80";
+  setTimeout(() => closeModal("modal-confirm"), 1800);
+}
+
+// ── INTEGRATION BRIDGE ────────────────────────────────────────────
+// This can be called from the parent page to populate real data
+window.nauticalReroute = {
+  loadFromMLResult(ml, shipment) {
+    if (!ml || !shipment) return;
+    const s = shipment, routes = ml.routes || {};
+
+    // Update header & context
+    const vid = (s._id||"").toString().slice(-8).toUpperCase();
+    document.getElementById("hdr-vessel").textContent = s.vessel?.name || "—";
+    document.getElementById("hdr-route").textContent  = `${s.cargo?.origin} → ${s.cargo?.destination}`;
+    document.getElementById("hdr-time").textContent   = `⏱ +${ml.predicted_delay_hours}h predicted delay`;
+
+    const badge = document.getElementById("hdr-risk-badge");
+    if (badge) {
+      badge.textContent = `${ml.risk_tier} · RISK ${ml.risk_score}/100`;
+      badge.className   = "topbar-badge pulse " + (ml.risk_score >= 76 ? "badge-critical" : ml.risk_score >= 51 ? "badge-warning" : "badge-ok");
+    }
+
+    document.getElementById("ctx-vessel").textContent = s.vessel?.name || "—";
+    document.getElementById("ctx-route").textContent  = `${s.cargo?.origin} → ${s.cargo?.destination}`;
+    document.getElementById("ctx-cargo").textContent  = s.cargo?.type || "—";
+    document.getElementById("ctx-teu").textContent    = (s.vessel?.container_count || "—") + " TEU";
+    document.getElementById("ctx-risk").textContent   = `${ml.risk_score} / 100`;
+    document.getElementById("ctx-delay").textContent  = `+${ml.predicted_delay_hours}h`;
+    document.getElementById("ctx-storm").textContent  = ml.storm_flag ? "Storm active" : "Clear";
+    document.getElementById("ctx-vtype").textContent  = s.vessel?.type || "—";
+  }
+};
+
+// ── OPEN FROM PARENT PAGE ─────────────────────────────────────────
+// Usage: window.open('reroute_decision.html?id=SHIPMENT_ID')
+// Or include as iframe and post messages
+</script>
+</body>
+</html>

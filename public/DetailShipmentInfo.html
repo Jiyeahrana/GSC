@@ -125,10 +125,6 @@
         from { transform: rotate(0deg); }
         to   { transform: rotate(360deg); }
     }
-    @keyframes gpsActivePulse {
-        0%, 100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.4); }
-        50%       { box-shadow: 0 0 0 8px rgba(74, 222, 128, 0); }
-    }
     @keyframes shimmer {
         0%   { background-position: -400px 0; }
         100% { background-position: 400px 0; }
@@ -139,7 +135,6 @@
         animation: shimmer 1.5s infinite;
     }
 
-    /* Compact header strip */
     .meta-chip {
         display: inline-flex;
         align-items: center;
@@ -155,11 +150,9 @@
         color: #8e9196;
     }
 
-    /* Checkpoint expand */
     .cp-extra { display: none; }
     .cp-extra.visible { display: flex; }
 
-    /* Scrollable intelligence panel */
     #intelligence-scroll {
         max-height: 680px;
         overflow-y: auto;
@@ -167,7 +160,10 @@
         scrollbar-color: rgba(186,200,220,0.15) transparent;
     }
     #intelligence-scroll::-webkit-scrollbar { width: 4px; }
-    #intelligence-scroll::-webkit-scrollbar-thumb { background: rgba(186,200,220,0.15); border-radius: 4px; }
+    #intelligence-scroll::-webkit-scrollbar-thumb {
+        background: rgba(186,200,220,0.15);
+        border-radius: 4px;
+    }
 </style>
 </head>
 <body class="bg-background text-on-surface font-body min-h-screen">
@@ -194,12 +190,9 @@
     </div>
 </header>
 
-<!-- ═══════════════════════════════════════════════════════════════════
-     COMPACT SHIP INFO BAR (replaces the big top panel)
-════════════════════════════════════════════════════════════════════ -->
+<!-- COMPACT SHIP INFO BAR -->
 <div class="px-6 pt-4 pb-0">
   <div class="flex flex-wrap items-center gap-3 px-5 py-3 rounded-xl border border-outline-variant/10 bg-surface-container-low">
-    <!-- Vessel name -->
     <div class="flex items-center gap-2 mr-4">
       <span class="material-symbols-outlined text-[#fb6b00] text-base">directions_boat</span>
       <div>
@@ -208,16 +201,13 @@
       </div>
     </div>
 
-    <!-- Divider -->
     <div class="w-px h-8 bg-outline-variant/20 hidden sm:block"></div>
 
-    <!-- Route -->
     <div class="flex items-center gap-1.5">
       <span class="material-symbols-outlined text-xs text-on-surface-variant">route</span>
       <p id="route-text" class="text-xs font-semibold text-on-surface">—</p>
     </div>
 
-    <!-- Chips row -->
     <div class="flex flex-wrap items-center gap-2 ml-auto">
       <span class="meta-chip">
         <span class="material-symbols-outlined text-[11px]">gps_fixed</span>
@@ -239,7 +229,6 @@
         <span class="material-symbols-outlined text-[11px]">schedule</span>
         <span id="days-remaining">—</span> left
       </span>
-      <!-- Status badge -->
       <div class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-surface-container-high border border-outline-variant/20">
         <span id="status-dot" class="w-1.5 h-1.5 rounded-full mr-2 bg-outline animate-pulse"></span>
         <span id="ship-status">—</span>
@@ -248,26 +237,27 @@
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════════════════
-     MAIN CONTENT — Map dominant + Intelligence side
-════════════════════════════════════════════════════════════════════ -->
+<!-- MAIN CONTENT -->
 <main class="px-6 pt-4 pb-10">
   <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
 
-    <!-- ── LEFT COLUMN: Map + Route Progress + Timeline ── -->
+    <!-- LEFT COLUMN: Map + Route Progress + Timeline -->
     <div class="lg:col-span-8 flex flex-col gap-5">
 
-      <!-- MAP (tall, dominant) -->
-      <div id="map-container" class="bg-[#001c2d] border border-outline-variant/10 shadow-xl" style="height: 540px; border-radius: 0.75rem; position: relative;">
+      <!-- MAP -->
+      <div id="map-container" class="bg-[#001c2d] border border-outline-variant/10 shadow-xl"
+           style="height: 540px; border-radius: 0.75rem; position: relative;">
         <div id="leaflet-map"></div>
         <div id="map-loading">
           <div class="text-center space-y-2">
-            <span class="material-symbols-outlined text-3xl text-on-surface-variant" style="animation:spin 2s linear infinite;display:inline-block;">radar</span>
+            <span class="material-symbols-outlined text-3xl text-on-surface-variant"
+                  style="animation:spin 2s linear infinite;display:inline-block;">radar</span>
             <p class="text-xs text-on-surface-variant font-mono">Acquiring GPS signal...</p>
           </div>
         </div>
         <!-- HUD -->
-        <div class="absolute bottom-5 left-5 right-5 flex justify-between items-end" style="z-index:1000;pointer-events:none;">
+        <div class="absolute bottom-5 left-5 right-5 flex justify-between items-end"
+             style="z-index:1000;pointer-events:none;">
           <div class="glass-panel p-3 rounded-lg flex gap-5 flex-wrap" style="pointer-events:auto;">
             <div>
               <p class="text-[9px] text-on-surface-variant uppercase tracking-tighter">Latitude</p>
@@ -285,13 +275,15 @@
           <!-- Progress pill -->
           <div class="glass-panel px-4 py-2 rounded-lg flex items-center gap-3" style="pointer-events:auto;">
             <div class="w-24 h-1.5 bg-surface-container-highest rounded-full overflow-hidden">
-              <div id="progress-bar" class="h-full bg-primary rounded-full transition-all duration-700" style="width:0%"></div>
+              <div id="progress-bar" class="h-full bg-primary rounded-full transition-all duration-700"
+                   style="width:0%"></div>
             </div>
             <span id="progress-label" class="text-xs font-bold text-primary font-mono">—</span>
           </div>
         </div>
         <!-- Map Legend -->
-        <div class="absolute top-4 right-4 glass-panel px-3 py-2 rounded-lg space-y-1.5" style="z-index:1000;">
+        <div class="absolute top-4 right-4 glass-panel px-3 py-2 rounded-lg space-y-1.5"
+             style="z-index:1000;">
             <div class="flex items-center gap-2">
                 <div style="width:20px;height:2px;border-top:2px dashed #60a5fa;"></div>
                 <span class="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider">Planned route</span>
@@ -315,14 +307,14 @@
         </div>
       </div>
 
-      <!-- ROUTE PROGRESS PANEL (injected by JS, stays here) -->
-      <!-- JS will insert #route-progress-panel here -->
+      <!-- Route Progress Panel injected by JS here -->
 
-      <!-- CHECKPOINT TIMELINE (compact — 5 items max, expandable) -->
+      <!-- CHECKPOINT TIMELINE -->
       <div class="glass-panel px-6 py-5 rounded-xl">
         <div class="flex items-center justify-between mb-4">
           <h4 class="font-headline text-base font-extrabold">Checkpoint Timeline</h4>
-          <button id="cp-expand-btn" class="hidden text-[10px] font-bold text-primary bg-surface-container px-3 py-1 rounded-full border border-primary/20 hover:bg-surface-container-high transition-colors">
+          <button id="cp-expand-btn"
+                  class="hidden text-[10px] font-bold text-primary bg-surface-container px-3 py-1 rounded-full border border-primary/20 hover:bg-surface-container-high transition-colors">
             Show all <span id="cp-count-extra"></span>
           </button>
         </div>
@@ -330,7 +322,7 @@
       </div>
     </div>
 
-    <!-- ── RIGHT COLUMN: Weather + Intelligence ── -->
+    <!-- RIGHT COLUMN: Weather + Intelligence -->
     <div class="lg:col-span-4 flex flex-col gap-4">
 
       <!-- Live Weather Cards (compact 2×2) -->
@@ -369,7 +361,7 @@
         </div>
       </div>
 
-      <!-- INTELLIGENCE ENGINE — scrollable, takes rest of height -->
+      <!-- INTELLIGENCE ENGINE -->
       <div class="bg-[#0a1e2c] border border-outline-variant/15 rounded-xl flex flex-col" style="flex:1;">
         <div class="px-5 py-3 border-b border-outline-variant/10 flex items-center gap-2">
           <span style="font-size:14px;">🧠</span>
@@ -401,11 +393,24 @@
 <script src="DetailShipmentInfo.js"></script>
 <script src="intelligenceEngine.js" defer></script>
 
-<!-- Patch: override renderTimeline to show 5 + expand -->
+<!--
+  PATCH: Timeline expand (5 items + show-more button).
+  NOTE: renderPage header-sync and reroute-link are now handled inside
+  DetailShipmentInfo.js → renderPage(). This block ONLY wires the
+  timeline collapse and the postMessage bridge — nothing else.
+-->
 <script>
+// ── postMessage bridge: receive ML data from parent and forward to reroute page ──
+window.addEventListener('message', (e) => {
+    if (e.origin !== window.location.origin) return;
+    if (e.data?.type === 'nautical_ml_data') {
+        window.nauticalReroute?.loadFromMLResult(e.data.ml, e.data.shipment);
+        e.source?.postMessage({ type: 'nautical_ml_ack' }, e.origin);
+    }
+});
+
+// ── Timeline 5-item collapse ──────────────────────────────────────────────────
 (function patchTimeline() {
-    const _orig = window.renderTimeline;
-    // Re-patch after scripts load
     window.addEventListener("load", () => {
         const origFn = window.renderTimeline;
         if (!origFn) return;
@@ -421,45 +426,31 @@
         const items = Array.from(container.children);
         const LIMIT = 5;
         if (items.length <= LIMIT) return;
-        // Hide items beyond 5
-        items.slice(LIMIT).forEach(el => el.classList.add("cp-extra"));
-        const extra = items.length - LIMIT;
-        const btn = document.getElementById("cp-expand-btn");
-        const countEl = document.getElementById("cp-count-extra");
-        if (btn) {
-            btn.classList.remove("hidden");
-            if (countEl) countEl.textContent = `(+${extra} more)`;
-            let expanded = false;
-            btn.addEventListener("click", () => {
-                expanded = !expanded;
-                items.slice(LIMIT).forEach(el => el.classList.toggle("cp-extra", !expanded));
-                btn.textContent = expanded ? "Show less" : `Show all (+${extra} more)`;
-            });
-        }
-    }
 
-    // Also sync header fields
-    const origRender = window.renderPage;
-    window.addEventListener("load", () => {
-        const rp = window.renderPage;
-        if (!rp) return;
-        window.renderPage = function(s) {
-            rp(s);
-            // Sync compact header
-            const hv = document.getElementById("header-vessel");
-            const hi = document.getElementById("header-id");
-            const hs = document.getElementById("header-status");
-            const hd = document.getElementById("header-dot");
-            const hr = document.getElementById("header-route");
-            if (hv) hv.textContent = s.vessel?.name || "—";
-            if (hi) hi.textContent = "#" + (s._id?.toString().slice(-8).toUpperCase() || "—");
-            if (hr) hr.textContent = `${s.cargo?.origin} → ${s.cargo?.destination}`;
-        };
-    });
+        items.slice(LIMIT).forEach(el => el.classList.add("cp-extra"));
+
+        const extra  = items.length - LIMIT;
+        const btn    = document.getElementById("cp-expand-btn");
+        const countEl = document.getElementById("cp-count-extra");
+        if (!btn) return;
+
+        btn.classList.remove("hidden");
+        if (countEl) countEl.textContent = `(+${extra} more)`;
+
+        let expanded = false;
+        btn.addEventListener("click", () => {
+            expanded = !expanded;
+            items.slice(LIMIT).forEach(el => el.classList.toggle("cp-extra", !expanded));
+            btn.textContent = expanded ? "Show less" : `Show all (+${extra} more)`;
+        });
+    }
 })();
 </script>
-<!-- GEMINI CHAT BOT UI-->
- <style>
+
+<!-- ═══════════════════════════════════════════════════════
+     POMS CHAT BOT
+════════════════════════════════════════════════════════ -->
+<style>
   #poms-chat-widget * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
   #poms-fab {
     position: fixed; bottom: 28px; right: 28px; z-index: 9999;
@@ -498,11 +489,8 @@
   .poms-avatar svg { width: 18px; height: 18px; fill: white; }
   .poms-header-info { flex: 1; }
   .poms-header-name { color: #d0e5f9; font-size: 14px; font-weight: 600; margin: 0; }
-  .poms-header-sub { color: #8e9196; font-size: 11px; margin: 0; }
-  .poms-status-dot {
-    width: 8px; height: 8px; border-radius: 50%;
-    background: #4ADE80; flex-shrink: 0;
-  }
+  .poms-header-sub  { color: #8e9196; font-size: 11px; margin: 0; }
+  .poms-status-dot  { width: 8px; height: 8px; border-radius: 50%; background: #4ADE80; flex-shrink: 0; }
   #poms-messages {
     flex: 1; overflow-y: auto; padding: 14px 14px 8px;
     display: flex; flex-direction: column; gap: 10px;
@@ -520,10 +508,7 @@
     background: #0c2230; border: 1px solid rgba(186,200,220,0.1);
     border-bottom-left-radius: 4px;
   }
-  .poms-msg.user .poms-bubble {
-    background: #fb6b00; color: white;
-    border-bottom-right-radius: 4px;
-  }
+  .poms-msg.user .poms-bubble { background: #fb6b00; color: white; border-bottom-right-radius: 4px; }
   .poms-bot-icon {
     width: 26px; height: 26px; border-radius: 50%;
     background: #172c3b; display: flex; align-items: center;
@@ -533,8 +518,7 @@
   .poms-typing {
     display: flex; gap: 4px; padding: 10px 13px;
     background: #0c2230; border: 1px solid rgba(186,200,220,0.1);
-    border-radius: 14px; border-bottom-left-radius: 4px;
-    width: fit-content;
+    border-radius: 14px; border-bottom-left-radius: 4px; width: fit-content;
   }
   .poms-typing span {
     width: 6px; height: 6px; border-radius: 50%; background: #8e9196;
@@ -546,9 +530,7 @@
     0%,60%,100% { transform: translateY(0); }
     30% { transform: translateY(-5px); background: #fb6b00; }
   }
-  #poms-suggestions {
-    padding: 0 14px 10px; display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;
-  }
+  #poms-suggestions { padding: 0 14px 10px; display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
   .poms-suggestion {
     background: #0c2230; border: 1px solid rgba(186,200,220,0.15);
     border-radius: 8px; padding: 8px 12px; font-size: 12px;
@@ -595,15 +577,12 @@
       </div>
       <div class="poms-header-info">
         <p class="poms-header-name" id="poms-bot-name">POMS Assistant</p>
-        <p class="poms-header-sub" id="poms-bot-sub">Powered by Gemini</p>
+        <p class="poms-header-sub"  id="poms-bot-sub">Powered by Gemini</p>
       </div>
       <div class="poms-status-dot"></div>
     </div>
-
     <div id="poms-messages"></div>
-
     <div id="poms-suggestions"></div>
-
     <div id="poms-input-row">
       <textarea id="poms-input" placeholder="Ask me anything..." rows="1"></textarea>
       <button id="poms-send" aria-label="Send message">
@@ -615,18 +594,14 @@
 
 <script>
 (function() {
-
-  // ── CONFIG — change these two lines per page ────────────────────────────────
-  const CHAT_MODE = "admin";   // "public" or "admin"
+  const CHAT_MODE = "admin";
   const API_BASE  = "http://localhost:3000/api/v1/chat";
-  // ───────────────────────────────────────────────────────────────────────────
 
   const PUBLIC_SUGGESTIONS = [
     "How do I track my shipment?",
     "Show me upcoming shipments for Mumbai port",
     "How do I register a new port?"
   ];
-
   const ADMIN_SUGGESTIONS = [
     "How many shipments do we have today?",
     "Show me all delayed shipments",
@@ -648,10 +623,8 @@
   const input      = document.getElementById("poms-input");
   const sendBtn    = document.getElementById("poms-send");
 
-  document.getElementById("poms-bot-name").textContent =
-    isAdmin ? "Port Admin AI" : "POMS Assistant";
-  document.getElementById("poms-bot-sub").textContent =
-    isAdmin ? "Full data access" : "Public assistant";
+  document.getElementById("poms-bot-name").textContent = isAdmin ? "Port Admin AI"    : "POMS Assistant";
+  document.getElementById("poms-bot-sub").textContent  = isAdmin ? "Full data access" : "Public assistant";
 
   fab.addEventListener("click", () => {
     const isOpen = panel.classList.toggle("open");
@@ -680,10 +653,7 @@
       const btn = document.createElement("button");
       btn.className   = "poms-suggestion";
       btn.textContent = s;
-      btn.addEventListener("click", () => {
-        suggestBox.innerHTML = "";
-        sendMessage(s);
-      });
+      btn.addEventListener("click", () => { suggestBox.innerHTML = ""; sendMessage(s); });
       suggestBox.appendChild(btn);
     });
   }
@@ -698,7 +668,7 @@
       wrap.appendChild(icon);
     }
     const bubble = document.createElement("div");
-    bubble.className = "poms-bubble";
+    bubble.className   = "poms-bubble";
     bubble.textContent = text;
     wrap.appendChild(bubble);
     messages.appendChild(wrap);
@@ -722,8 +692,7 @@
   }
 
   function removeTyping() {
-    const el = document.getElementById("poms-typing-wrap");
-    if (el) el.remove();
+    document.getElementById("poms-typing-wrap")?.remove();
   }
 
   async function sendMessage(text) {
@@ -739,15 +708,10 @@
     try {
       const headers = { "Content-Type": "application/json" };
       if (isAdmin && token) headers["Authorization"] = `Bearer ${token}`;
-
-      // Pass live Firebase sensor data if available on this page
-      const sensorPayload = (isAdmin && typeof sensorData !== "undefined")
-          ? sensorData
-          : null;
-
-      const res = await fetch(endpoint, {
-          method: "POST", headers,
-          body: JSON.stringify({ messages: history, sensor_data: sensorPayload })
+      const sensorPayload = (isAdmin && typeof sensorData !== "undefined") ? sensorData : null;
+      const res  = await fetch(endpoint, {
+        method: "POST", headers,
+        body: JSON.stringify({ messages: history, sensor_data: sensorPayload })
       });
       const data = await res.json();
       removeTyping();
@@ -757,7 +721,7 @@
       } else {
         appendMessage("bot", "Sorry, I ran into an issue. Please try again.");
       }
-    } catch (err) {
+    } catch {
       removeTyping();
       appendMessage("bot", "Connection error. Please check your network and try again.");
     } finally {
@@ -775,7 +739,49 @@
     input.style.height = "auto";
     input.style.height = Math.min(input.scrollHeight, 80) + "px";
   });
-
 })();
 </script>
+
+<!-- Bridge: show reroute banner when IE fires REROUTE recommendation -->
+<script>
+window.addEventListener('message', (e) => {
+    if (e.data?.type === 'nautical_reroute_ready') {
+        const banner = document.getElementById('reroute-banner');
+        // FIX #1 — remove display:none by switching to flex
+        if (banner) banner.style.display = 'flex';
+    }
+});
+</script>
+
+<!--
+  FIX #1 — Reroute Quick-Access Banner
+  REMOVED display:none from inline style so the JS bridge above can simply
+  set display:'flex' without fighting the inline declaration.
+  The banner starts hidden via display:none set here programmatically on load,
+  and is revealed only when the IE posts 'nautical_reroute_ready'.
+-->
+<div id="reroute-banner"
+     style="position:fixed;bottom:100px;left:50%;transform:translateX(-50%);
+            z-index:9990;background:#0c2230;border:1px solid rgba(248,113,113,.4);
+            border-radius:12px;padding:12px 20px;
+            align-items:center;gap:14px;
+            box-shadow:0 8px 32px rgba(0,0,0,.5);font-family:Inter,sans-serif;">
+    <span style="font-size:18px;">🌀</span>
+    <div>
+        <div style="font-size:12px;font-weight:700;color:#f87171;">Storm Reroute Required</div>
+        <div style="font-size:10px;color:#8e9196;">Intelligence Engine recommends immediate route change</div>
+    </div>
+    <a id="reroute-banner-link" href="reroute_decision.html"
+       style="padding:8px 16px;background:#fb6b00;color:white;border-radius:8px;
+              font-size:11px;font-weight:700;text-decoration:none;letter-spacing:.05em;
+              text-transform:uppercase;white-space:nowrap;">
+        Open Decision Center →
+    </a>
+</div>
+
+<!-- Hide the banner on load; JS bridge reveals it only when needed -->
+<script>
+document.getElementById('reroute-banner').style.display = 'none';
+</script>
+
 </body></html>

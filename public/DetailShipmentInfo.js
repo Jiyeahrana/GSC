@@ -1,12 +1,12 @@
 /**
  * NAUTICAL.OS — Shipment Detail Frontend
- * Full replacement for shipment_detail.js
+ * DetailShipmentInfo.js
  *
- * Adds:
- *  - Planned route as blue dashed polyline
- *  - Checkpoint markers (grey/green/red) with popups
- *  - Route progress info panel
- *  - Live polling every 10s refreshes map & progress panel
+ * Fixes applied:
+ *  1. Header sync (header-vessel, header-id, header-route) moved INTO renderPage()
+ *     so it always runs with fresh data and never races with a patched wrapper.
+ *  2. Reroute banner link set here — single source of truth.
+ *  3. No duplicate renderPage wrapping needed in the HTML patch block.
  */
 
 const token = localStorage.getItem("token");
@@ -19,7 +19,8 @@ let shipmentData     = null;
 let leafletMap       = null;
 let vesselMarker     = null;
 let lastWeatherFetch = 0;
-let mapInitializing = false;
+let mapInitializing  = false;
+
 // Leaflet layer references — kept global so we can remove/re-add on refresh
 let plannedRouteLayer    = null;
 let traveledPathLayer    = null;
@@ -32,9 +33,10 @@ let checkpointLayerGroup = null;
 // ─────────────────────────────────────────────────────────────────────────────
 async function fetchShipmentDetail() {
     try {
-        const res = await fetch(`https://gsc-app-630083017128.us-central1.run.app/api/v1/shipments/${shipmentId}/detail?t=${Date.now()}`, {
-            headers: { "Authorization": `Bearer ${token}` }
-        });
+        const res = await fetch(
+            `https://gsc-app-630083017128.us-central1.run.app/api/v1/shipments/${shipmentId}/detail?t=${Date.now()}`,
+            { headers: { "Authorization": `Bearer ${token}` } }
+        );
         const data = await res.json();
         if (!data.success) { showError("Shipment not found"); return; }
 
@@ -54,33 +56,32 @@ async function fetchShipmentDetail() {
 // ─────────────────────────────────────────────────────────────────────────────
 // Geocode port name → { lat, lng }
 // ─────────────────────────────────────────────────────────────────────────────
-// Port coordinates — matches routePlanner's known ports
 const KNOWN_PORTS = {
-    "mumbai":       { lat: 18.9322, lng: 72.8375 },
-    "jnpt":         { lat: 18.9480, lng: 72.9500 },
-    "nhava sheva":  { lat: 18.9480, lng: 72.9500 },
-    "kochi":        { lat: 9.9312,  lng: 76.2673 },
-    "cochin":       { lat: 9.9312,  lng: 76.2673 },
-    "goa":          { lat: 15.4909, lng: 73.8278 },
-    "mangalore":    { lat: 12.8703, lng: 74.8423 },
-    "chennai":      { lat: 13.0827, lng: 80.2707 },
-    "madras":       { lat: 13.0827, lng: 80.2707 },
-    "vizag":        { lat: 17.6868, lng: 83.2185 },
-    "visakhapatnam":{ lat: 17.6868, lng: 83.2185 },
-    "kolkata":      { lat: 22.5726, lng: 88.3639 },
-    "haldia":       { lat: 22.0667, lng: 88.0833 },
-    "paradip":      { lat: 20.3167, lng: 86.6167 },
-    "kandla":       { lat: 23.0333, lng: 70.2167 },
-    "mundra":       { lat: 22.8390, lng: 69.7183 },
-    "tuticorin":    { lat: 8.7642,  lng: 78.1348 },
-    "thoothukudi":  { lat: 8.7642,  lng: 78.1348 },
-    "kozhikode":    { lat: 11.2588, lng: 75.7804 },
-    "calicut":      { lat: 11.2588, lng: 75.7804 },
-    "ennore":       { lat: 13.2827, lng: 80.3311 },
-    "kamarajar":    { lat: 13.2827, lng: 80.3311 },
-    "pipavav":      { lat: 20.9167, lng: 71.5167 },
-    "hazira":       { lat: 21.1167, lng: 72.6500 },
-    "mormugao":     { lat: 15.4139, lng: 73.7993 },
+    "mumbai":        { lat: 18.9322, lng: 72.8375 },
+    "jnpt":          { lat: 18.9480, lng: 72.9500 },
+    "nhava sheva":   { lat: 18.9480, lng: 72.9500 },
+    "kochi":         { lat: 9.9312,  lng: 76.2673 },
+    "cochin":        { lat: 9.9312,  lng: 76.2673 },
+    "goa":           { lat: 15.4909, lng: 73.8278 },
+    "mangalore":     { lat: 12.8703, lng: 74.8423 },
+    "chennai":       { lat: 13.0827, lng: 80.2707 },
+    "madras":        { lat: 13.0827, lng: 80.2707 },
+    "vizag":         { lat: 17.6868, lng: 83.2185 },
+    "visakhapatnam": { lat: 17.6868, lng: 83.2185 },
+    "kolkata":       { lat: 22.5726, lng: 88.3639 },
+    "haldia":        { lat: 22.0667, lng: 88.0833 },
+    "paradip":       { lat: 20.3167, lng: 86.6167 },
+    "kandla":        { lat: 23.0333, lng: 70.2167 },
+    "mundra":        { lat: 22.8390, lng: 69.7183 },
+    "tuticorin":     { lat: 8.7642,  lng: 78.1348 },
+    "thoothukudi":   { lat: 8.7642,  lng: 78.1348 },
+    "kozhikode":     { lat: 11.2588, lng: 75.7804 },
+    "calicut":       { lat: 11.2588, lng: 75.7804 },
+    "ennore":        { lat: 13.2827, lng: 80.3311 },
+    "kamarajar":     { lat: 13.2827, lng: 80.3311 },
+    "pipavav":       { lat: 20.9167, lng: 71.5167 },
+    "hazira":        { lat: 21.1167, lng: 72.6500 },
+    "mormugao":      { lat: 15.4139, lng: 73.7993 },
 };
 
 function geocodePort(name) {
@@ -91,6 +92,7 @@ function geocodePort(name) {
     }
     return null;
 }
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Fetch live weather
 // ─────────────────────────────────────────────────────────────────────────────
@@ -100,7 +102,8 @@ async function fetchWeather(lat, lng, source = "ship") {
     lastWeatherFetch = now;
     setWeatherLoading(true);
     try {
-        const url = `https://api.open-meteo.com/v1/forecast` +
+        const url =
+            `https://api.open-meteo.com/v1/forecast` +
             `?latitude=${lat}&longitude=${lng}` +
             `&current=temperature_2m,wind_speed_10m,relative_humidity_2m,visibility` +
             `&wind_speed_unit=kn`;
@@ -109,17 +112,20 @@ async function fetchWeather(lat, lng, source = "ship") {
         const c    = data.current;
         if (c?.temperature_2m !== undefined) {
             document.getElementById("live-temp").textContent   = `${c.temperature_2m}°C`;
-            document.getElementById("temp-source").textContent = `Live • ${source === "phone" ? "📱 Phone GPS" : "Ship data"}`;
+            document.getElementById("temp-source").textContent =
+                `Live • ${source === "phone" ? "📱 Phone GPS" : "Ship data"}`;
         }
         if (c?.wind_speed_10m !== undefined) {
             document.getElementById("live-wind").textContent   = `${c.wind_speed_10m} kn`;
-            document.getElementById("wind-source").textContent = `Live • ${source === "phone" ? "📱 Phone GPS" : "Ship data"}`;
+            document.getElementById("wind-source").textContent =
+                `Live • ${source === "phone" ? "📱 Phone GPS" : "Ship data"}`;
         }
         if (c?.relative_humidity_2m !== undefined) {
             document.getElementById("live-humidity").textContent = `${c.relative_humidity_2m}%`;
         }
         if (c?.visibility !== undefined) {
-            document.getElementById("live-visibility").textContent = `${(c.visibility / 1000).toFixed(1)} km`;
+            document.getElementById("live-visibility").textContent =
+                `${(c.visibility / 1000).toFixed(1)} km`;
         }
     } catch (err) {
         console.error("Weather fetch error:", err);
@@ -153,18 +159,27 @@ function getStatusConfig(status) {
 // Render all page sections
 // ─────────────────────────────────────────────────────────────────────────────
 function renderPage(s) {
-    document.getElementById("cargo-origin").textContent      = s.cargo.origin;
-    document.getElementById("cargo-dest").textContent        = s.cargo.destination;
-    document.getElementById("cargo-containers").textContent  = s.vessel.container_count + " units";
-    document.getElementById("cargo-capacity").textContent    = s.vessel.capacity + " TEU";
-    document.getElementById("cargo-snapshots").textContent   = s.weather_snapshots.length;
-    
+    // ── Hidden fields (for JS compat) ─────────────────────────────────────────
+    document.getElementById("cargo-origin").textContent     = s.cargo.origin;
+    document.getElementById("cargo-dest").textContent       = s.cargo.destination;
+    document.getElementById("cargo-containers").textContent = s.vessel.container_count + " units";
+    document.getElementById("cargo-capacity").textContent   = s.vessel.capacity + " TEU";
+    document.getElementById("cargo-snapshots").textContent  = s.weather_snapshots.length;
+
+    // ── Reroute banner link — SINGLE source of truth ──────────────────────────
+    const rerouteLink = document.getElementById("reroute-banner-link");
+    if (rerouteLink && s._id) {
+        rerouteLink.href = `reroute_decision.html?id=${s._id}`;
+    }
 
     const sc        = getStatusConfig(s.status);
     const shortId   = s._id.toString().slice(-8).toUpperCase();
-    const arrival   = new Date(s.schedule.arrival).toLocaleDateString("en-IN",  { day: "2-digit", month: "short", year: "numeric" });
-    const departure = new Date(s.schedule.departure).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+    const arrival   = new Date(s.schedule.arrival).toLocaleDateString("en-IN",
+        { day: "2-digit", month: "short", year: "numeric" });
+    const departure = new Date(s.schedule.departure).toLocaleDateString("en-IN",
+        { day: "2-digit", month: "short", year: "numeric" });
 
+    // ── Compact ship info bar ─────────────────────────────────────────────────
     document.getElementById("ship-id").textContent          = `#${shortId}`;
     document.getElementById("vessel-name").textContent      = s.vessel.name;
     document.getElementById("ship-status").textContent      = sc.label;
@@ -176,30 +191,43 @@ function renderPage(s) {
     document.getElementById("arrival-date").textContent     = arrival;
     document.getElementById("days-remaining").textContent   = `${s.days_remaining} Days`;
     document.getElementById("container-count").textContent  = s.vessel.container_count.toLocaleString() + " TEU";
-    
     document.getElementById("ship-type").textContent        = s.type === "incoming" ? "INCOMING" : "OUTGOING";
 
-    const cpTotal    = s.checkpoints?.length || 0;
-const cpReached  = s.checkpoints?.filter(c => c.status === "reached").length || 0;
-const cpProgress = cpTotal > 0 ? Math.round((cpReached / cpTotal) * 100) : 0;
+    // ── Sticky topbar header sync (FIX #3 — moved here, not in HTML patch) ────
+    const hv = document.getElementById("header-vessel");
+    const hi = document.getElementById("header-id");
+    const hr = document.getElementById("header-route");
+    if (hv) hv.textContent = s.vessel?.name || "—";
+    if (hi) hi.textContent = "#" + (s._id?.toString().slice(-8).toUpperCase() || "—");
+    if (hr) hr.textContent = `${s.cargo?.origin} → ${s.cargo?.destination}`;
 
-document.getElementById("progress-bar").style.width    = `${cpProgress}%`;
-document.getElementById("progress-label").textContent  = `${cpProgress}% (${cpReached}/${cpTotal} CPs)`;
-document.getElementById("benchmark-bar").style.width   = `${Math.min(cpProgress + 5, 100)}%`;
+    // ── Checkpoint progress ───────────────────────────────────────────────────
+    const cpTotal   = s.checkpoints?.length || 0;
+    const cpReached = s.checkpoints?.filter(c => c.status === "reached").length || 0;
+    const cpProgress = cpTotal > 0 ? Math.round((cpReached / cpTotal) * 100) : 0;
 
+    document.getElementById("progress-bar").style.width   = `${cpProgress}%`;
+    document.getElementById("progress-label").textContent = `${cpProgress}% (${cpReached}/${cpTotal} CPs)`;
+    document.getElementById("benchmark-bar").style.width  = `${Math.min(cpProgress + 5, 100)}%`;
+
+    // ── Live weather from ship data ───────────────────────────────────────────
     if (s.latest_weather?.lat != null && s.latest_weather?.lng != null) {
-    document.getElementById("live-lat").textContent    = `${s.latest_weather.lat.toFixed(4)}° N`;
-    document.getElementById("live-lng").textContent    = `${s.latest_weather.lng.toFixed(4)}° E`;
-        document.getElementById("storm-flag").textContent  = s.latest_weather.storm_flag ? "⚠ STORM ALERT" : "Clear";
-        document.getElementById("storm-flag").style.color  = s.latest_weather.storm_flag ? "#fb6b00" : "#4ADE80";
-        document.getElementById("live-wind").textContent   = `${s.latest_weather.wind_speed_kmh} km/h`;
+        document.getElementById("live-lat").textContent   = `${s.latest_weather.lat.toFixed(4)}° N`;
+        document.getElementById("live-lng").textContent   = `${s.latest_weather.lng.toFixed(4)}° E`;
+        document.getElementById("storm-flag").textContent = s.latest_weather.storm_flag
+            ? "⚠ STORM ALERT" : "Clear";
+        document.getElementById("storm-flag").style.color = s.latest_weather.storm_flag
+            ? "#fb6b00" : "#4ADE80";
+        document.getElementById("live-wind").textContent  = `${s.latest_weather.wind_speed_kmh} km/h`;
     }
 
-    // Render route progress panel (new)
+    // ── Sub-renders ───────────────────────────────────────────────────────────
     renderRouteProgressPanel(s);
-
     initLeafletMap(s);
     renderTimeline(s);
+    // Tell IE not to draw ML route overlays on THIS map (detail page).
+    // The IE checks window._ieSkipMapRoutes before calling renderMLRouteMap.
+    window._ieSkipMapRoutes = true;
     if (window.runIntelligenceEngine) runIntelligenceEngine(s);
 }
 
@@ -212,7 +240,6 @@ function renderRouteProgressPanel(s) {
 
     let panel = document.getElementById("route-progress-panel");
     if (!panel) {
-        // Create panel and inject it after the map container
         panel = document.createElement("div");
         panel.id = "route-progress-panel";
         panel.style.cssText = `
@@ -224,8 +251,8 @@ function renderRouteProgressPanel(s) {
             padding: 20px 24px;
             font-family: 'Inter', sans-serif;
         `;
-        const mapEl = document.getElementById("leaflet-map");
-        mapEl?.parentNode?.insertBefore(panel, mapEl.nextSibling);
+        const mapContainer = document.getElementById("map-container");
+        mapContainer?.parentNode?.insertBefore(panel, mapContainer.nextSibling);
     }
 
     if (!rp || cps.length === 0) {
@@ -245,15 +272,21 @@ function renderRouteProgressPanel(s) {
     const total   = cps.length;
     const pct     = Math.round((reached / total) * 100);
 
-    const delayColor  = rp.delay_minutes > 0 ? "#f87171" : rp.delay_minutes < 0 ? "#4ADE80" : "#94a3b8";
-    const delayLabel  = rp.delay_minutes > 0
+    // ── Compute on_time locally — never trust API value when CPs are missed ──
+    // A shipment is only "on time" if: no CPs missed AND delay_minutes <= 0
+    const localOnTime = missed === 0 && (rp.delay_minutes || 0) <= 0;
+
+    const delayColor = (rp.delay_minutes > 0 || missed > 0) ? "#f87171"
+                     : rp.delay_minutes < 0 ? "#4ADE80"
+                     : "#94a3b8";
+    const delayLabel = rp.delay_minutes > 0
         ? `+${rp.delay_minutes} min BEHIND`
         : rp.delay_minutes < 0
             ? `${Math.abs(rp.delay_minutes)} min AHEAD`
+            : missed > 0 ? "CHECKPOINTS MISSED"
             : "ON SCHEDULE";
-    const onTimeColor = rp.on_time ? "#4ADE80" : "#f87171";
+    const onTimeColor = localOnTime ? "#4ADE80" : "#f87171";
 
-    // ETA to next checkpoint
     let etaStr = "—";
     if (rp.eta_to_next_checkpoint_min !== null) {
         const h = Math.floor(rp.eta_to_next_checkpoint_min / 60);
@@ -262,7 +295,6 @@ function renderRouteProgressPanel(s) {
     }
 
     panel.innerHTML = `
-        <!-- Header -->
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
             <div style="display:flex;align-items:center;gap:10px;">
                 <span style="font-size:16px;">🧭</span>
@@ -272,11 +304,10 @@ function renderRouteProgressPanel(s) {
             </div>
             <span style="font-size:11px;font-weight:700;color:${onTimeColor};
                 background:${onTimeColor}18;padding:3px 10px;border-radius:20px;letter-spacing:0.05em;">
-                ${rp.on_time ? "✓ ON TIME" : "⚠ DELAYED"}
+                ${localOnTime ? "✓ ON TIME" : "⚠ DELAYED"}
             </span>
         </div>
 
-        <!-- Progress Bar -->
         <div style="margin-bottom:16px;">
             <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
                 <span style="font-size:11px;color:#8e9196;">${reached} of ${total} checkpoints reached</span>
@@ -288,7 +319,6 @@ function renderRouteProgressPanel(s) {
             </div>
         </div>
 
-        <!-- Stats Row -->
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;">
             <div style="background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.15);
                 border-radius:8px;padding:10px;text-align:center;">
@@ -314,7 +344,6 @@ function renderRouteProgressPanel(s) {
             </div>
         </div>
 
-        <!-- Next Checkpoint -->
         <div style="display:flex;align-items:center;justify-content:space-between;
             background:rgba(186,200,220,0.05);border:1px solid rgba(186,200,220,0.1);
             border-radius:8px;padding:12px 16px;">
@@ -332,17 +361,22 @@ function renderRouteProgressPanel(s) {
             </div>
         </div>
 
-        <!-- Checkpoint List -->
         <div style="margin-top:14px;display:flex;flex-direction:column;gap:6px;">
             ${cps.map(cp => {
-                const icon  = cp.status === "reached" ? "✓" : cp.status === "missed" ? "✗" : "○";
-                const color = cp.status === "reached" ? "#4ADE80" : cp.status === "missed" ? "#f87171" : "#94a3b8";
-                const bg    = cp.status === "reached" ? "rgba(74,222,128,0.08)" : cp.status === "missed" ? "rgba(248,113,113,0.08)" : "rgba(255,255,255,0.03)";
+                const icon  = cp.status === "reached" ? "✓"
+                            : cp.status === "missed"  ? "✗" : "○";
+                const color = cp.status === "reached" ? "#4ADE80"
+                            : cp.status === "missed"  ? "#f87171" : "#94a3b8";
+                const bg    = cp.status === "reached" ? "rgba(74,222,128,0.08)"
+                            : cp.status === "missed"  ? "rgba(248,113,113,0.08)"
+                            : "rgba(255,255,255,0.03)";
                 const expected = cp.expected_arrival
-                    ? new Date(cp.expected_arrival).toLocaleString("en-IN", { day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit" })
+                    ? new Date(cp.expected_arrival).toLocaleString("en-IN",
+                        { day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit" })
                     : "—";
                 const actual = cp.actual_arrival
-                    ? new Date(cp.actual_arrival).toLocaleString("en-IN", { day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit" })
+                    ? new Date(cp.actual_arrival).toLocaleString("en-IN",
+                        { day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit" })
                     : cp.status === "missed" ? "MISSED" : "Pending";
                 return `
                     <div style="display:flex;align-items:center;gap:12px;padding:8px 12px;
@@ -364,11 +398,9 @@ function renderRouteProgressPanel(s) {
             }).join("")}
         </div>
 
-        <!-- Legend -->
         <div style="display:flex;gap:16px;margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06);">
             <div style="display:flex;align-items:center;gap:6px;">
-                <div style="width:24px;height:3px;background:#60a5fa;border-radius:2px;
-                    border-top:1px dashed #60a5fa;"></div>
+                <div style="width:24px;height:3px;background:#60a5fa;border-radius:2px;"></div>
                 <span style="font-size:9px;color:#8e9196;text-transform:uppercase;letter-spacing:0.06em;">Planned Route</span>
             </div>
             <div style="display:flex;align-items:center;gap:6px;">
@@ -393,7 +425,6 @@ function renderRouteProgressPanel(s) {
 // ─────────────────────────────────────────────────────────────────────────────
 // Leaflet Map — full init with planned route + checkpoints
 // ─────────────────────────────────────────────────────────────────────────────
-
 async function initLeafletMap(s) {
     if (mapInitializing) return;
     if (!window.L) {
@@ -409,23 +440,18 @@ async function initLeafletMap(s) {
     const snapshots   = s.weather_snapshots || [];
     const routePoints = snapshots.map(w => [w.lat, w.lng]);
     const livePos = (s.latest_weather?.lat != null && s.latest_weather?.lng != null)
-    ? [s.latest_weather.lat, s.latest_weather.lng]
-    : routePoints[routePoints.length - 1] || null;
+        ? [s.latest_weather.lat, s.latest_weather.lng]
+        : routePoints[routePoints.length - 1] || null;
 
     // ── If map already exists: just update dynamic layers ────────────────────
     if (leafletMap) {
-        // Update vessel marker position
-        if (vesselMarker && livePos) {
-            vesselMarker.setLatLng(livePos);
-        }
-        // Refresh traveled path
+        if (vesselMarker && livePos) vesselMarker.setLatLng(livePos);
         if (traveledPathLayer) { leafletMap.removeLayer(traveledPathLayer); traveledPathLayer = null; }
         if (traveledGlowLayer) { leafletMap.removeLayer(traveledGlowLayer); traveledGlowLayer = null; }
         if (routePoints.length > 1) {
             traveledGlowLayer = L.polyline(routePoints, { color: "#fb6b00", weight: 10, opacity: 0.20 }).addTo(leafletMap);
             traveledPathLayer = L.polyline(routePoints, { color: "#fb6b00", weight: 4,  opacity: 1.0  }).addTo(leafletMap);
         }
-        // Refresh checkpoint markers
         updateCheckpointMarkers(s);
         return;
     }
@@ -441,24 +467,25 @@ async function initLeafletMap(s) {
         mapCenter = livePos;
     }
 
-    leafletMap = L.map("leaflet-map", { center: mapCenter, zoom: 5, zoomControl: true, attributionControl: false });
-    leafletMap.whenReady(() => {
-    document.getElementById("map-loading")?.classList.add("hidden");
+    leafletMap = L.map("leaflet-map", {
+        center: mapCenter, zoom: 5, zoomControl: true, attributionControl: false
     });
+    window._leafletMap       = leafletMap;
+    window.leafletMapInstance = leafletMap;
+
+    leafletMap.whenReady(() => {
+        document.getElementById("map-loading")?.classList.add("hidden");
+    });
+
     L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-    maxZoom: 19,
-    attribution: '©OpenStreetMap ©CartoDB'
+        maxZoom: 19, attribution: "©OpenStreetMap ©CartoDB"
     }).addTo(leafletMap);
 
     // ── PLANNED ROUTE — blue dashed line ──────────────────────────────────────
     const plannedRoute = s.planned_route || [];
     if (plannedRoute.length > 1) {
         const plannedLatLngs = plannedRoute.map(p => [p.lat, p.lng]);
-        // Glow
-        L.polyline(plannedLatLngs, {
-            color: "#60a5fa", weight: 8, opacity: 0.08, dashArray: null
-        }).addTo(leafletMap);
-        // Main dashed line
+        L.polyline(plannedLatLngs, { color: "#60a5fa", weight: 8, opacity: 0.08 }).addTo(leafletMap);
         plannedRouteLayer = L.polyline(plannedLatLngs, {
             color: "#60a5fa", weight: 2, opacity: 0.75, dashArray: "10 6"
         }).addTo(leafletMap);
@@ -482,20 +509,24 @@ async function initLeafletMap(s) {
     const portIcon = (color, label) => L.divIcon({
         className: "",
         html: `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
-          <div style="width:14px;height:14px;border-radius:50%;background:${color};box-shadow:0 0 0 3px ${color}44,0 0 12px ${color}88;"></div>
-          <div style="background:rgba(0,21,35,0.9);color:${color};font-family:monospace;font-size:9px;font-weight:700;
-            padding:2px 6px;border-radius:3px;white-space:nowrap;letter-spacing:0.05em;border:1px solid ${color}55;">${label}</div>
+          <div style="width:14px;height:14px;border-radius:50%;background:${color};
+            box-shadow:0 0 0 3px ${color}44,0 0 12px ${color}88;"></div>
+          <div style="background:rgba(0,21,35,0.9);color:${color};font-family:monospace;
+            font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;white-space:nowrap;
+            letter-spacing:0.05em;border:1px solid ${color}55;">${label}</div>
         </div>`,
-        iconSize: [0,0], iconAnchor: [7,7]
+        iconSize: [0, 0], iconAnchor: [7, 7]
     });
 
     if (originCoords) {
         L.marker([originCoords.lat, originCoords.lng], { icon: portIcon("#4ADE80", "⚓ " + s.cargo.origin) })
-         .addTo(leafletMap).bindPopup(`<b>Origin Port</b><br>${s.cargo.origin}`);
+         .addTo(leafletMap)
+         .bindPopup(`<b>Origin Port</b><br>${s.cargo.origin}`);
     }
     if (destCoords) {
-        L.marker([destCoords.lat, destCoords.lng], { icon: portIcon(isArrived ? "#4ADE80" : "#bac8dc", "🏁 " + s.cargo.destination) })
-         .addTo(leafletMap).bindPopup(`<b>Destination Port</b><br>${s.cargo.destination}`);
+        L.marker([destCoords.lat, destCoords.lng], {
+            icon: portIcon(isArrived ? "#4ADE80" : "#bac8dc", "🏁 " + s.cargo.destination)
+        }).addTo(leafletMap).bindPopup(`<b>Destination Port</b><br>${s.cargo.destination}`);
     }
 
     // ── VESSEL MARKER ─────────────────────────────────────────────────────────
@@ -512,13 +543,15 @@ async function initLeafletMap(s) {
     const vesselIconFn = (color) => L.divIcon({
         className: "",
         html: `<div style="display:flex;align-items:center;justify-content:center;">
-          <div style="width:32px;height:32px;border-radius:50%;background:${color}22;border:2px solid ${color};
-            box-shadow:0 0 0 6px ${color}22,0 0 20px ${color}66;display:flex;align-items:center;justify-content:center;
+          <div style="width:32px;height:32px;border-radius:50%;background:${color}22;
+            border:2px solid ${color};
+            box-shadow:0 0 0 6px ${color}22,0 0 20px ${color}66;
+            display:flex;align-items:center;justify-content:center;
             animation:vesselPulse 2s ease-in-out infinite;">
             <span style="color:${color};font-size:14px;">▲</span>
           </div>
         </div>`,
-        iconSize: [32,32], iconAnchor: [16,16]
+        iconSize: [32, 32], iconAnchor: [16, 16]
     });
 
     if (livePos) {
@@ -547,19 +580,13 @@ async function initLeafletMap(s) {
     if (destCoords)   allPoints.push([destCoords.lat,   destCoords.lng]);
     if (livePos)      allPoints.push(livePos);
     routePoints.forEach(p => allPoints.push(p));
-
-    // ← ADD THIS: also include planned route points so full path is visible
-    plannedRoute.forEach(p => {
-        if (p.lat && p.lng) allPoints.push([p.lat, p.lng]);
-    });
+    plannedRoute.forEach(p => { if (p.lat && p.lng) allPoints.push([p.lat, p.lng]); });
 
     if (allPoints.length > 1) {
         leafletMap.fitBounds(L.latLngBounds(allPoints), { padding: [60, 60] });
     } else if (allPoints.length === 1) {
         leafletMap.setView(allPoints[0], 6);
     }
-
-    
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -573,11 +600,9 @@ function updateCheckpointMarkers(s) {
         const color = cp.status === "reached" ? "#4ADE80"
                     : cp.status === "missed"  ? "#f87171"
                     : "#94a3b8";
-
         const ring  = cp.status === "reached" ? "#4ADE8044"
                     : cp.status === "missed"  ? "#f8717144"
                     : "#94a3b844";
-
         const icon  = cp.status === "reached" ? "✓"
                     : cp.status === "missed"  ? "✗"
                     : `${i + 1}`;
@@ -594,17 +619,22 @@ function updateCheckpointMarkers(s) {
                 padding:1px 5px;border-radius:3px;white-space:nowrap;border:1px solid ${color}44;
                 letter-spacing:0.04em;">CP${i + 1}</div>
             </div>`,
-            iconSize: [0,0], iconAnchor: [11, 11]
+            iconSize: [0, 0], iconAnchor: [11, 11]
         });
 
         const expectedStr = cp.expected_arrival
-            ? new Date(cp.expected_arrival).toLocaleString("en-IN", { day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit" })
+            ? new Date(cp.expected_arrival).toLocaleString("en-IN",
+                { day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit" })
             : "—";
         const actualStr = cp.actual_arrival
-            ? new Date(cp.actual_arrival).toLocaleString("en-IN", { day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit" })
-            : cp.status === "missed" ? "<span style='color:#f87171'>MISSED</span>" : "<span style='color:#94a3b8'>Pending</span>";
+            ? new Date(cp.actual_arrival).toLocaleString("en-IN",
+                { day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit" })
+            : cp.status === "missed"
+                ? "<span style='color:#f87171'>MISSED</span>"
+                : "<span style='color:#94a3b8'>Pending</span>";
 
-        const statusBadge = `<span style="font-weight:700;color:${color};text-transform:uppercase;">${cp.status}</span>`;
+        const statusBadge =
+            `<span style="font-weight:700;color:${color};text-transform:uppercase;">${cp.status}</span>`;
 
         L.marker([cp.position.lat, cp.position.lng], { icon: markerIcon })
          .addTo(checkpointLayerGroup)
@@ -655,7 +685,8 @@ function renderTimeline(s) {
 
     events.push({
         label: `${s.cargo.origin} (${s.type === "incoming" ? "Origin" : "Departure"})`,
-        sub:   `Scheduled: ${new Date(s.schedule.arrival).toLocaleString("en-IN", { day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit" })}`,
+        sub:   `Scheduled: ${new Date(s.schedule.arrival).toLocaleString("en-IN",
+            { day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit" })}`,
         done: true, current: false
     });
 
@@ -663,7 +694,8 @@ function renderTimeline(s) {
         const ts = new Date(w.timestamp);
         events.push({
             label:   `Waypoint ${i + 1} — ${w.lat.toFixed(2)}°N ${w.lng.toFixed(2)}°E`,
-            sub:     `${ts.toLocaleString("en-IN", { day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit" })} UTC${w.storm_flag ? " ⚠ Storm" : ""}`,
+            sub:     `${ts.toLocaleString("en-IN",
+                { day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit" })} UTC${w.storm_flag ? " ⚠ Storm" : ""}`,
             done: ts < now, current: false
         });
     });
@@ -680,9 +712,11 @@ function renderTimeline(s) {
 
     events.push({
         label: `${s.cargo.destination} (${s.type === "incoming" ? "Destination" : "Arrival"})`,
-        sub:   isArrived
-            ? `Arrived: ${new Date(s.actual?.arrival || s.schedule.departure).toLocaleString("en-IN", { day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit" })}`
-            : `ETA: ${new Date(s.schedule.departure).toLocaleString("en-IN", { day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit" })}`,
+        sub: isArrived
+            ? `Arrived: ${new Date(s.actual?.arrival || s.schedule.departure).toLocaleString("en-IN",
+                { day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit" })}`
+            : `ETA: ${new Date(s.schedule.departure).toLocaleString("en-IN",
+                { day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit" })}`,
         done: isArrived, current: isArrived
     });
 
@@ -692,17 +726,28 @@ function renderTimeline(s) {
         const div    = document.createElement("div");
         div.className = "flex gap-4 items-start relative " + (isLast ? "" : "pb-6");
         div.innerHTML = `
-            ${!isLast ? `<div class="w-0.5 h-full absolute left-3 top-6 bg-outline-variant/30"></div>` : ""}
-            <div class="w-6 h-6 rounded-full flex items-center justify-center relative z-10 ring-4 ring-background flex-shrink-0
-                ${ev.current ? "bg-[#fb6b00] animate-pulse" : ev.done ? "bg-primary" : "bg-surface-container-high border border-outline-variant/40"}">
+            ${!isLast
+                ? `<div class="w-0.5 h-full absolute left-3 top-6 bg-outline-variant/30"></div>`
+                : ""}
+            <div class="w-6 h-6 rounded-full flex items-center justify-center relative z-10
+                ring-4 ring-background flex-shrink-0
                 ${ev.current
-                    ? `<span class="material-symbols-outlined text-[12px] text-background" style="font-variation-settings:'FILL' 1">radio_button_checked</span>`
+                    ? "bg-[#fb6b00] animate-pulse"
                     : ev.done
-                        ? `<span class="material-symbols-outlined text-[12px] text-background" style="font-variation-settings:'FILL' 1">check</span>`
+                        ? "bg-primary"
+                        : "bg-surface-container-high border border-outline-variant/40"}">
+                ${ev.current
+                    ? `<span class="material-symbols-outlined text-[12px] text-background"
+                            style="font-variation-settings:'FILL' 1">radio_button_checked</span>`
+                    : ev.done
+                        ? `<span class="material-symbols-outlined text-[12px] text-background"
+                                style="font-variation-settings:'FILL' 1">check</span>`
                         : `<span class="material-symbols-outlined text-[12px] text-outline-variant">schedule</span>`}
             </div>
             <div>
-                <p class="text-sm font-bold ${ev.current ? "text-[#fb6b00]" : ev.done ? "text-on-surface" : "text-on-surface-variant"}">${ev.label}</p>
+                <p class="text-sm font-bold ${
+                    ev.current ? "text-[#fb6b00]" : ev.done ? "text-on-surface" : "text-on-surface-variant"
+                }">${ev.label}</p>
                 <p class="text-xs text-on-surface-variant mt-0.5">${ev.sub}</p>
             </div>`;
         container.appendChild(div);
