@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html class="dark" lang="en"><head>
+  <link rel="icon" type="image/svg+xml" href="/LOGO.svg"/>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>POMS | Shipment Data Entry</title>
@@ -69,7 +70,10 @@
     <a href="Dashboardport.html" class="md:hidden flex items-center justify-center w-8 h-8 rounded-md bg-surface-container-high border border-outline-variant/20 text-[#bac8dc] hover:text-white transition-colors" aria-label="Back to dashboard">
       <span class="material-symbols-outlined" style="font-size:18px">arrow_back</span>
     </a>
-    <span class="text-2xl font-black text-[#bac8dc] tracking-tighter font-headline">POMS</span>
+        <a href="landingPage.html" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
+        <img src="/LOGO.svg" alt="POMS Logo" class="h-12 w-auto"/>
+        <span class="text-2xl font-black tracking-tighter text-[#bac8dc] uppercase font-['Manrope']">POMS</span>
+    </a>
     <span id="header-port-name" class="md:hidden text-xs text-on-surface-variant font-body truncate max-w-[120px]"></span>
   </div>
   <div class="flex items-center gap-6">
@@ -521,7 +525,7 @@
 
   // ── CONFIG — change these two lines per page ────────────────────────────────
   const CHAT_MODE = "admin";   // "public" or "admin"
-  const API_BASE  = "http://localhost:3000/api/v1/chat";
+  const API_BASE  = "https://gsc-app-630083017128.us-central1.run.app/api/v1/chat";
   // ───────────────────────────────────────────────────────────────────────────
 
   const PUBLIC_SUGGESTIONS = [

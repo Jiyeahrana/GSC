@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 
 <html class="dark" lang="en"><head>
+  <link rel="icon" type="image/svg+xml" href="/LOGO.svg"/>
 <script>
     if (!localStorage.getItem("visited")) {
         localStorage.setItem("visited", "true");
@@ -96,11 +97,13 @@
 <header class="bg-[#0a151a] flex items-center w-full px-6 py-4 fixed top-0 z-50 border-b border-[rgba(186,200,220,0.08)]">
  
     <!-- Logo -->
-    <div class="absolute left-6">
-        <a href="landingPage.html" class="text-xl font-black tracking-tighter text-[#bac8dc] uppercase font-['Manrope'] hover:text-white transition-colors">
-            POMS
-        </a>
-    </div>
+<!-- Logo -->
+<div class="absolute left-6">
+    <a href="landingPage.html" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
+        <img src="/LOGO.svg" alt="POMS Logo" class="h-12 w-auto"/>
+        <span class="text-xl font-black tracking-tighter text-[#bac8dc] uppercase font-['Manrope']">POMS</span>
+    </a>
+</div>
  
     <!-- Centered Desktop Nav -->
     <nav class="hidden md:flex mx-auto space-x-10 font-['Manrope'] font-bold tracking-tight">
@@ -199,7 +202,7 @@
 <label class="font-label text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Work Email</label>
 <div class="relative">
 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline" data-icon="alternate_email">alternate_email</span>
-<input id="loginEmail" class="w-full bg-surface-container-lowest border-none focus:ring-1 focus:ring-primary pl-10 py-3 text-sm rounded" placeholder="name@portauthority.com" type="email"/>
+<input id="loginEmail" class="w-full bg-surface-container-lowest border-none focus:ring-1 focus:ring-primary pl-10 py-3 text-sm rounded" placeholder="admin@jnport.in" type="email"/>
 </div>
 </div>
 <div class="space-y-1.5">
@@ -211,13 +214,23 @@
 <!-- <input id="loginPassword" class="w-full bg-surface-container-lowest border-none focus:ring-1 focus:ring-primary pl-10 py-3 text-sm rounded" placeholder="••••••••••••" type="password"/> -->
 <div class="relative">
 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">lock</span>
-<input id="loginPassword" class="w-full bg-surface-container-lowest border-none focus:ring-1 focus:ring-primary pl-10 pr-10 py-3 text-sm rounded" placeholder="••••••••••••" type="password"/>
+<input id="loginPassword" class="w-full bg-surface-container-lowest border-none focus:ring-1 focus:ring-primary pl-10 pr-10 py-3 text-sm rounded" placeholder="JNPort@2026" type="password"/>
 <button type="button" onclick="togglePassword('loginPassword', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors">
   <span class="material-symbols-outlined text-sm">visibility</span>
 </button>
 </div>
 </div>
+</div>
 
+<!-- Demo credentials note -->
+<div class="flex items-start gap-2 px-3 py-2.5 bg-surface-container-high rounded-lg border border-primary/10">
+    <span class="material-symbols-outlined text-xs text-primary mt-0.5" style="font-size:14px">info</span>
+    <div>
+        <p class="text-[10px] font-bold text-primary uppercase tracking-wider mb-0.5">Demo Credentials</p>
+        <p class="text-[10px] text-on-surface-variant leading-relaxed">
+            Use the pre-filled email and password above to explore POMS with real port data, live shipment tracking, AI chatbot, zone capacity, and labour forecasts already loaded.
+        </p>
+    </div>
 </div>
 
 <!-- Error showing div -->
@@ -615,7 +628,7 @@ container.addEventListener("click", (e) => {
 
   // ── CONFIG — change these two lines per page ────────────────────────────────
   const CHAT_MODE = "public";   // "public" or "admin"
-  const API_BASE  = "http://localhost:3000/api/v1/chat";
+  const API_BASE  = "https://gsc-app-630083017128.us-central1.run.app/api/v1/chat";
   // ───────────────────────────────────────────────────────────────────────────
 
   const PUBLIC_SUGGESTIONS = [

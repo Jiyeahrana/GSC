@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html class="dark" lang="en"><head>
+    <link rel="icon" type="image/svg+xml" href="/LOGO.svg"/>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>POMS| Port Operations Dashboard</title>
@@ -152,7 +153,10 @@
             <span id="sb2" class="block w-5 h-[1.5px] bg-[#bac8dc] transition-all duration-300"></span>
             <span id="sb3" class="block w-4 h-[1.5px] bg-[#bac8dc] transition-all duration-300"></span>
         </button>
-        <span class="text-2xl font-black text-[#bac8dc] tracking-tighter font-headline">POMS</span>
+            <a href="landingPage.html" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
+        <img src="/LOGO.svg" alt="POMS Logo" class="h-12 w-auto"/>
+        <span class="text-2xl font-black tracking-tighter text-[#bac8dc] uppercase font-['Manrope']">POMS</span>
+    </a>
     </div>
     <div class="flex items-center gap-6">
         <div class="flex items-center gap-4 text-[#bac8dc]">
@@ -566,7 +570,7 @@
 
   // ── CONFIG — change these two lines per page ────────────────────────────────
   const CHAT_MODE = "admin";   // "public" or "admin"
-  const API_BASE  = "http://localhost:3000/api/v1/chat";
+  const API_BASE  = "https://gsc-app-630083017128.us-central1.run.app/api/v1/chat";
   // ───────────────────────────────────────────────────────────────────────────
 
   const PUBLIC_SUGGESTIONS = [

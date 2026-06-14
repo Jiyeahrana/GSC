@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html class="dark" lang="en">
 <head>
+    <link rel="icon" type="image/svg+xml" href="/LOGO.svg"/>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>POMS - Labour Demand Prediction</title>
@@ -167,7 +168,10 @@
     <span class="material-symbols-outlined">menu</span>
 </button>
     <div class="flex items-left gap-4">
-        <span class="text-2xl font-black text-[#bac8dc] tracking-tighter font-headline">POMS</span>
+            <a href="landingPage.html" class="flex items-center gap-2 hover:opacity-80 transition-opacity">
+        <img src="/LOGO.svg" alt="POMS Logo" class="h-12 w-auto"/>
+        <span class="text-2xl font-black tracking-tighter text-[#bac8dc] uppercase font-['Manrope']">POMS</span>
+    </a>
     </div>
 </header>
 
@@ -394,7 +398,7 @@
 <script>
 (function() {
   const CHAT_MODE = "admin";
-  const API_BASE  = "http://localhost:3000/api/v1/chat";
+  const API_BASE  = "https://gsc-app-630083017128.us-central1.run.app/api/v1/chat";
   const isAdmin = true;
   const endpoint = `${API_BASE}/admin`;
   const token = localStorage.getItem("token");

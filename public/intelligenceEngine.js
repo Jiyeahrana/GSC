@@ -21,7 +21,7 @@ const IE_COLORS = {
     accent   : "#fb6b00",
 };
 
-const ML_SERVICE_URL    = "http://localhost:5001/predict";
+const ML_SERVICE_URL    = "https://nautical-ml-630083017128.us-central1.run.app/predict";
 const ALERT_STORAGE_KEY = (id) => `nautical_alerts_v4_${id}`;
 const CP_STORAGE_KEY    = (id) => `nautical_checkpoints_${id}`;
 

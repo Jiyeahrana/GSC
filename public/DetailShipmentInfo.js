@@ -720,9 +720,45 @@ function renderTimeline(s) {
         done: isArrived, current: isArrived
     });
 
-    container.innerHTML = "";
+container.innerHTML = "";
+
+const PREVIEW_COUNT = 3;
+const btn   = document.getElementById("cp-expand-btn");
+const extra = document.getElementById("cp-count-extra");
+
+if (!btn || !extra) {
+    // Button not in DOM — just render all events and return
     events.forEach((ev, i) => {
         const isLast = i === events.length - 1;
+        const div    = document.createElement("div");
+        div.className = "flex gap-4 items-start relative " + (isLast ? "" : "pb-6");
+        div.innerHTML = `
+            ${!isLast ? `<div class="w-0.5 h-full absolute left-3 top-6 bg-outline-variant/30"></div>` : ""}
+            <div class="w-6 h-6 rounded-full flex items-center justify-center relative z-10
+                ring-4 ring-background flex-shrink-0
+                ${ev.current ? "bg-[#fb6b00] animate-pulse" : ev.done ? "bg-primary" : "bg-surface-container-high border border-outline-variant/40"}">
+                ${ev.current
+                    ? `<span class="material-symbols-outlined text-[12px] text-background" style="font-variation-settings:'FILL' 1">radio_button_checked</span>`
+                    : ev.done
+                        ? `<span class="material-symbols-outlined text-[12px] text-background" style="font-variation-settings:'FILL' 1">check</span>`
+                        : `<span class="material-symbols-outlined text-[12px] text-outline-variant">schedule</span>`}
+            </div>
+            <div>
+                <p class="text-sm font-bold ${ev.current ? "text-[#fb6b00]" : ev.done ? "text-on-surface" : "text-on-surface-variant"}">${ev.label}</p>
+                <p class="text-xs text-on-surface-variant mt-0.5">${ev.sub}</p>
+            </div>`;
+        container.appendChild(div);
+    });
+    return;
+}
+let expanded = false;
+
+function renderEvents(showAll) {
+    container.innerHTML = "";
+    const visible = showAll ? events : events.slice(0, PREVIEW_COUNT);
+
+    visible.forEach((ev, i) => {
+        const isLast = i === visible.length - 1;
         const div    = document.createElement("div");
         div.className = "flex gap-4 items-start relative " + (isLast ? "" : "pb-6");
         div.innerHTML = `
@@ -752,6 +788,29 @@ function renderTimeline(s) {
             </div>`;
         container.appendChild(div);
     });
+}
+
+// Show/hide button based on event count
+if (events.length > PREVIEW_COUNT) {
+    btn.classList.remove("hidden");
+    extra.textContent = events.length - PREVIEW_COUNT;
+    renderEvents(false);
+
+    btn.onclick = () => {
+        expanded = !expanded;
+        renderEvents(expanded);
+        btn.textContent = expanded
+            ? "Show less"
+            : `Show all ${events.length - PREVIEW_COUNT} more`;
+        // Reset the span since we replaced btn textContent
+        if (!expanded) {
+            btn.innerHTML = `Show all <span id="cp-count-extra">${events.length - PREVIEW_COUNT}</span>`;
+        }
+    };
+} else {
+    btn.classList.add("hidden");
+    renderEvents(true);
+}
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
