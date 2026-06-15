@@ -411,7 +411,7 @@ function updateExpectedUtilization(shipments) {
 
 async function fetchEfficiencyScore() {
     try {
-        const res = await fetch("http://localhost:3000/api/v1/port/efficiency-score", {
+        const res = await fetch("https://gsc-app-630083017128.us-central1.run.app/api/v1/port/efficiency-score", {
             headers: { "Authorization": `Bearer ${token}` }
         });
 

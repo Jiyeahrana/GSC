@@ -23,7 +23,7 @@ let shiftCount = 0;
 
 async function fetchWorkforce() {
     try {
-        const res  = await fetch("http://localhost:3000/api/v1/port/workforce", {
+        const res  = await fetch("https://gsc-app-630083017128.us-central1.run.app/api/v1/port/workforce", {
             headers: { "Authorization": `Bearer ${token}` }
         });
         const data = await res.json();
@@ -270,7 +270,7 @@ document.getElementById("workforce-form").addEventListener("submit", async (e) =
     btnLoading.style.display = "flex";
 
     try {
-        const res = await fetch("http://localhost:3000/api/v1/port/workforce", {
+        const res = await fetch("https://gsc-app-630083017128.us-central1.run.app/api/v1/port/workforce", {
             method:  "PUT",
             headers: {
                 "Content-Type":  "application/json",

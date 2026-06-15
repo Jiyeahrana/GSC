@@ -93,7 +93,7 @@ function renderSkeletons() {
 async function fetchLabourPrediction() {
      renderSkeletons();
     try {
-        const res  = await fetch("http://localhost:3000/api/v1/port/labour-prediction", {
+        const res  = await fetch("https://gsc-app-630083017128.us-central1.run.app/api/v1/port/labour-prediction", {
             headers: { "Authorization": `Bearer ${token}` }
         });
         const data = await res.json();
