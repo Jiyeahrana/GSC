@@ -2,7 +2,13 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const Shipment = require("../models/shipment");
 const Port     = require("../models/port");
 const db = require("../config/firebase"); // adjust path to match your project
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY, {
+    requestOptions: {
+        customHeaders: {
+            "x-goog-api-key": process.env.GEMINI_API_KEY
+        }
+    }
+});
 
 // ── Tool definitions ──────────────────────────────────────────────────────────
 
