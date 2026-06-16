@@ -642,13 +642,16 @@ const publicChat = async (req, res) => {
 
 const adminChat = async (req, res) => {
     try {
+        console.log("[adminChat] user:", JSON.stringify(req.user));
+        console.log("[adminChat] body keys:", Object.keys(req.body));
         const { messages } = req.body; 
-        const portId = req.user.port_id;
-
-        if (!messages || messages.length === 0) {
-            return res.status(400).json({ success: false, message: "No messages provided" });
+        const portId = req.user?.port_id;
+        if (!portId) {
+            return res.status(403).json({ success: false, message: "Missing port_id" });
         }
-
+        if (!messages?.length) {
+            return res.status(400).json({ success: false, message: "No messages" });
+        }
         const model = genAI.getGenerativeModel({
             model:             "gemini-2.5-flash",
             systemInstruction: ADMIN_SYSTEM_PROMPT,
@@ -688,8 +691,8 @@ const adminChat = async (req, res) => {
         });
 
     } catch (err) {
-        console.error("Admin chat error:", err);
-        return res.status(500).json({ success: false, message: "Chat error" });
+        console.error("[adminChat] ERROR:", err.message, err.stack);
+        return res.status(500).json({ success: false, message: err.message }); // <-- expose message temporarily
     }
 };
 
