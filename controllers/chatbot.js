@@ -640,19 +640,83 @@ const publicChat = async (req, res) => {
     }
 };
 
-
 const adminChat = async (req, res) => {
     try {
-        return res.status(200).json({
-            success: true,
-            reply: "Admin chatbot is available."
+        console.log("[adminChat] user:", JSON.stringify(req.user));
+
+        const { messages } = req.body;
+        const portId = req.user?.port_id;
+
+        if (!portId) {
+            console.error("[adminChat] No port_id on req.user");
+            return res.status(403).json({ success: false, message: "Missing port_id" });
+        }
+
+        if (!messages?.length) {
+            return res.status(400).json({ success: false, message: "No messages provided" });
+        }
+
+        console.log("[adminChat] portId:", portId, "| messages:", messages.length);
+        console.log("[adminChat] last message:", JSON.stringify(messages[messages.length - 1]));
+
+        const model = genAI.getGenerativeModel({
+            model:             "gemini-2.5-flash",
+            systemInstruction: ADMIN_SYSTEM_PROMPT,
+            tools:             ADMIN_TOOLS
         });
+
+        console.log("[adminChat] model created");
+
+        const history = messages.slice(0, -1);
+        const lastMsg = messages[messages.length - 1].parts[0].text;
+
+        console.log("[adminChat] lastMsg:", lastMsg);
+
+        const chat = model.startChat({ history });
+
+        console.log("[adminChat] chat started, sending message...");
+
+        let result   = await chat.sendMessage(lastMsg);
+        let response = result.response;
+
+        console.log("[adminChat] initial response received");
+
+        let loopCount = 0;
+        while (response.functionCalls()?.length > 0) {
+            loopCount++;
+            console.log(`[adminChat] tool loop #${loopCount}, calls:`, response.functionCalls().map(c => c.name));
+
+            const toolResults = [];
+            for (const call of response.functionCalls()) {
+                console.log(`[adminChat] executing tool: ${call.name}`, call.args);
+                try {
+                    const output = await executeAdminTool(call.name, call.args, portId);
+                    console.log(`[adminChat] tool ${call.name} result:`, JSON.stringify(output).slice(0, 200));
+                    toolResults.push({
+                        functionResponse: { name: call.name, response: output }
+                    });
+                } catch (toolErr) {
+                    console.error(`[adminChat] tool ${call.name} threw:`, toolErr.message);
+                    toolResults.push({
+                        functionResponse: { name: call.name, response: { error: toolErr.message } }
+                    });
+                }
+            }
+
+            result   = await chat.sendMessage(toolResults);
+            response = result.response;
+            console.log(`[adminChat] loop #${loopCount} response received`);
+        }
+
+        const reply = response.text();
+        console.log("[adminChat] final reply length:", reply.length);
+
+        return res.status(200).json({ success: true, reply });
+
     } catch (err) {
-        console.error("Admin chat error:", err);
-        return res.status(500).json({
-            success: false,
-            message: "Admin chat error"
-        });
+        console.error("[adminChat] FATAL ERROR:", err.message);
+        console.error("[adminChat] STACK:", err.stack);
+        return res.status(500).json({ success: false, message: err.message });
     }
 };
 
