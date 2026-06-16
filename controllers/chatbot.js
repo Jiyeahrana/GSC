@@ -1,123 +1,152 @@
-const { GoogleGenerativeAI } = require("@google/generative-ai");
 const Shipment = require("../models/shipment");
 const Port     = require("../models/port");
 const db = require("../config/firebase"); // adjust path to match your project
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY, {
-    requestOptions: {
-        customHeaders: {
-            "x-goog-api-key": process.env.GEMINI_API_KEY
-        }
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+async function callGemini(systemPrompt, tools, history, lastMessage) {
+    const contents = [];
+
+    // Add history
+    for (const msg of history) {
+        contents.push(msg);
     }
-});
+
+    // Add latest user message
+    contents.push({ role: "user", parts: [{ text: lastMessage }] });
+
+    let response = await fetch(GEMINI_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            system_instruction: { parts: [{ text: systemPrompt }] },
+            tools: tools,
+            contents
+        })
+    });
+
+    if (!response.ok) {
+        const err = await response.text();
+        throw new Error(`Gemini HTTP ${response.status}: ${err}`);
+    }
+
+    return await response.json();
+}
+
+function extractFunctionCalls(geminiResponse) {
+    const parts = geminiResponse.candidates?.[0]?.content?.parts || [];
+    return parts.filter(p => p.functionCall).map(p => p.functionCall);
+}
+
+function extractText(geminiResponse) {
+    const parts = geminiResponse.candidates?.[0]?.content?.parts || [];
+    return parts.filter(p => p.text).map(p => p.text).join("");
+}
+
+function buildToolResultContent(toolResults) {
+    return {
+        role: "user",
+        parts: toolResults.map(r => ({
+            functionResponse: {
+                name: r.functionResponse.name,
+                response: r.functionResponse.response
+            }
+        }))
+    };
+}
 
 // ── Tool definitions ──────────────────────────────────────────────────────────
-
-const PUBLIC_TOOLS = [{
-    functionDeclarations: [
-        {
-            name:        "trackShipment",
-            description: "Track a shipment by its tracking ID and return its status, vessel name, ETA and last known location",
-            parameters: {
-                type: "OBJECT",
-                properties: {
-                    trackingId: { type: "STRING", description: "The shipment tracking ID" }
-                },
-                required: ["trackingId"]
-            }
-        },
-        {
-            name:        "getPortTimeline",
-            description: "Get the next 10 scheduled shipments for a port by port name",
-            parameters: {
-                type: "OBJECT",
-                properties: {
-                    portName: { type: "STRING", description: "Name of the port" }
-                },
-                required: ["portName"]
-            }
-        },
-        {
-            name:        "listPorts",
-            description: "List all available ports",
-            parameters:  { type: "OBJECT", properties: {} }
+const publicChat = async (req, res) => {
+    try {
+        const { messages } = req.body;
+        if (!messages?.length) {
+            return res.status(400).json({ success: false, message: "No messages provided" });
         }
-    ]
-}];
 
-const ADMIN_TOOLS = [{
-    functionDeclarations: [
-        {
-            name:        "getTodayShipments",
-            description: "Get all shipments arriving or departing today for this port",
-            parameters:  { type: "OBJECT", properties: {} }
-        },
-        {
-            name:        "getShipmentById",
-            description: "Get full details of a specific shipment by its ID including status, vessel, cargo, weather and delay info",
-            parameters: {
-                type: "OBJECT",
-                properties: {
-                    shipmentId: { type: "STRING", description: "The MongoDB shipment ID" }
-                },
-                required: ["shipmentId"]
+        const history  = messages.slice(0, -1);
+        const lastMsg  = messages[messages.length - 1].parts[0].text;
+        let geminiRes  = await callGemini(PUBLIC_SYSTEM_PROMPT, PUBLIC_TOOLS, history, lastMsg);
+        let contents   = [...history, { role: "user", parts: [{ text: lastMsg }] }];
+
+        let calls = extractFunctionCalls(geminiRes);
+        while (calls.length > 0) {
+            const modelTurn = geminiRes.candidates[0].content;
+            contents.push(modelTurn);
+
+            const toolResults = [];
+            for (const call of calls) {
+                const output = await executePublicTool(call.name, call.args);
+                toolResults.push({ functionResponse: { name: call.name, response: output } });
             }
-        },
-        {
-            name:        "getShipmentsBetween",
-            description: "Get shipments scheduled between two dates",
-            parameters: {
-                type: "OBJECT",
-                properties: {
-                    startDate: { type: "STRING", description: "Start date in ISO format e.g. 2026-04-19" },
-                    endDate:   { type: "STRING", description: "End date in ISO format e.g. 2026-04-21"   }
-                },
-                required: ["startDate", "endDate"]
-            }
-        },
-        {
-            name:        "getZoneCapacity",
-            description: "Get current zone capacity and occupancy stats for this port",
-            parameters:  { type: "OBJECT", properties: {} }
-        },
-        {
-            name:        "getPortStats",
-            description: "Get overall port statistics: total shipments, incoming, outgoing, delayed, at port counts",
-            parameters:  { type: "OBJECT", properties: {} }
-        },
-        {
-            name:        "getDelayedShipments",
-            description: "Get all shipments that are currently delayed",
-            parameters:  { type: "OBJECT", properties: {} }
-        },
-        {
-            name:        "getShipmentsByStatus",
-            description: "Get shipments filtered by a specific status",
-            parameters: {
-                type: "OBJECT",
-                properties: {
-                    status: {
-                        type: "STRING",
-                        description: "One of: registered, in_transit, at_port, delayed, departed, arrived"
-                    }
-                },
-                required: ["status"]
-            }
-        },
-        {
-            name:        "getLabourDemand",
-            description: "Get workforce/labour demand forecast for upcoming days, including any staffing shortages by role (crane operators, truck operators, customs officers, ground crew, docking staff)",
-            parameters: {
-                type: "OBJECT",
-                properties: {
-                    daysAhead: {
-                        type: "NUMBER",
-                        description: "How many days ahead to forecast, default 7, max 7"
-                    }
-                }
-            }
+
+            contents.push(buildToolResultContent(toolResults));
+
+            const nextRes = await fetch(GEMINI_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    system_instruction: { parts: [{ text: PUBLIC_SYSTEM_PROMPT }] },
+                    tools: PUBLIC_TOOLS,
+                    contents
+                })
+            });
+            geminiRes = await nextRes.json();
+            calls = extractFunctionCalls(geminiRes);
         }
-    ]
-}];
+
+        return res.status(200).json({ success: true, reply: extractText(geminiRes) });
+
+    } catch (err) {
+        console.error("Public chat error:", err);
+        return res.status(500).json({ success: false, message: err.message });
+    }
+};
+
+const adminChat = async (req, res) => {
+    try {
+        const { messages } = req.body;
+        const portId = req.user?.port_id;
+        if (!portId) return res.status(403).json({ success: false, message: "Missing port_id" });
+        if (!messages?.length) return res.status(400).json({ success: false, message: "No messages provided" });
+
+        const history  = messages.slice(0, -1);
+        const lastMsg  = messages[messages.length - 1].parts[0].text;
+        let geminiRes  = await callGemini(ADMIN_SYSTEM_PROMPT, ADMIN_TOOLS, history, lastMsg);
+        let contents   = [...history, { role: "user", parts: [{ text: lastMsg }] }];
+
+        let calls = extractFunctionCalls(geminiRes);
+        while (calls.length > 0) {
+            const modelTurn = geminiRes.candidates[0].content;
+            contents.push(modelTurn);
+
+            const toolResults = [];
+            for (const call of calls) {
+                const output = await executeAdminTool(call.name, call.args, portId);
+                toolResults.push({ functionResponse: { name: call.name, response: output } });
+            }
+
+            contents.push(buildToolResultContent(toolResults));
+
+            const nextRes = await fetch(GEMINI_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    system_instruction: { parts: [{ text: ADMIN_SYSTEM_PROMPT }] },
+                    tools: ADMIN_TOOLS,
+                    contents
+                })
+            });
+            geminiRes = await nextRes.json();
+            calls = extractFunctionCalls(geminiRes);
+        }
+
+        return res.status(200).json({ success: true, reply: extractText(geminiRes) });
+
+    } catch (err) {
+        console.error("[adminChat] ERROR:", err.message);
+        return res.status(500).json({ success: false, message: err.message });
+    }
+};
 
 // ── Labour demand ratios (same as labour_prediction controller) ──────────────
 
