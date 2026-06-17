@@ -1,125 +1,152 @@
-
+const OpenAI   = require("openai");
 const Shipment = require("../models/shipment");
 const Port     = require("../models/port");
-const db = require("../config/firebase"); // adjust path to match your project
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY, {
-    requestOptions: {
-        customHeaders: {
-            "x-goog-api-key": process.env.GEMINI_API_KEY
-        }
-    }
+const db       = require("../config/firebase");
+
+const openai = new OpenAI({
+    apiKey: process.env.GROQ_API_KEY,
+    baseURL: "https://api.groq.com/openai/v1"  // ← add this
 });
 
-// ── Tool definitions ──────────────────────────────────────────────────────────
+// ── Tool definitions (OpenAI format) ──────────────────────────────────────────
 
-const PUBLIC_TOOLS = [{
-    functionDeclarations: [
-        {
-            name:        "trackShipment",
+const PUBLIC_TOOLS = [
+    {
+        type: "function",
+        function: {
+            name: "trackShipment",
             description: "Track a shipment by its tracking ID and return its status, vessel name, ETA and last known location",
             parameters: {
-                type: "OBJECT",
+                type: "object",
                 properties: {
-                    trackingId: { type: "STRING", description: "The shipment tracking ID" }
+                    trackingId: { type: "string", description: "The shipment tracking ID" }
                 },
                 required: ["trackingId"]
             }
-        },
-        {
-            name:        "getPortTimeline",
+        }
+    },
+    {
+        type: "function",
+        function: {
+            name: "getPortTimeline",
             description: "Get the next 10 scheduled shipments for a port by port name",
             parameters: {
-                type: "OBJECT",
+                type: "object",
                 properties: {
-                    portName: { type: "STRING", description: "Name of the port" }
+                    portName: { type: "string", description: "Name of the port" }
                 },
                 required: ["portName"]
             }
-        },
-        {
-            name:        "listPorts",
-            description: "List all available ports",
-            parameters:  { type: "OBJECT", properties: {} }
         }
-    ]
-}];
+    },
+    {
+        type: "function",
+        function: {
+            name: "listPorts",
+            description: "List all available ports",
+            parameters: { type: "object", properties: {} }
+        }
+    }
+];
 
-const ADMIN_TOOLS = [{
-    functionDeclarations: [
-        {
-            name:        "getTodayShipments",
+const ADMIN_TOOLS = [
+    {
+        type: "function",
+        function: {
+            name: "getTodayShipments",
             description: "Get all shipments arriving or departing today for this port",
-            parameters:  { type: "OBJECT", properties: {} }
-        },
-        {
-            name:        "getShipmentById",
+            parameters: { type: "object", properties: {} }
+        }
+    },
+    {
+        type: "function",
+        function: {
+            name: "getShipmentById",
             description: "Get full details of a specific shipment by its ID including status, vessel, cargo, weather and delay info",
             parameters: {
-                type: "OBJECT",
+                type: "object",
                 properties: {
-                    shipmentId: { type: "STRING", description: "The MongoDB shipment ID" }
+                    shipmentId: { type: "string", description: "The MongoDB shipment ID" }
                 },
                 required: ["shipmentId"]
             }
-        },
-        {
-            name:        "getShipmentsBetween",
+        }
+    },
+    {
+        type: "function",
+        function: {
+            name: "getShipmentsBetween",
             description: "Get shipments scheduled between two dates",
             parameters: {
-                type: "OBJECT",
+                type: "object",
                 properties: {
-                    startDate: { type: "STRING", description: "Start date in ISO format e.g. 2026-04-19" },
-                    endDate:   { type: "STRING", description: "End date in ISO format e.g. 2026-04-21"   }
+                    startDate: { type: "string", description: "Start date in ISO format e.g. 2026-04-19" },
+                    endDate:   { type: "string", description: "End date in ISO format e.g. 2026-04-21" }
                 },
                 required: ["startDate", "endDate"]
             }
-        },
-        {
-            name:        "getZoneCapacity",
+        }
+    },
+    {
+        type: "function",
+        function: {
+            name: "getZoneCapacity",
             description: "Get current zone capacity and occupancy stats for this port",
-            parameters:  { type: "OBJECT", properties: {} }
-        },
-        {
-            name:        "getPortStats",
+            parameters: { type: "object", properties: {} }
+        }
+    },
+    {
+        type: "function",
+        function: {
+            name: "getPortStats",
             description: "Get overall port statistics: total shipments, incoming, outgoing, delayed, at port counts",
-            parameters:  { type: "OBJECT", properties: {} }
-        },
-        {
-            name:        "getDelayedShipments",
+            parameters: { type: "object", properties: {} }
+        }
+    },
+    {
+        type: "function",
+        function: {
+            name: "getDelayedShipments",
             description: "Get all shipments that are currently delayed",
-            parameters:  { type: "OBJECT", properties: {} }
-        },
-        {
-            name:        "getShipmentsByStatus",
+            parameters: { type: "object", properties: {} }
+        }
+    },
+    {
+        type: "function",
+        function: {
+            name: "getShipmentsByStatus",
             description: "Get shipments filtered by a specific status",
             parameters: {
-                type: "OBJECT",
+                type: "object",
                 properties: {
                     status: {
-                        type: "STRING",
+                        type: "string",
                         description: "One of: registered, in_transit, at_port, delayed, departed, arrived"
                     }
                 },
                 required: ["status"]
             }
-        },
-        {
-            name:        "getLabourDemand",
-            description: "Get workforce/labour demand forecast for upcoming days, including any staffing shortages by role (crane operators, truck operators, customs officers, ground crew, docking staff)",
+        }
+    },
+    {
+        type: "function",
+        function: {
+            name: "getLabourDemand",
+            description: "Get workforce/labour demand forecast for upcoming days, including any staffing shortages by role",
             parameters: {
-                type: "OBJECT",
+                type: "object",
                 properties: {
                     daysAhead: {
-                        type: "NUMBER",
+                        type: "number",
                         description: "How many days ahead to forecast, default 7, max 7"
                     }
                 }
             }
         }
-    ]
-}];
+    }
+];
 
-// ── Labour demand ratios (same as labour_prediction controller) ──────────────
+// ── Labour demand helpers (unchanged) ─────────────────────────────────────────
 
 const LABOUR_RATIOS = {
     crane_operators:  { per_containers: 30, per_vessel: 1 },
@@ -133,29 +160,19 @@ function calcDemandForShipment(containerCount) {
     const demand = {};
     for (const [role, ratio] of Object.entries(LABOUR_RATIOS)) {
         const fromContainers = ratio.per_containers > 0
-            ? Math.ceil(containerCount / ratio.per_containers)
-            : 0;
+            ? Math.ceil(containerCount / ratio.per_containers) : 0;
         demand[role] = fromContainers + (ratio.per_vessel || 0);
     }
     return demand;
 }
-
 function addDemands(a, b) {
     const result = { ...a };
-    for (const key of Object.keys(b)) {
-        result[key] = (result[key] || 0) + (b[key] || 0);
-    }
+    for (const key of Object.keys(b)) result[key] = (result[key] || 0) + (b[key] || 0);
     return result;
 }
-
 function emptyDemand() {
-    return {
-        crane_operators: 0, truck_operators: 0,
-        customs_officers: 0, ground_crew: 0, docking_staff: 0
-    };
+    return { crane_operators: 0, truck_operators: 0, customs_officers: 0, ground_crew: 0, docking_staff: 0 };
 }
-// ── Tool executors ────────────────────────────────────────────────────────────
-
 async function executePublicTool(name, args) {
     switch (name) {
 
@@ -165,38 +182,36 @@ async function executePublicTool(name, args) {
             );
             if (!s) return { error: "Shipment not found" };
             return {
-                vessel:    s.vessel.name,
-                type:      s.type,
-                status:    s.status,
-                eta:       s.schedule.arrival,
-                origin:    s.cargo.origin,
-                destination: s.cargo.destination,
-                lastLat:   s.weather_snapshots?.at(-1)?.lat || null,
-                lastLng:   s.weather_snapshots?.at(-1)?.lng || null,
-                stormFlag: s.weather_snapshots?.at(-1)?.storm_flag || false
+                vessel:       s.vessel.name,
+                type:         s.type,
+                status:       s.status,
+                eta:          s.schedule.arrival,
+                origin:       s.cargo.origin,
+                destination:  s.cargo.destination,
+                lastLat:      s.weather_snapshots?.at(-1)?.lat  || null,
+                lastLng:      s.weather_snapshots?.at(-1)?.lng  || null,
+                stormFlag:    s.weather_snapshots?.at(-1)?.storm_flag || false
             };
         }
 
         case "getPortTimeline": {
-            const ports = await Port.find({
-                name: { $regex: args.portName, $options: "i" }
-            }, "name location");
-
+            const ports = await Port.find(
+                { name: { $regex: args.portName, $options: "i" } },
+                "name location"
+            );
             if (ports.length === 0) return { error: "No port found with that name" };
-
             const port      = ports[0];
             const shipments = await Shipment.find(
                 { port_id: port._id },
                 "vessel.name type status schedule.arrival schedule.departure"
             ).sort({ "schedule.arrival": 1 }).limit(10);
-
             return {
-                port:      port.name,
-                shipments: shipments.map(s => ({
-                    vessel:   s.vessel.name,
-                    type:     s.type,
-                    status:   s.status,
-                    arrival:  s.schedule.arrival,
+                port:        port.name,
+                shipments:   shipments.map(s => ({
+                    vessel:    s.vessel.name,
+                    type:      s.type,
+                    status:    s.status,
+                    arrival:   s.schedule.arrival,
                     departure: s.schedule.departure
                 })),
                 suggestions: ports.length > 1 ? ports.slice(1, 4).map(p => p.name) : []
@@ -232,19 +247,19 @@ async function executeAdminTool(name, args, portId) {
         case "getShipmentById": {
             const s = await Shipment.findOne({ _id: args.shipmentId, port_id: portId });
             if (!s) return { error: "Shipment not found" };
-            const now      = new Date();
-            const isLate   = s.status === "in_transit" && new Date(s.schedule.arrival) < now;
+            const now    = new Date();
+            const isLate = s.status === "in_transit" && new Date(s.schedule.arrival) < now;
             return {
-                id:          s._id,
-                vessel:      s.vessel,
-                cargo:       s.cargo,
-                status:      s.status,
-                schedule:    s.schedule,
-                actual:      s.actual,
-                sender:      s.sender_name,
-                isDelayed:   isLate,
-                delayHours:  isLate ? Math.round((now - new Date(s.schedule.arrival)) / 3600000) : 0,
-                stormAlert:  s.weather_snapshots?.at(-1)?.storm_flag || false,
+                id:           s._id,
+                vessel:       s.vessel,
+                cargo:        s.cargo,
+                status:       s.status,
+                schedule:     s.schedule,
+                actual:       s.actual,
+                sender:       s.sender_name,
+                isDelayed:    isLate,
+                delayHours:   isLate ? Math.round((now - new Date(s.schedule.arrival)) / 3600000) : 0,
+                stormAlert:   s.weather_snapshots?.at(-1)?.storm_flag || false,
                 lastLocation: s.weather_snapshots?.at(-1)
                     ? { lat: s.weather_snapshots.at(-1).lat, lng: s.weather_snapshots.at(-1).lng }
                     : null
@@ -253,8 +268,7 @@ async function executeAdminTool(name, args, portId) {
 
         case "getShipmentsBetween": {
             const start = new Date(args.startDate);
-            const end   = new Date(args.endDate);
-            end.setHours(23, 59, 59, 999);
+            const end   = new Date(args.endDate); end.setHours(23, 59, 59, 999);
             const ships = await Shipment.find({
                 port_id: portId,
                 "schedule.arrival": { $gte: start, $lte: end }
@@ -265,10 +279,6 @@ async function executeAdminTool(name, args, portId) {
         case "getZoneCapacity": {
             const port = await Port.findById(portId, "zones total_capacity");
             if (!port) return { error: "Port not found" };
-
-            const totalCapacity = port.total_capacity || 0;
-
-            // ── Fetch live sensor data from Firebase directly ──────────────────────
             let sensorData = {};
             try {
                 const snapshot = await db.ref(`sensor_readings/${portId}`).once("value");
@@ -276,54 +286,34 @@ async function executeAdminTool(name, args, portId) {
             } catch (err) {
                 console.error("Firebase fetch error in getZoneCapacity:", err.message);
             }
-
-            let totalOccupied = 0;
-            if (sensorData && typeof sensorData === "object") {
-                totalOccupied = Object.values(sensorData)
-                    .reduce((sum, zone) => sum + (zone?.container_count || 0), 0);
-            }
-
+            let totalOccupied = Object.values(sensorData)
+                .reduce((sum, zone) => sum + (zone?.container_count || 0), 0);
             const zones = port.zones.map(z => {
-                const parts   = z.name?.split(" ") || [];
-                const letter  = parts[1] || "";
-                const zoneKey = `zone_${letter}`;
-
-                const occupied  = sensorData?.[zoneKey]?.container_count || 0;
-                const available = Math.max(z.max_capacity - occupied, 0);
-                const pct       = z.max_capacity > 0
-                    ? Math.round((occupied / z.max_capacity) * 100)
-                    : 0;
-
+                const letter   = z.name?.split(" ")[1] || "";
+                const occupied = sensorData?.[`zone_${letter}`]?.container_count || 0;
+                const pct      = z.max_capacity > 0 ? Math.round((occupied / z.max_capacity) * 100) : 0;
                 return {
-                    name:        z.name,
-                    firebaseKey: zoneKey,
-                    maxCapacity: z.max_capacity,
-                    occupied,
-                    available,
-                    pct,
+                    name: z.name, maxCapacity: z.max_capacity,
+                    occupied, available: Math.max(z.max_capacity - occupied, 0), pct,
                     status: pct >= 90 ? "Critical" : pct >= 70 ? "High Load" : pct >= 40 ? "Optimal" : "Low"
                 };
             });
-
+            const totalCapacity = port.total_capacity || 0;
             return {
-                totalCapacity,
-                totalOccupied,
+                totalCapacity, totalOccupied,
                 totalAvailable: Math.max(totalCapacity - totalOccupied, 0),
-                globalOccupancyPct: totalCapacity > 0
-                    ? Math.round((totalOccupied / totalCapacity) * 100)
-                    : 0,
+                globalOccupancyPct: totalCapacity > 0 ? Math.round((totalOccupied / totalCapacity) * 100) : 0,
                 zones
             };
         }
 
         case "getPortStats": {
-            const all      = await Shipment.find({ port_id: portId }, "type status schedule");
-            const now      = new Date();
-            const today    = all.filter(s => new Date(s.schedule.arrival).toDateString() === now.toDateString());
-            const delayed  = all.filter(s => s.status === "in_transit" && new Date(s.schedule.arrival) < now);
+            const all     = await Shipment.find({ port_id: portId }, "type status schedule");
+            const now     = new Date();
+            const delayed = all.filter(s => s.status === "in_transit" && new Date(s.schedule.arrival) < now);
             return {
                 total:     all.length,
-                today:     today.length,
+                today:     all.filter(s => new Date(s.schedule.arrival).toDateString() === now.toDateString()).length,
                 incoming:  all.filter(s => s.type === "incoming").length,
                 outgoing:  all.filter(s => s.type === "outgoing").length,
                 inTransit: all.filter(s => s.status === "in_transit").length,
@@ -335,100 +325,141 @@ async function executeAdminTool(name, args, portId) {
         }
 
         case "getDelayedShipments": {
-            const now  = new Date();
+            const now   = new Date();
             const ships = await Shipment.find({
-                port_id: portId,
-                status:  "in_transit",
+                port_id: portId, status: "in_transit",
                 "schedule.arrival": { $lt: now }
             }, "vessel.name cargo schedule status sender_name");
             return {
                 count: ships.length,
                 shipments: ships.map(s => ({
-                    vessel:     s.vessel.name,
-                    origin:     s.cargo.origin,
-                    destination: s.cargo.destination,
+                    vessel:           s.vessel.name,
+                    origin:           s.cargo.origin,
+                    destination:      s.cargo.destination,
                     scheduledArrival: s.schedule.arrival,
-                    delayHours: Math.round((now - new Date(s.schedule.arrival)) / 3600000),
-                    sender:     s.sender_name
+                    delayHours:       Math.round((now - new Date(s.schedule.arrival)) / 3600000),
+                    sender:           s.sender_name
                 }))
             };
         }
 
         case "getShipmentsByStatus": {
-            const ships = await Shipment.find({
-                port_id: portId,
-                status:  args.status
-            }, "vessel.name type cargo schedule sender_name").sort({ "schedule.arrival": -1 }).limit(20);
+            const ships = await Shipment.find(
+                { port_id: portId, status: args.status },
+                "vessel.name type cargo schedule sender_name"
+            ).sort({ "schedule.arrival": -1 }).limit(20);
             return { count: ships.length, shipments: ships };
         }
 
         case "getLabourDemand": {
             const port = await Port.findById(portId, "workforce");
             if (!port) return { error: "Port not found" };
-
-            const workforce  = port.workforce;
-            const roles      = workforce?.roles  || emptyDemand();
-            const shifts     = workforce?.shifts || [];
-            const daysAhead  = Math.min(args.daysAhead || 7, 7);
-
-            const today = new Date(); today.setHours(0, 0, 0, 0);
-            const endDate = new Date(today);
-            endDate.setDate(today.getDate() + daysAhead);
-
+            const workforce = port.workforce;
+            const roles     = workforce?.roles  || emptyDemand();
+            const shifts    = workforce?.shifts || [];
+            const daysAhead = Math.min(args.daysAhead || 7, 7);
+            const today     = new Date(); today.setHours(0, 0, 0, 0);
+            const endDate   = new Date(today); endDate.setDate(today.getDate() + daysAhead);
             const shipments = await Shipment.find({
                 port_id: portId,
                 "schedule.arrival": { $gte: today, $lte: endDate }
             }, "vessel.container_count schedule.arrival type");
-
             const days = [];
             for (let i = 0; i < daysAhead; i++) {
-                const day = new Date(today);
-                day.setDate(today.getDate() + i);
+                const day    = new Date(today); day.setDate(today.getDate() + i);
                 const dayEnd = new Date(day); dayEnd.setHours(23, 59, 59, 999);
-
                 const dayShipments = shipments.filter(s => {
                     const arr = new Date(s.schedule.arrival);
                     return arr >= day && arr <= dayEnd;
                 });
-
-                const totalDemand = dayShipments.reduce((acc, s) => {
-                    return addDemands(acc, calcDemandForShipment(s.vessel?.container_count || 0));
-                }, emptyDemand());
-
+                const totalDemand = dayShipments.reduce(
+                    (acc, s) => addDemands(acc, calcDemandForShipment(s.vessel?.container_count || 0)),
+                    emptyDemand()
+                );
                 const shortages = {};
                 let hasShortage = false;
                 for (const role of Object.keys(totalDemand)) {
-                    const needed = totalDemand[role];
-                    const avail  = roles[role] || 0;
-                    const deficit = Math.max(needed - avail, 0);
-                    shortages[role] = { needed, available: avail, deficit };
+                    const deficit = Math.max(totalDemand[role] - (roles[role] || 0), 0);
+                    shortages[role] = { needed: totalDemand[role], available: roles[role] || 0, deficit };
                     if (deficit > 0) hasShortage = true;
                 }
-
                 days.push({
                     date: day.toISOString().split("T")[0],
                     shipment_count: dayShipments.length,
-                    demand: totalDemand,
-                    available: roles,
-                    shortages,
-                    has_shortage: hasShortage
+                    demand: totalDemand, available: roles,
+                    shortages, has_shortage: hasShortage
                 });
             }
-
-            return {
-                total_workers: workforce?.total_workers || 0,
-                roles_available: roles,
-                shift_count: shifts.length,
-                days
-            };
+            return { total_workers: workforce?.total_workers || 0, roles_available: roles, shift_count: shifts.length, days };
         }
 
         default:
             return { error: "Unknown tool" };
     }
 }
+// ── OpenAI agentic loop helper ────────────────────────────────────────────────
 
-// ── System prompts ────────────────────────────────────────────────────────────
+/**
+ * Converts the Gemini-style history from the frontend
+ * ({ role: "user"|"model", parts: [{text}] })
+ * into OpenAI messages ({ role: "user"|"assistant", content: string }).
+ */
+function convertHistory(geminiHistory) {
+    return geminiHistory.map(m => ({
+        role:    m.role === "model" ? "assistant" : m.role,
+        content: m.parts[0].text
+    }));
+}
+
+async function runAgentLoop(systemPrompt, tools, history, lastUserMsg, toolExecutor) {
+    // Build initial message list
+    const messages = [
+        { role: "system", content: systemPrompt },
+        ...convertHistory(history),
+        { role: "user", content: lastUserMsg }
+    ];
+
+    const MAX_ITERATIONS = 10;   // ← add this
+    let iterations = 0;          // ← and this
+
+    while (true) {
+        if (++iterations > MAX_ITERATIONS)                         // ← guard
+            throw new Error("Agent loop exceeded max iterations");
+
+        const response = await openai.chat.completions.create({
+            model: "llama-3.3-70b-versatile",
+            tools,
+            tool_choice: "auto",
+            messages
+        });
+
+        const choice  = response.choices[0];
+        const message = choice.message;
+
+        // Always push the assistant turn (may include tool_calls)
+        messages.push(message);
+
+        // If the model wants to call tools, execute them all then loop
+        if (choice.finish_reason === "tool_calls" && message.tool_calls?.length) {
+            for (const toolCall of message.tool_calls) {
+                const name   = toolCall.function.name;
+                const args   = JSON.parse(toolCall.function.arguments || "{}");
+                const result = await toolExecutor(name, args);
+
+                messages.push({
+                    role:         "tool",
+                    tool_call_id: toolCall.id,
+                    content:      JSON.stringify(result)
+                });
+            }
+            continue; // send tool results back to the model
+        }
+
+        // No more tool calls — return the final text
+        return message.content;
+    }
+}
+
 
 const PUBLIC_SYSTEM_PROMPT = `
 You are a helpful assistant for POMS (Port Operations Management System) — a web platform for managing port operations. You assist PUBLIC users who are visiting the platform.
@@ -596,101 +627,61 @@ RESPONSE STYLE
 - If the user seems to be asking about a shipment but gives a vessel name instead of ID, use getShipmentsByStatus or getTodayShipments to find it, then getShipmentById for details
 `;
 
-// ── Main chat handler ─────────────────────────────────────────────────────────
+// ── Route handlers ────────────────────────────────────────────────────────────
 
 const publicChat = async (req, res) => {
     try {
         const { messages } = req.body;
-        if (!messages?.length) {
+        if (!messages?.length)
             return res.status(400).json({ success: false, message: "No messages provided" });
-        }
 
-        const history  = messages.slice(0, -1);
-        const lastMsg  = messages[messages.length - 1].parts[0].text;
-        let geminiRes  = await callGemini(PUBLIC_SYSTEM_PROMPT, PUBLIC_TOOLS, history, lastMsg);
-        let contents   = [...history, { role: "user", parts: [{ text: lastMsg }] }];
+        const history    = messages.slice(0, -1);
+        const lastMsg    = messages[messages.length - 1].parts[0].text;
 
-        let calls = extractFunctionCalls(geminiRes);
-        while (calls.length > 0) {
-            const modelTurn = geminiRes.candidates[0].content;
-            contents.push(modelTurn);
+        const reply = await runAgentLoop(
+            PUBLIC_SYSTEM_PROMPT,
+            PUBLIC_TOOLS,
+            history,
+            lastMsg,
+            (name, args) => executePublicTool(name, args)
+        );
 
-            const toolResults = [];
-            for (const call of calls) {
-                const output = await executePublicTool(call.name, call.args);
-                toolResults.push({ functionResponse: { name: call.name, response: output } });
-            }
-
-            contents.push(buildToolResultContent(toolResults));
-
-            const nextRes = await fetch(GEMINI_URL, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    system_instruction: { parts: [{ text: PUBLIC_SYSTEM_PROMPT }] },
-                    tools: PUBLIC_TOOLS,
-                    contents
-                })
-            });
-            geminiRes = await nextRes.json();
-            calls = extractFunctionCalls(geminiRes);
-        }
-
-        return res.status(200).json({ success: true, reply: extractText(geminiRes) });
-
+        return res.status(200).json({ success: true, reply });
     } catch (err) {
         console.error("Public chat error:", err);
         return res.status(500).json({ success: false, message: err.message });
     }
 };
-
 const adminChat = async (req, res) => {
     try {
         const { messages } = req.body;
         const portId = req.user?.port_id;
-        if (!portId) return res.status(403).json({ success: false, message: "Missing port_id" });
-        if (!messages?.length) return res.status(400).json({ success: false, message: "No messages provided" });
+        
+        
+        if (!portId)
+            return res.status(403).json({ success: false, message: "Missing port_id" });
+        if (!messages?.length)
+            return res.status(400).json({ success: false, message: "No messages provided" });
 
-        const history  = messages.slice(0, -1);
-        const lastMsg  = messages[messages.length - 1].parts[0].text;
-        let geminiRes  = await callGemini(ADMIN_SYSTEM_PROMPT, ADMIN_TOOLS, history, lastMsg);
-        let contents   = [...history, { role: "user", parts: [{ text: lastMsg }] }];
+        const history = messages.slice(0, -1);
+        const lastMsg = messages[messages.length - 1].parts[0].text;
+        
 
-        let calls = extractFunctionCalls(geminiRes);
-        while (calls.length > 0) {
-            const modelTurn = geminiRes.candidates[0].content;
-            contents.push(modelTurn);
+        const reply = await runAgentLoop(
+            ADMIN_SYSTEM_PROMPT,
+            ADMIN_TOOLS,
+            history,
+            lastMsg,
+            (name, args) => executeAdminTool(name, args, portId)
+        );
 
-            const toolResults = [];
-            for (const call of calls) {
-                const output = await executeAdminTool(call.name, call.args, portId);
-                toolResults.push({ functionResponse: { name: call.name, response: output } });
-            }
-
-            contents.push(buildToolResultContent(toolResults));
-
-            const nextRes = await fetch(GEMINI_URL, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    system_instruction: { parts: [{ text: ADMIN_SYSTEM_PROMPT }] },
-                    tools: ADMIN_TOOLS,
-                    contents
-                })
-            });
-            geminiRes = await nextRes.json();
-            calls = extractFunctionCalls(geminiRes);
-        }
-
-        return res.status(200).json({ success: true, reply: extractText(geminiRes) });
-
+        return res.status(200).json({ success: true, reply });
     } catch (err) {
-        console.error("[adminChat] ERROR:", err.message);
+        console.error("[adminChat] FULL ERROR:", err);       // ← change to log full error object
         return res.status(500).json({ success: false, message: err.message });
     }
 };
 
-module.exports = {
-    publicChat,
-    adminChat
-};
+
+
+module.exports = { publicChat, adminChat };
